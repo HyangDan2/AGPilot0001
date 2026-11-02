@@ -1,0 +1,64 @@
+import { describe, expect, it } from "vitest";
+import { GameEvent, InputFrame } from "../src/sim/types";
+import { createWorld, step } from "../src/sim/world";
+
+describe("Stage 1 Headless Playthrough Gate", () => {
+  it("plays through stage 1 and clears Leviathan boss", () => {
+    // Start at sec 100 directly to test the midboss, second half and final boss Leviathan
+    const world = createWorld({ seed: 20261103, startAt: 100, invulnerable: true });
+    expect(world.phase).toBe("play");
+
+    const events: GameEvent[] = [];
+    let cleared = false;
+    let sawBoss = false;
+
+    // Simulate up to 200 seconds of combat at 60 Hz
+    const maxTicks = 200 * 60;
+    for (let tick = 0; tick < maxTicks; tick++) {
+      // AI Autopilot: aim at nearest enemy, fire continuously
+      let targetX = world.player.x;
+      let minDist = Infinity;
+
+      for (const enemy of world.enemies) {
+        if (!enemy.alive) continue;
+        if (enemy.kind === "leviathan") sawBoss = true;
+        const d = Math.hypot(enemy.x - world.player.x, enemy.y - world.player.y);
+        if (d < minDist) {
+          minDist = d;
+          targetX = enemy.x;
+        }
+      }
+
+      // Smooth tracking towards target
+      let moveX = 0;
+      if (Math.abs(targetX - world.player.x) > 10) {
+        moveX = targetX > world.player.x ? 1 : -1;
+      }
+
+      const input: InputFrame = {
+        moveX,
+        moveY: 0,
+        dragDx: 0,
+        dragDy: 0,
+        fire: true, // Auto-fire continuously
+        roll: tick % 300 === 0, // Occasional evasive roll
+      };
+
+      const tickEvents = step(world, input);
+      for (const e of tickEvents) {
+        events.push(e);
+        if (e.t === "stageClear") {
+          cleared = true;
+          break;
+        }
+      }
+
+      if (cleared) break;
+    }
+
+    expect(sawBoss).toBe(true);
+    expect(cleared).toBe(true);
+    expect(world.phase).toBe("clear");
+    expect(world.score).toBeGreaterThan(30000);
+  });
+});

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+test-results/
+playwright-report/
+art/work/
+audio/work/
+__pycache__/
+.DS_Store

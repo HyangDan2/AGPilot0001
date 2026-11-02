@@ -1,0 +1,182 @@
+// Pure simulation types. No DOM, Canvas or Audio imports anywhere under src/sim/.
+
+export const FIELD_W = 720;
+export const FIELD_H = 1280;
+export const TICK_HZ = 60;
+export const DT = 1 / TICK_HZ;
+
+export interface InputFrame {
+  /** Analog/keyboard movement, each axis -1..1. */
+  moveX: number;
+  moveY: number;
+  /** Relative drag in logical pixels accumulated since the previous tick (touch). */
+  dragDx: number;
+  dragDy: number;
+  fire: boolean;
+  roll: boolean;
+}
+
+export const NO_INPUT: Readonly<InputFrame> = Object.freeze({
+  moveX: 0,
+  moveY: 0,
+  dragDx: 0,
+  dragDy: 0,
+  fire: false,
+  roll: false,
+});
+
+export type ExplosionSize = "s" | "m" | "l" | "boss";
+export type PickupKind = "pow" | "roll" | "medal";
+
+export type GameEvent =
+  | { t: "shot"; level: 1 | 2 | 3 }
+  | { t: "hit"; id: number; x: number; y: number }
+  | { t: "explode"; size: ExplosionSize; x: number; y: number }
+  | { t: "pickup"; kind: PickupKind; x: number; y: number }
+  | { t: "bonus"; amount: number; x: number; y: number }
+  | { t: "roll" }
+  | { t: "playerDown"; x: number; y: number }
+  | { t: "respawn" }
+  | { t: "warning" }
+  | { t: "bossPhase"; phase: number }
+  | { t: "stageClear" }
+  | { t: "gameOver" };
+
+export type EnemyKind =
+  | "kestrel"
+  | "kestrelRed"
+  | "harrier"
+  | "condor"
+  | "gunboat"
+  | "albatross"
+  | "leviathan";
+
+export type PathKind =
+  | "straight"
+  | "swoopL"
+  | "swoopR"
+  | "sCurve"
+  | "dive"
+  | "hover"
+  | "ground"
+  | "loopL"
+  | "loopR";
+
+export interface BossPart {
+  name: string;
+  dx: number;
+  dy: number;
+  r: number;
+  hp: number;
+  maxHp: number;
+  alive: boolean;
+  flash: number;
+}
+
+export interface Enemy {
+  id: number;
+  kind: EnemyKind;
+  x: number;
+  y: number;
+  x0: number;
+  y0: number;
+  path: PathKind;
+  age: number;
+  hp: number;
+  maxHp: number;
+  r: number;
+  ground: boolean;
+  fireTimer: number;
+  flash: number;
+  heading: number;
+  formation: number;
+  sx: number;
+  sy: number;
+  mode: number;
+  parts: BossPart[];
+  alive: boolean;
+}
+
+export interface Bullet {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  dmg: number;
+  owner: "player" | "enemy";
+  alive: boolean;
+}
+
+export interface Pickup {
+  id: number;
+  kind: PickupKind;
+  x: number;
+  y: number;
+  age: number;
+  alive: boolean;
+}
+
+export interface Player {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  lives: number;
+  power: 1 | 2 | 3;
+  rolls: number;
+  rollTimer: number;
+  invuln: number;
+  downTimer: number;
+  fireCooldown: number;
+  prevRoll: boolean;
+  deaths: number;
+}
+
+export interface Formation {
+  total: number;
+  killed: number;
+  escaped: number;
+  reward: PickupKind | null;
+  lastX: number;
+  lastY: number;
+}
+
+export type Phase = "intro" | "play" | "boss" | "clearing" | "clear" | "dying" | "over";
+
+export interface Stats {
+  spawned: number;
+  killed: number;
+  shotsFired: number;
+  noMissBonus: number;
+}
+
+export interface WorldOptions {
+  seed: number;
+  invulnerable?: boolean;
+  startAt?: number;
+}
+
+export interface World {
+  seed: number;
+  rngState: number;
+  tick: number;
+  stageTick: number;
+  waveCursor: number;
+  phase: Phase;
+  phaseTimer: number;
+  scrollY: number;
+  player: Player;
+  enemies: Enemy[];
+  bullets: Bullet[];
+  pickups: Pickup[];
+  formations: Map<number, Formation>;
+  score: number;
+  stats: Stats;
+  nextId: number;
+  bossId: number;
+  bossPhase: number;
+  invulnerable: boolean;
+  ended: boolean;
+}
