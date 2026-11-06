@@ -4,8 +4,8 @@ import { createWorld, step } from "../src/sim/world";
 
 describe("Stage 1 Headless Playthrough Gate", () => {
   it("plays through stage 1 and clears Leviathan boss", () => {
-    // Start at sec 100 directly to test the midboss, second half and final boss Leviathan
-    const world = createWorld({ seed: 20261103, startAt: 100, invulnerable: true });
+    // Start at sec 55 right before midboss and final boss Leviathan
+    const world = createWorld({ seed: 20261103, startAt: 55, invulnerable: true });
     expect(world.phase).toBe("play");
 
     const events: GameEvent[] = [];
@@ -60,5 +60,44 @@ describe("Stage 1 Headless Playthrough Gate", () => {
     expect(cleared).toBe(true);
     expect(world.phase).toBe("clear");
     expect(world.score).toBeGreaterThan(30000);
+  });
+
+  it("survives early combat (0-25s) with normal player lives without test invulnerability", () => {
+    const world = createWorld({ seed: 20261103, startAt: 0, invulnerable: false });
+    expect(world.phase).toBe("intro");
+
+    for (let tick = 0; tick < 25 * 60; tick++) {
+      let targetX = world.player.x;
+      let minDist = Infinity;
+      for (const enemy of world.enemies) {
+        if (!enemy.alive) continue;
+        const d = Math.hypot(enemy.x - world.player.x, enemy.y - world.player.y);
+        if (d < minDist) {
+          minDist = d;
+          targetX = enemy.x;
+        }
+      }
+
+      let moveX = 0;
+      if (Math.abs(targetX - world.player.x) > 10) {
+        moveX = targetX > world.player.x ? 1 : -1;
+      }
+
+      const input: InputFrame = {
+        moveX,
+        moveY: 0,
+        dragDx: 0,
+        dragDy: 0,
+        fire: true,
+        roll: false,
+      };
+
+      step(world, input);
+    }
+
+    // Player survived without losing all lives and scored
+    expect(world.player.lives).toBeGreaterThanOrEqual(1);
+    expect(world.score).toBeGreaterThan(1000);
+    expect(world.stats.killed).toBeGreaterThan(5);
   });
 });

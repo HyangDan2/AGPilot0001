@@ -17,6 +17,7 @@ export class GameApp {
 
   private isRunning = false;
   private isPaused = false;
+  private rafId: number | null = null;
   private settings = loadSettings();
   private highScore = loadHighScore();
   private lastTime = 0;
@@ -65,25 +66,39 @@ export class GameApp {
     }
   }
 
-  private startGame(): void {
-    this.audio.init();
-    this.world = createWorld({ seed: Date.now() });
+  private startLoop(): void {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
     this.isRunning = true;
     this.isPaused = false;
-    this.ui.showInGameHUD(this.settings.muted);
-
     this.lastTime = performance.now();
     this.accumulator = 0;
-    requestAnimationFrame((t) => this.loop(t));
+    this.rafId = requestAnimationFrame((t) => this.loop(t));
+  }
+
+  private stopLoop(): void {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    this.isRunning = false;
+  }
+
+  private startGame(): void {
+    this.audio.init();
+    this.audio.playBGM("bgm_stage");
+    this.world = createWorld({ seed: Date.now() });
+    this.ui.showInGameHUD(this.settings.muted);
+    this.startLoop();
   }
 
   private restartGame(): void {
+    this.audio.playBGM("bgm_stage");
     this.world = createWorld({ seed: Date.now() });
-    this.isRunning = true;
-    this.isPaused = false;
     this.ui.showInGameHUD(this.settings.muted);
-    this.lastTime = performance.now();
-    this.accumulator = 0;
+    this.startLoop();
   }
 
   private togglePause(): void {
@@ -94,6 +109,10 @@ export class GameApp {
     } else {
       this.ui.hidePauseMenu();
       this.lastTime = performance.now();
+      // Ensure RAF is still active if coming back from background
+      if (this.rafId === null) {
+        this.rafId = requestAnimationFrame((t) => this.loop(t));
+      }
     }
   }
 
@@ -117,10 +136,11 @@ export class GameApp {
   }
 
   private loop(now: number): void {
+    this.rafId = null;
     if (!this.isRunning) return;
 
     if (this.isPaused) {
-      requestAnimationFrame((t) => this.loop(t));
+      this.rafId = requestAnimationFrame((t) => this.loop(t));
       return;
     }
 
@@ -133,7 +153,7 @@ export class GameApp {
 
     if (key.pause) {
       this.togglePause();
-      requestAnimationFrame((t) => this.loop(t));
+      this.rafId = requestAnimationFrame((t) => this.loop(t));
       return;
     }
 
@@ -158,18 +178,20 @@ export class GameApp {
     }
 
     this.renderer.render(this.world);
-    requestAnimationFrame((t) => this.loop(t));
+    if (this.isRunning) {
+      this.rafId = requestAnimationFrame((t) => this.loop(t));
+    }
   }
 
   private handleSimEvents(events: GameEvent[]): void {
     for (const e of events) {
       if (e.t === "gameOver") {
-        this.isRunning = false;
+        this.stopLoop();
         saveHighScore(this.world.score);
         this.highScore = loadHighScore();
         this.ui.showGameOver(this.world.score, this.highScore);
       } else if (e.t === "stageClear") {
-        this.isRunning = false;
+        this.stopLoop();
         saveHighScore(this.world.score);
         this.highScore = loadHighScore();
         this.ui.showVictory(
@@ -189,7 +211,7 @@ export class GameApp {
       stepOnce: (input: InputFrame) => step(this.world, input),
       startWithSeed: (seed: number, startAt?: number) => {
         this.world = createWorld({ seed, startAt });
-        this.isRunning = true;
+        this.startLoop();
       },
       getAudioAnalyser: () => this.audio.analyser,
       setAudioMuted: (m: boolean) => this.audio.setMuted(m),

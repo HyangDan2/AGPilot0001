@@ -20,16 +20,26 @@ export class UIManager {
   public showTitle(highScore: number, isMuted: boolean, reducedMotion: boolean): void {
     this.container.innerHTML = `
       <div class="overlay title-screen">
+        <div class="brand-badge">
+          <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="20" height="20" />
+          <span class="brand-title">HD²LAB ARCADE</span>
+        </div>
+        <div class="brand-slogan">HYPER DIMENSIONAL DESIGN</div>
+
         <div class="logo-box">
           <h1 class="game-title">IRON WINGS</h1>
-          <div class="subtitle">PACIFIC THEATER 1942</div>
+          <div class="subtitle">TACTICAL AIR COMBAT</div>
         </div>
-        <div class="high-score-display">RECORD: ${highScore.toString().padStart(6, "0")}</div>
-        <button id="btn-start" class="btn btn-primary">START MISSION</button>
+
+        <div class="high-score-display">TOP RECORD : ${highScore.toString().padStart(6, "0")}</div>
+
+        <button id="btn-start" class="btn btn-primary">LAUNCH MISSION</button>
+
         <div class="instructions">
-          <div><strong>KEYBOARD:</strong> ARROWS/WASD : MOVE | Z/SPACE : FIRE | X/SHIFT : ROLL</div>
+          <div><strong>KEYBOARD:</strong> WASD / ARROWS : MOVE | Z / SPACE : FIRE | X / SHIFT : ROLL</div>
           <div><strong>TOUCH:</strong> DRAG TO MOVE & AUTO-FIRE | [ROLL] BUTTON</div>
         </div>
+
         <div class="settings-bar">
           <button id="btn-mute" class="btn btn-sm">${isMuted ? "UNMUTE" : "MUTE"}</button>
           <button id="btn-motion" class="btn btn-sm">${reducedMotion ? "MOTION: REDUCED" : "MOTION: NORMAL"}</button>
@@ -53,14 +63,20 @@ export class UIManager {
 
     document.getElementById("btn-pause")?.addEventListener("click", () => this.events.onResume());
     document.getElementById("btn-ingame-mute")?.addEventListener("click", () => this.events.onToggleMute());
+
+    let lastRollTime = 0;
     const triggerRoll = (e: Event) => {
+      e.preventDefault();
       e.stopPropagation();
+      const now = performance.now();
+      if (now - lastRollTime < 250) return; // 250ms debounce
+      lastRollTime = now;
       this.events.onRoll();
       window.dispatchEvent(new CustomEvent("iron-wings-roll"));
     };
+
     const rollBtn = document.getElementById("btn-touch-roll");
     rollBtn?.addEventListener("pointerdown", triggerRoll);
-    rollBtn?.addEventListener("click", triggerRoll);
   }
 
   public showPauseMenu(): void {
@@ -68,10 +84,14 @@ export class UIManager {
     el.id = "pause-menu";
     el.className = "overlay pause-screen";
     el.innerHTML = `
+      <div class="brand-badge">
+        <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="16" height="16" />
+        <span class="brand-title">HD²LAB ARCADE</span>
+      </div>
       <h2>TACTICAL PAUSE</h2>
       <div class="menu-actions">
-        <button id="btn-resume" class="btn btn-primary">RESUME</button>
-        <button id="btn-restart" class="btn">RESTART</button>
+        <button id="btn-resume" class="btn btn-primary">RESUME FLIGHT</button>
+        <button id="btn-restart" class="btn">RESTART MISSION</button>
       </div>
     `;
     this.container.appendChild(el);
@@ -93,12 +113,16 @@ export class UIManager {
   public showGameOver(score: number, highScore: number): void {
     this.container.innerHTML = `
       <div class="overlay game-over-screen">
+        <div class="brand-badge">
+          <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="16" height="16" />
+          <span class="brand-title">HD²LAB ARCADE</span>
+        </div>
         <h2 class="danger-text">AIRCRAFT DESTROYED</h2>
         <div class="stats-card">
-          <div class="stat-row"><span>SCORE:</span> <strong>${score}</strong></div>
-          <div class="stat-row"><span>HIGH SCORE:</span> <strong>${highScore}</strong></div>
+          <div class="stat-row"><span>MISSION SCORE:</span> <strong>${score}</strong></div>
+          <div class="stat-row highlight"><span>TOP RECORD:</span> <strong>${highScore}</strong></div>
         </div>
-        <button id="btn-restart" class="btn btn-primary">TRY AGAIN</button>
+        <button id="btn-restart" class="btn btn-primary">RETRY MISSION</button>
       </div>
     `;
     document.getElementById("btn-restart")?.addEventListener("click", () => this.events.onRestart());
@@ -114,14 +138,18 @@ export class UIManager {
     const accuracy = total > 0 ? Math.round((destroyed / total) * 100) : 100;
     this.container.innerHTML = `
       <div class="overlay victory-screen">
+        <div class="brand-badge">
+          <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="16" height="16" />
+          <span class="brand-title">HD²LAB ARCADE</span>
+        </div>
         <h2 class="victory-text">MISSION ACCOMPLISHED</h2>
         <div class="stats-card">
-          <div class="stat-row"><span>ENEMIES DOWNED:</span> <strong>${destroyed}/${total} (${accuracy}%)</strong></div>
+          <div class="stat-row"><span>TARGETS DOWNED:</span> <strong>${destroyed}/${total} (${accuracy}%)</strong></div>
           ${noMissBonus > 0 ? `<div class="stat-row gold-text"><span>NO-MISS BONUS:</span> <strong>+${noMissBonus}</strong></div>` : ""}
           <div class="stat-row highlight"><span>FINAL SCORE:</span> <strong>${score}</strong></div>
-          <div class="stat-row"><span>RECORD:</span> <strong>${highScore}</strong></div>
+          <div class="stat-row"><span>TOP RECORD:</span> <strong>${highScore}</strong></div>
         </div>
-        <button id="btn-restart" class="btn btn-primary">PLAY AGAIN</button>
+        <button id="btn-restart" class="btn btn-primary">NEXT OPERATION</button>
       </div>
     `;
     document.getElementById("btn-restart")?.addEventListener("click", () => this.events.onRestart());

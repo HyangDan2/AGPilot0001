@@ -53,18 +53,33 @@ export function createTouchHandler(canvas: HTMLCanvasElement): {
     }
   };
 
+  const resetPointer = () => {
+    activePointerId = null;
+    isTouching = false;
+    dragDx = 0;
+    dragDy = 0;
+  };
+
   const onPointerUp = (e: PointerEvent) => {
     if (e.pointerId === activePointerId) {
-      activePointerId = null;
-      isTouching = false;
+      resetPointer();
     }
   };
 
   const onPointerCancel = (e: PointerEvent) => {
     if (e.pointerId === activePointerId) {
-      activePointerId = null;
-      isTouching = false;
+      resetPointer();
     }
+  };
+
+  const onLostPointerCapture = (e: PointerEvent) => {
+    if (e.pointerId === activePointerId) {
+      resetPointer();
+    }
+  };
+
+  const onWindowBlur = () => {
+    resetPointer();
   };
 
   // Block pinch-zoom and gesture scrolling on play surface
@@ -72,6 +87,8 @@ export function createTouchHandler(canvas: HTMLCanvasElement): {
   canvas.addEventListener("pointermove", onPointerMove);
   canvas.addEventListener("pointerup", onPointerUp);
   canvas.addEventListener("pointercancel", onPointerCancel);
+  canvas.addEventListener("lostpointercapture", onLostPointerCapture);
+  window.addEventListener("blur", onWindowBlur);
 
   return {
     sample: () => {
@@ -92,6 +109,8 @@ export function createTouchHandler(canvas: HTMLCanvasElement): {
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointercancel", onPointerCancel);
+      canvas.removeEventListener("lostpointercapture", onLostPointerCapture);
+      window.removeEventListener("blur", onWindowBlur);
     },
   };
 }

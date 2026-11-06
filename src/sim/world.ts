@@ -5,6 +5,7 @@ import {
 } from "./collision";
 import { ENEMY_DEFS, spawnEnemy, updateEnemyAI } from "./enemies";
 import { createPlayer, killPlayer, updatePlayer } from "./player";
+import { rand } from "./rng";
 import { STAGE1_WAVES, WaveDef } from "./stage1";
 import {
   DT,
@@ -20,17 +21,17 @@ import {
 } from "./types";
 
 export function createWorld(options?: WorldOptions): World {
-  const seed = options?.seed ?? 1942001;
+  const seed = options?.seed ?? 2026001;
   const startAt = options?.startAt ?? 0;
   return {
     seed,
     rngState: seed,
-    tick: 0,
+    tick: Math.floor(startAt * TICK_HZ),
     stageTick: Math.floor(startAt * TICK_HZ),
     waveCursor: 0,
     phase: startAt > 0 ? "play" : "intro",
     phaseTimer: startAt > 0 ? 0 : 120, // 2s intro takeoff
-    scrollY: 0,
+    scrollY: Math.floor(startAt * 80),
     player: createPlayer(),
     enemies: [],
     bullets: [],
@@ -87,8 +88,8 @@ export function step(world: World, input: InputFrame): GameEvent[] {
     world.phaseTimer--;
     if (world.phaseTimer % 20 === 0) {
       // Periodic victory fireworks/explosions
-      const rx = FIELD_W / 2 + (Math.random() - 0.5) * 320;
-      const ry = 220 + (Math.random() - 0.5) * 160;
+      const rx = FIELD_W / 2 + (rand(world) - 0.5) * 320;
+      const ry = 220 + (rand(world) - 0.5) * 160;
       events.push({ t: "explode", size: "m", x: rx, y: ry });
     }
     if (world.phaseTimer <= 0) {

@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "branding": {
+    "icon": "assets/branding/hd2lab.svg",
+    "png": "assets/branding/hd2lab.png",
+    "logo": "assets/branding/hd2lab-logo.png"
+  },
+  "sprites": {
+    "player": { "w": 96, "h": 96, "drawW": 96, "drawH": 96, "facing": "up" },
+    "kestrel": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down" },
+    "kestrelRed": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down" },
+    "harrier": { "w": 84, "h": 84, "drawW": 84, "drawH": 84, "facing": "down" },
+    "condor": { "w": 170, "h": 170, "drawW": 170, "drawH": 170, "facing": "down" },
+    "gunboat": { "w": 110, "h": 110, "drawW": 110, "drawH": 110, "facing": "down" },
+    "albatross": { "w": 300, "h": 120, "drawW": 300, "drawH": 120, "facing": "down" },
+    "leviathan": { "w": 600, "h": 220, "drawW": 600, "drawH": 220, "facing": "down" }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "formats": [
+    "ogg",
+    "m4a"
+  ],
+  "sounds": {
+    "bgm_title": {
+      "base": "assets/audio/bgm_title",
+      "kind": "bgm",
+      "gain": 0.75,
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 24
+    },
+    "bgm_stage": {
+      "base": "assets/audio/bgm_stage",
+      "kind": "bgm",
+      "gain": 0.75,
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 28
+    },
+    "bgm_boss": {
+      "base": "assets/audio/bgm_boss",
+      "kind": "bgm",
+      "gain": 0.8,
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 20
+    },
+    "jingle_clear": {
+      "base": "assets/audio/jingle_clear",
+      "kind": "jingle",
+      "gain": 0.85,
+      "loop": false
+    },
+    "jingle_gameover": {
+      "base": "assets/audio/jingle_gameover",
+      "kind": "jingle",
+      "gain": 0.85,
+      "loop": false
+    },
+    "sfx_shot1": {
+      "base": "assets/audio/sfx_shot1",
+      "kind": "sfx",
+      "gain": 0.45,
+      "maxVoices": 4
+    },
+    "sfx_shot2": {
+      "base": "assets/audio/sfx_shot2",
+      "kind": "sfx",
+      "gain": 0.45,
+      "maxVoices": 4
+    },
+    "sfx_shot3": {
+      "base": "assets/audio/sfx_shot3",
+      "kind": "sfx",
+      "gain": 0.5,
+      "maxVoices": 4
+    },
+    "sfx_explode_s": {
+      "base": "assets/audio/sfx_explode_s",
+      "kind": "sfx",
+      "gain": 0.4,
+      "maxVoices": 6
+    },
+    "sfx_explode_m": {
+      "base": "assets/audio/sfx_explode_m",
+      "kind": "sfx",
+      "gain": 0.5,
+      "maxVoices": 6
+    },
+    "sfx_explode_l": {
+      "base": "assets/audio/sfx_explode_l",
+      "kind": "sfx",
+      "gain": 0.6,
+      "maxVoices": 6
+    },
+    "sfx_explode_boss": {
+      "base": "assets/audio/sfx_explode_boss",
+      "kind": "sfx",
+      "gain": 0.7,
+      "maxVoices": 4
+    },
+    "sfx_pickup": {
+      "base": "assets/audio/sfx_pickup",
+      "kind": "sfx",
+      "gain": 0.5,
+      "maxVoices": 3
+    },
+    "sfx_roll": {
+      "base": "assets/audio/sfx_roll",
+      "kind": "sfx",
+      "gain": 0.5,
+      "maxVoices": 2
+    },
+    "sfx_warning": {
+      "base": "assets/audio/sfx_warning",
+      "kind": "sfx",
+      "gain": 0.6,
+      "maxVoices": 2
+    }
+  }
+}

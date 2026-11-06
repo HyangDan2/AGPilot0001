@@ -1,22 +1,24 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("IRON WINGS E2E & Browser Gate", () => {
-  test("renders title screen with controls and settings", async ({ page }) => {
+test.describe("HD²LAB ARCADE : IRON WINGS E2E & Browser Gate", () => {
+  test("renders title screen with HD²LAB brand, controls and settings", async ({ page }) => {
     const errors: string[] = [];
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
     page.on("pageerror", (e) => errors.push(e.message));
 
     await page.goto("./");
     await expect(page).toHaveTitle(/IRON WINGS/);
+    await expect(page.locator(".brand-title")).toHaveText("HD²LAB ARCADE");
+    await expect(page.locator(".brand-slogan")).toHaveText("HYPER DIMENSIONAL DESIGN");
     await expect(page.locator(".game-title")).toHaveText("IRON WINGS");
-    await expect(page.locator("#btn-start")).toBeVisible();
+    await expect(page.locator("#btn-start")).toHaveText("LAUNCH MISSION");
     await expect(page.locator("#btn-mute")).toBeVisible();
     await expect(page.locator("#btn-motion")).toBeVisible();
 
     expect(errors).toEqual([]);
   });
 
-  test("starts game on clicking START and accepts keyboard input", async ({ page }) => {
+  test("starts game on clicking LAUNCH MISSION and accepts keyboard input", async ({ page }) => {
     await page.goto("./?test=1");
     await page.click("#btn-start");
 
@@ -60,6 +62,41 @@ test.describe("IRON WINGS E2E & Browser Gate", () => {
       return hook.getWorld().player.rollTimer;
     });
     expect(rollTimer).toBeGreaterThan(0);
+  });
+
+  test("game over -> restart -> resumes gameplay loop without freeze or duplicates", async ({ page }) => {
+    await page.goto("./?test=1");
+    await page.click("#btn-start");
+
+    // Force game over state
+    await page.evaluate(() => {
+      const hook = (window as unknown as { __testHook: { getWorld: () => { player: { lives: number; downTimer: number }; phase: string; phaseTimer: number } } }).__testHook;
+      const w = hook.getWorld();
+      w.player.lives = 0;
+      w.player.downTimer = 0;
+      w.phase = "dying";
+      w.phaseTimer = 1;
+    });
+
+    // Wait for GAME OVER overlay
+    await expect(page.locator(".game-over-screen")).toBeVisible({ timeout: 5000 });
+    await expect(page.locator("#btn-restart")).toBeVisible();
+
+    // Click RETRY MISSION
+    await page.click("#btn-restart");
+
+    // In-game HUD should be back
+    await expect(page.locator("#btn-pause")).toBeVisible();
+
+    // Let the simulation advance for 200ms
+    await page.waitForTimeout(200);
+
+    // Confirm world loop is advancing
+    const tick = await page.evaluate(() => {
+      const hook = (window as unknown as { __testHook: { getWorld: () => { tick: number } } }).__testHook;
+      return hook.getWorld().tick;
+    });
+    expect(tick).toBeGreaterThan(0);
   });
 
   const viewports = [

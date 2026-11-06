@@ -6,6 +6,7 @@ import {
   World,
 } from "./types";
 import { fireEnemyBullet, updateEnemyPath } from "./patterns";
+import { rand } from "./rng";
 
 export interface EnemyDef {
   kind: EnemyKind;
@@ -47,7 +48,7 @@ export function spawnEnemy(
     maxHp: def.hp,
     r: def.r,
     ground: def.ground,
-    fireTimer: 30 + Math.floor(Math.random() * 30),
+    fireTimer: 30 + Math.floor(rand(world) * 30),
     flash: 0,
     heading: Math.PI,
     formation: formationId,
@@ -99,7 +100,7 @@ export function updateEnemyAI(
   switch (enemy.kind) {
     case "kestrel":
     case "kestrelRed": {
-      if (enemy.age === 40 && Math.random() < 0.6) {
+      if (enemy.age === 40 && rand(world) < 0.6) {
         fireEnemyBullet(world, enemy.x, enemy.y + 16, 260, true);
       }
       break;

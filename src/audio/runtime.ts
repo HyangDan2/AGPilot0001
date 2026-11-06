@@ -3,11 +3,19 @@ import { GameEvent } from "../sim/types";
 export class AudioRuntime {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
+  private bgmGain: GainNode | null = null;
+  private sfxGain: GainNode | null = null;
   public analyser: AnalyserNode | null = null;
   private isMuted = false;
 
+  private bufferCache = new Map<string, AudioBuffer>();
+  private activeBgmSource: AudioBufferSourceNode | null = null;
+  private currentBgmId: string | null = null;
+  private manifestLoaded = false;
+  private preferredExt = "ogg";
+
   constructor() {
-    // AudioContext will be created / resumed on first user click
+    // AudioContext will be initialized on user interaction
   }
 
   public init(): void {
@@ -17,14 +25,64 @@ export class AudioRuntime {
       if (!AudioCtx) return;
       this.ctx = new AudioCtx();
       this.masterGain = this.ctx.createGain();
+      this.bgmGain = this.ctx.createGain();
+      this.sfxGain = this.ctx.createGain();
+
       this.analyser = this.ctx.createAnalyser();
       this.analyser.fftSize = 256;
 
+      this.bgmGain.connect(this.masterGain);
+      this.sfxGain.connect(this.masterGain);
       this.masterGain.connect(this.analyser);
       this.analyser.connect(this.ctx.destination);
+
       this.setMuted(this.isMuted);
+
+      // Determine audio codec support
+      const audioEl = document.createElement("audio");
+      if (audioEl.canPlayType("audio/ogg; codecs=vorbis")) {
+        this.preferredExt = "ogg";
+      } else {
+        this.preferredExt = "m4a";
+      }
+
+      this.preloadAudio();
     } catch {
       // Audio not supported in this environment
+    }
+  }
+
+  private async preloadAudio(): Promise<void> {
+    if (this.manifestLoaded || !this.ctx) return;
+    try {
+      const res = await fetch("./assets/audio.json");
+      if (!res.ok) return;
+      const manifest = await res.json();
+      this.manifestLoaded = true;
+
+      for (const [id, sound] of Object.entries<{ base: string }>(manifest.sounds)) {
+        this.loadSoundBuffer(id, `./${sound.base}.${this.preferredExt}`);
+      }
+    } catch {
+      // Offline fallback: procedural synth
+    }
+  }
+
+  private async loadSoundBuffer(id: string, url: string): Promise<void> {
+    if (!this.ctx || this.bufferCache.has(id)) return;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const arrayBuf = await res.arrayBuffer();
+      const decoded = await this.ctx.decodeAudioData(arrayBuf);
+      this.bufferCache.set(id, decoded);
+
+      // If this was pending current BGM, start it
+      if (this.currentBgmId === id && !this.activeBgmSource) {
+        this.playBgmInternal(id);
+      }
+    } catch {
+      // Decode error fallback
     }
   }
 
@@ -35,84 +93,142 @@ export class AudioRuntime {
     }
   }
 
+  public playBGM(id: "bgm_title" | "bgm_stage" | "bgm_boss"): void {
+    if (this.currentBgmId === id && this.activeBgmSource) return;
+    this.currentBgmId = id;
+    this.stopBGM();
+    this.playBgmInternal(id);
+  }
+
+  public stopBGM(): void {
+    if (this.activeBgmSource) {
+      try {
+        this.activeBgmSource.stop();
+        this.activeBgmSource.disconnect();
+      } catch {
+        // Ignore stop error
+      }
+      this.activeBgmSource = null;
+    }
+  }
+
+  private playBgmInternal(id: string): void {
+    if (!this.ctx || !this.bgmGain || this.isMuted) return;
+    const buf = this.bufferCache.get(id);
+    if (!buf) return; // Wait for buffer or fallback
+
+    try {
+      const src = this.ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = true;
+      src.connect(this.bgmGain);
+      src.start(0);
+      this.activeBgmSource = src;
+    } catch {
+      // Play error
+    }
+  }
+
   public handleEvents(events: GameEvent[]): void {
     if (!this.ctx || this.isMuted || this.ctx.state !== "running") return;
 
     for (const e of events) {
       switch (e.t) {
         case "shot":
-          this.playShot(e.level);
+          this.playAudioOrSynth(`sfx_shot${e.level}`, () => this.synthShot(e.level));
           break;
         case "hit":
-          this.playHit();
+          this.playAudioOrSynth("sfx_hit", () => this.synthHit());
           break;
         case "explode":
-          this.playExplosion(e.size);
+          this.playAudioOrSynth(`sfx_explode_${e.size}`, () => this.synthExplosion(e.size));
           break;
         case "pickup":
-          this.playPickup();
+          this.playAudioOrSynth("sfx_pickup", () => this.synthPickup());
           break;
         case "roll":
-          this.playRoll();
+          this.playAudioOrSynth("sfx_roll", () => this.synthRoll());
           break;
         case "playerDown":
-          this.playPlayerDown();
+          this.playAudioOrSynth("sfx_explode_l", () => this.synthExplosion("l"));
           break;
         case "warning":
-          this.playWarning();
+          this.playBGM("bgm_boss");
+          this.playAudioOrSynth("sfx_warning", () => this.synthWarning());
           break;
         case "stageClear":
-          this.playVictoryFanfare();
+          this.stopBGM();
+          this.playAudioOrSynth("jingle_clear", () => this.synthVictoryFanfare());
+          break;
+        case "gameOver":
+          this.stopBGM();
+          this.playAudioOrSynth("jingle_gameover", () => this.synthGameOver());
           break;
       }
     }
   }
 
-  private playShot(level: 1 | 2 | 3): void {
-    if (!this.ctx || !this.masterGain) return;
+  private playAudioOrSynth(id: string, fallbackSynth: () => void): void {
+    const buf = this.bufferCache.get(id);
+    if (buf && this.ctx && this.sfxGain) {
+      try {
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(this.sfxGain);
+        src.start(0);
+        return;
+      } catch {
+        // Fall back to synth on source creation error
+      }
+    }
+    fallbackSynth();
+  }
+
+  // Procedural synth fallbacks
+  private synthShot(level: 1 | 2 | 3): void {
+    if (!this.ctx || !this.sfxGain) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = "square";
-    const startFreq = level === 3 ? 980 : level === 2 ? 880 : 760;
+    const startFreq = level === 3 ? 1020 : level === 2 ? 880 : 760;
     osc.frequency.setValueAtTime(startFreq, t);
     osc.frequency.exponentialRampToValueAtTime(140, t + 0.08);
 
-    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.setValueAtTime(0.2, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
 
     osc.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
     osc.start(t);
     osc.stop(t + 0.09);
   }
 
-  private playHit(): void {
-    if (!this.ctx || !this.masterGain) return;
+  private synthHit(): void {
+    if (!this.ctx || !this.sfxGain) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(320, t);
+    osc.frequency.setValueAtTime(340, t);
     osc.frequency.linearRampToValueAtTime(80, t + 0.04);
 
-    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.setValueAtTime(0.14, t);
     gain.gain.linearRampToValueAtTime(0.001, t + 0.04);
 
     osc.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
     osc.start(t);
     osc.stop(t + 0.05);
   }
 
-  private playExplosion(size: "s" | "m" | "l" | "boss"): void {
-    if (!this.ctx || !this.masterGain) return;
+  private synthExplosion(size: "s" | "m" | "l" | "boss"): void {
+    if (!this.ctx || !this.sfxGain) return;
     const t = this.ctx.currentTime;
-    const duration = size === "boss" ? 0.9 : size === "l" ? 0.55 : size === "m" ? 0.35 : 0.2;
+    const duration = size === "boss" ? 1.0 : size === "l" ? 0.6 : size === "m" ? 0.35 : 0.2;
 
-    // Synthesize low white noise buffer
     const bufferSize = Math.floor(this.ctx.sampleRate * duration);
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
@@ -125,65 +241,61 @@ export class AudioRuntime {
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.setValueAtTime(size === "boss" ? 480 : 360, t);
-    filter.frequency.exponentialRampToValueAtTime(40, t + duration);
+    filter.frequency.setValueAtTime(size === "boss" ? 500 : 380, t);
+    filter.frequency.exponentialRampToValueAtTime(30, t + duration);
 
     const gain = this.ctx.createGain();
-    const peakVol = size === "boss" ? 0.45 : size === "l" ? 0.35 : 0.22;
+    const peakVol = size === "boss" ? 0.45 : size === "l" ? 0.35 : 0.24;
     gain.gain.setValueAtTime(peakVol, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
 
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
     noise.start(t);
   }
 
-  private playPickup(): void {
-    if (!this.ctx || !this.masterGain) return;
+  private synthPickup(): void {
+    if (!this.ctx || !this.sfxGain) return;
     const t = this.ctx.currentTime;
-    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6 arpeggio
+    const notes = [523.25, 659.25, 783.99, 1046.5];
     notes.forEach((freq, idx) => {
       const osc = this.ctx!.createOscillator();
       const gain = this.ctx!.createGain();
       const st = t + idx * 0.04;
       osc.type = "triangle";
       osc.frequency.setValueAtTime(freq, st);
-      gain.gain.setValueAtTime(0.18, st);
+      gain.gain.setValueAtTime(0.2, st);
       gain.gain.exponentialRampToValueAtTime(0.001, st + 0.12);
       osc.connect(gain);
-      gain.connect(this.masterGain!);
+      gain.connect(this.sfxGain!);
       osc.start(st);
       osc.stop(st + 0.13);
     });
   }
 
-  private playRoll(): void {
-    if (!this.ctx || !this.masterGain) return;
+  private synthRoll(): void {
+    if (!this.ctx || !this.sfxGain) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
     osc.type = "sine";
     osc.frequency.setValueAtTime(180, t);
-    osc.frequency.exponentialRampToValueAtTime(620, t + 0.3);
-    osc.frequency.exponentialRampToValueAtTime(240, t + 0.6);
+    osc.frequency.exponentialRampToValueAtTime(640, t + 0.3);
+    osc.frequency.exponentialRampToValueAtTime(220, t + 0.6);
 
-    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.setValueAtTime(0.22, t);
     gain.gain.linearRampToValueAtTime(0.001, t + 0.6);
 
     osc.connect(gain);
-    gain.connect(this.masterGain);
+    gain.connect(this.sfxGain);
     osc.start(t);
     osc.stop(t + 0.65);
   }
 
-  private playPlayerDown(): void {
-    this.playExplosion("l");
-  }
-
-  private playWarning(): void {
-    if (!this.ctx || !this.masterGain) return;
+  private synthWarning(): void {
+    if (!this.ctx || !this.sfxGain) return;
     const t = this.ctx.currentTime;
     for (let i = 0; i < 2; i++) {
       const st = t + i * 0.5;
@@ -191,25 +303,24 @@ export class AudioRuntime {
       const gain = this.ctx.createGain();
       osc.type = "sawtooth";
       osc.frequency.setValueAtTime(440, st);
-      osc.frequency.linearRampToValueAtTime(680, st + 0.4);
-      gain.gain.setValueAtTime(0.2, st);
+      osc.frequency.linearRampToValueAtTime(700, st + 0.4);
+      gain.gain.setValueAtTime(0.22, st);
       gain.gain.linearRampToValueAtTime(0.001, st + 0.45);
       osc.connect(gain);
-      gain.connect(this.masterGain);
+      gain.connect(this.sfxGain);
       osc.start(st);
       osc.stop(st + 0.48);
     }
   }
 
-  private playVictoryFanfare(): void {
-    if (!this.ctx || !this.masterGain) return;
+  private synthVictoryFanfare(): void {
+    if (!this.ctx || !this.sfxGain) return;
     const t = this.ctx.currentTime;
-    // Classic 1942 Stage Clear 4-note victory flourish
     const notes = [
-      { f: 523.25, d: 0.15 },
-      { f: 523.25, d: 0.15 },
-      { f: 523.25, d: 0.15 },
-      { f: 698.46, d: 0.6 },
+      { f: 523.25, d: 0.16 },
+      { f: 659.25, d: 0.16 },
+      { f: 783.99, d: 0.22 },
+      { f: 1046.5, d: 0.7 },
     ];
     let offset = 0;
     notes.forEach((n) => {
@@ -218,10 +329,36 @@ export class AudioRuntime {
       const gain = this.ctx!.createGain();
       osc.type = "square";
       osc.frequency.setValueAtTime(n.f, st);
-      gain.gain.setValueAtTime(0.22, st);
+      gain.gain.setValueAtTime(0.25, st);
       gain.gain.exponentialRampToValueAtTime(0.001, st + n.d);
       osc.connect(gain);
-      gain.connect(this.masterGain!);
+      gain.connect(this.sfxGain!);
+      osc.start(st);
+      osc.stop(st + n.d + 0.05);
+      offset += n.d + 0.05;
+    });
+  }
+
+  private synthGameOver(): void {
+    if (!this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const notes = [
+      { f: 440.0, d: 0.35 },
+      { f: 415.3, d: 0.35 },
+      { f: 392.0, d: 0.4 },
+      { f: 349.2, d: 0.9 },
+    ];
+    let offset = 0;
+    notes.forEach((n) => {
+      const st = t + offset;
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(n.f, st);
+      gain.gain.setValueAtTime(0.24, st);
+      gain.gain.exponentialRampToValueAtTime(0.001, st + n.d);
+      osc.connect(gain);
+      gain.connect(this.sfxGain!);
       osc.start(st);
       osc.stop(st + n.d + 0.05);
       offset += n.d + 0.05;
