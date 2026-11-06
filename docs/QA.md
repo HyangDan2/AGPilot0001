@@ -1,5 +1,16 @@
 # Quality Assurance & Verification Record
 
+## Local Verification Summary (v0.3.0 - 2026-11-07)
+- Date: 2026-11-07
+- Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK)
+- Node Version: v22.23.4 (npm 10.9.9)
+- Assets Check: 12 items validated, total 2.58 MB (`scripts/check-assets.mjs`)
+- Audio Check: 30 audio files validated, total 2.71 MB (`scripts/check-audio.mjs`)
+- Vitest Model Tests: 12 passed (deterministic simulation, restart, non-invulnerable survival)
+- Playwright E2E Tests: 11 passed across 6 viewports (320x568 to 1440x900)
+- Screenshot Inspection: 6 evidence captures reviewed in `docs/evidence/` (title, combat, movement, boss, victory).
+- Build Output: dist/index.html (0.82 kB), dist/assets/index-*.css (5.72 kB), dist/assets/index-*.js (44.17 kB)
+
 ## Local Verification Summary (v0.2.0 - 2026-11-06)
 - Date: 2026-11-06
 - Node Version: v22.23.4 (npm 10.9.9)

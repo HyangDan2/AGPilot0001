@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0] - 2026-11-07
+### Added
+- **VALKYRIE EIRA (SKYBREAK) Master Fantasy Redesign**:
+  - Reimagined WWII aviation shmup into an original 2D vertical-scrolling fantasy shooter starring Valkyrie Eira (`HyangDan2/CDXPilot0005` canonical design).
+  - High-angle top-down/3/4 perspective flight sprite sheet ([`eira-flight.png`](file:///Users/jaehyukshim/AGWS/AGPilot0001/public/assets/characters/eira/eira-flight.png)) featuring hover/idle, bank left/right, sword thrust, Arc Blade slash, rune charge, and 360-degree aerial roll maneuver.
+  - Fantasy monster enemy armada ([`enemies-atlas.png`](file:///Users/jaehyukshim/AGWS/AGPilot0001/public/assets/enemies/enemies-atlas.png)): Shadow Gargoyles, Crimson Drakes, Skyfang Phantoms, Armored Behemoths, Floating Arcane Bastions, Ancient Sky Guardian Gryphon, and 4-winged Abyssal Sky Dragon.
+  - High-resolution key visual title background ([`eira-title-bg.webp`](file:///Users/jaehyukshim/AGWS/AGPilot0001/public/assets/title/eira-title-bg.webp)) with glowing title typography.
+  - Magic combat visual effects: glowing cyan crescent Arc Blades (Lv1/2/3) and magenta-violet arcane plasma orbs.
+  - Ancient Sky Sanctuary Landing Dais intro sequence replacing military carrier.
+  - Full automated asset extraction and packing pipelines (`scripts/pack-eira-flight.mjs`, `scripts/pack-fantasy-enemies.mjs`).
+  - Visual review sheets generated on transparent checkerboard for Eira and monsters.
+  - Updated E2E browser tests and asset validation budget.
+
 ## [0.2.0] - 2026-11-06
 ### Added
 - **HD²LAB ARCADE Brand Integration**: Implemented official brand mark (`hd2lab.svg`), slogan "HYPER DIMENSIONAL DESIGN", cyber-military palette (`#080D23`, `#142650`, `#335DCB`, `#7955EA`, `#44D7F5`, `#D9E5FF`, `#FF5468`), and glowing stencil typography.

@@ -57,8 +57,18 @@ function main() {
       hasError = true;
       continue;
     }
+    if (sp.src) {
+      const spPath = path.resolve("public", sp.src);
+      if (!fs.existsSync(spPath)) {
+        console.error(`FAIL: Missing sprite file for ${id}: ${sp.src}`);
+        hasError = true;
+        continue;
+      }
+      const st = fs.statSync(spPath);
+      report.totalBytes += st.size;
+      report.checked++;
+    }
     report.sprites[id] = sp;
-    report.checked++;
   }
 
   const maxImageBudget = 6.0 * 1024 * 1024; // 6 MB

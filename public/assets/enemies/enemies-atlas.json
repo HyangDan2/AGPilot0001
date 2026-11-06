@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "image": "assets/enemies/enemies-atlas.png",
+    "size": {
+      "w": 1024,
+      "h": 1024
+    }
+  },
+  "frames": {
+    "shadow_gargoyle": {
+      "x": 10,
+      "y": 10,
+      "w": 160,
+      "h": 140,
+      "anchorX": 80,
+      "anchorY": 70
+    },
+    "crimson_drake": {
+      "x": 180,
+      "y": 10,
+      "w": 160,
+      "h": 160,
+      "anchorX": 80,
+      "anchorY": 80
+    },
+    "skyfang_phantom": {
+      "x": 350,
+      "y": 10,
+      "w": 160,
+      "h": 160,
+      "anchorX": 80,
+      "anchorY": 80
+    },
+    "floating_bastion": {
+      "x": 520,
+      "y": 10,
+      "w": 180,
+      "h": 220,
+      "anchorX": 90,
+      "anchorY": 110
+    },
+    "armored_behemoth": {
+      "x": 710,
+      "y": 10,
+      "w": 240,
+      "h": 250,
+      "anchorX": 120,
+      "anchorY": 125
+    },
+    "ancient_guardian": {
+      "x": 20,
+      "y": 280,
+      "w": 460,
+      "h": 260,
+      "anchorX": 230,
+      "anchorY": 130
+    },
+    "abyssal_dragon": {
+      "x": 20,
+      "y": 560,
+      "w": 580,
+      "h": 300,
+      "anchorX": 290,
+      "anchorY": 150
+    }
+  }
+}

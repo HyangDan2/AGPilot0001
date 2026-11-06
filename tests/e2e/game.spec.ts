@@ -1,24 +1,24 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("HD²LAB ARCADE : IRON WINGS E2E & Browser Gate", () => {
+test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
   test("renders title screen with HD²LAB brand, controls and settings", async ({ page }) => {
     const errors: string[] = [];
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
     page.on("pageerror", (e) => errors.push(e.message));
 
     await page.goto("./");
-    await expect(page).toHaveTitle(/IRON WINGS/);
+    await expect(page).toHaveTitle(/VALKYRIE EIRA/);
     await expect(page.locator(".brand-title")).toHaveText("HD²LAB ARCADE");
     await expect(page.locator(".brand-slogan")).toHaveText("HYPER DIMENSIONAL DESIGN");
-    await expect(page.locator(".game-title")).toHaveText("IRON WINGS");
-    await expect(page.locator("#btn-start")).toHaveText("LAUNCH MISSION");
+    await expect(page.locator(".game-title")).toHaveText("VALKYRIE EIRA");
+    await expect(page.locator("#btn-start")).toHaveText("START FLIGHT");
     await expect(page.locator("#btn-mute")).toBeVisible();
     await expect(page.locator("#btn-motion")).toBeVisible();
 
     expect(errors).toEqual([]);
   });
 
-  test("starts game on clicking LAUNCH MISSION and accepts keyboard input", async ({ page }) => {
+  test("starts game on clicking START FLIGHT and accepts keyboard input", async ({ page }) => {
     await page.goto("./?test=1");
     await page.click("#btn-start");
 

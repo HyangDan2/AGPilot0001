@@ -1,18 +1,28 @@
 {
-  "version": 1,
+  "version": 2,
   "branding": {
     "icon": "assets/branding/hd2lab.svg",
     "png": "assets/branding/hd2lab.png",
-    "logo": "assets/branding/hd2lab-logo.png"
+    "logo": "assets/branding/hd2lab-logo.png",
+    "titleBg": "assets/title/eira-title-bg.webp"
+  },
+  "player": {
+    "name": "Valkyrie Eira",
+    "atlas": "assets/characters/eira/eira-flight.png",
+    "meta": "assets/characters/eira/eira-flight.json"
+  },
+  "enemies": {
+    "atlas": "assets/enemies/enemies-atlas.png",
+    "meta": "assets/enemies/enemies-atlas.json"
   },
   "sprites": {
-    "player": { "w": 96, "h": 96, "drawW": 96, "drawH": 96, "facing": "up" },
-    "kestrel": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down" },
-    "kestrelRed": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down" },
-    "harrier": { "w": 84, "h": 84, "drawW": 84, "drawH": 84, "facing": "down" },
-    "condor": { "w": 170, "h": 170, "drawW": 170, "drawH": 170, "facing": "down" },
-    "gunboat": { "w": 110, "h": 110, "drawW": 110, "drawH": 110, "facing": "down" },
-    "albatross": { "w": 300, "h": 120, "drawW": 300, "drawH": 120, "facing": "down" },
-    "leviathan": { "w": 600, "h": 220, "drawW": 600, "drawH": 220, "facing": "down" }
+    "player": { "w": 96, "h": 96, "drawW": 96, "drawH": 96, "facing": "up", "src": "assets/characters/eira/eira-flight.png" },
+    "kestrel": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down", "src": "assets/enemies/shadow_gargoyle.png" },
+    "kestrelRed": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down", "src": "assets/enemies/crimson_drake.png" },
+    "harrier": { "w": 84, "h": 84, "drawW": 84, "drawH": 84, "facing": "down", "src": "assets/enemies/skyfang_phantom.png" },
+    "condor": { "w": 170, "h": 170, "drawW": 170, "drawH": 170, "facing": "down", "src": "assets/enemies/armored_behemoth.png" },
+    "gunboat": { "w": 110, "h": 110, "drawW": 110, "drawH": 110, "facing": "down", "src": "assets/enemies/floating_bastion.png" },
+    "albatross": { "w": 300, "h": 120, "drawW": 300, "drawH": 120, "facing": "down", "src": "assets/enemies/ancient_guardian.png" },
+    "leviathan": { "w": 600, "h": 220, "drawW": 600, "drawH": 220, "facing": "down", "src": "assets/enemies/abyssal_dragon.png" }
   }
 }

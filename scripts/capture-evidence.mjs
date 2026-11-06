@@ -36,16 +36,15 @@ async function main() {
       await page.close();
     }
 
-    // 3. Mobile Combat (390x844)
+    // 3. Mobile Combat (390x844) - Eira Arc Blade vs Monster Formations
     {
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
       await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
       await page.click("#btn-start");
       await page.evaluate(() => {
         const hook = window.__testHook;
-        hook.startWithSeed(42, 5); // 5s in, active dogfight
+        hook.startWithSeed(42, 5); // 5s in, Gargoyles and Drakes engaged
       });
-      // Fire weapon
       await page.keyboard.down("Space");
       await page.waitForTimeout(800);
       await page.screenshot({ path: path.join(outDir, "combat-mobile-390x844.png") });
@@ -69,21 +68,38 @@ async function main() {
       await page.close();
     }
 
-    // 5. Boss Battle (Leviathan)
+    // 5. Eira Evasive Roll & Maneuver (390x844)
     {
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
       await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
       await page.click("#btn-start");
       await page.evaluate(() => {
         const hook = window.__testHook;
-        hook.startWithSeed(42, 101); // 101s in, Leviathan engaged
+        hook.startWithSeed(42, 6);
+        const w = hook.getWorld();
+        w.player.rollTimer = 36; // Mid-roll 360 barrel spin
+        w.player.vx = -120; // Banking left
+      });
+      await page.waitForTimeout(200);
+      await page.screenshot({ path: path.join(outDir, "movement-eira-390x844.png") });
+      await page.close();
+    }
+
+    // 6. Boss Battle (Abyssal Dragon Leviathan & Warning Banner)
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        hook.startWithSeed(42, 101); // 101s in, Leviathan dragon engaged
       });
       await page.waitForTimeout(1000);
       await page.screenshot({ path: path.join(outDir, "boss-mobile-390x844.png") });
       await page.close();
     }
 
-    // 6. Victory Screen
+    // 7. Victory Screen (Skybreak Accomplished)
     {
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
       await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
@@ -91,8 +107,8 @@ async function main() {
       await page.evaluate(() => {
         const hook = window.__testHook;
         const w = hook.getWorld();
-        w.score = 68500;
-        w.stats.killed = 38;
+        w.score = 88500;
+        w.stats.killed = 39;
         w.stats.spawned = 40;
         w.phase = "clearing";
         w.phaseTimer = 2;

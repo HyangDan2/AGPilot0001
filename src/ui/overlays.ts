@@ -27,17 +27,17 @@ export class UIManager {
         <div class="brand-slogan">HYPER DIMENSIONAL DESIGN</div>
 
         <div class="logo-box">
-          <h1 class="game-title">IRON WINGS</h1>
-          <div class="subtitle">TACTICAL AIR COMBAT</div>
+          <h1 class="game-title">VALKYRIE EIRA</h1>
+          <div class="subtitle">SKYBREAK</div>
         </div>
 
         <div class="high-score-display">TOP RECORD : ${highScore.toString().padStart(6, "0")}</div>
 
-        <button id="btn-start" class="btn btn-primary">LAUNCH MISSION</button>
+        <button id="btn-start" class="btn btn-primary">START FLIGHT</button>
 
         <div class="instructions">
-          <div><strong>KEYBOARD:</strong> WASD / ARROWS : MOVE | Z / SPACE : FIRE | X / SHIFT : ROLL</div>
-          <div><strong>TOUCH:</strong> DRAG TO MOVE & AUTO-FIRE | [ROLL] BUTTON</div>
+          <div><strong>KEYBOARD:</strong> WASD / ARROWS : MOVE | Z / SPACE : ARC BLADE | X / SHIFT : ROLL</div>
+          <div><strong>TOUCH:</strong> DRAG TO FLY & AUTO-ATTACK | [ROLL] EVASION</div>
         </div>
 
         <div class="settings-bar">
@@ -117,12 +117,12 @@ export class UIManager {
           <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="16" height="16" />
           <span class="brand-title">HD²LAB ARCADE</span>
         </div>
-        <h2 class="danger-text">AIRCRAFT DESTROYED</h2>
+        <h2 class="danger-text">VALKYRIE FALLEN</h2>
         <div class="stats-card">
           <div class="stat-row"><span>MISSION SCORE:</span> <strong>${score}</strong></div>
           <div class="stat-row highlight"><span>TOP RECORD:</span> <strong>${highScore}</strong></div>
         </div>
-        <button id="btn-restart" class="btn btn-primary">RETRY MISSION</button>
+        <button id="btn-restart" class="btn btn-primary">RETRY BATTLE</button>
       </div>
     `;
     document.getElementById("btn-restart")?.addEventListener("click", () => this.events.onRestart());
@@ -142,14 +142,14 @@ export class UIManager {
           <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="16" height="16" />
           <span class="brand-title">HD²LAB ARCADE</span>
         </div>
-        <h2 class="victory-text">MISSION ACCOMPLISHED</h2>
+        <h2 class="victory-text">SKYBREAK ACCOMPLISHED</h2>
         <div class="stats-card">
-          <div class="stat-row"><span>TARGETS DOWNED:</span> <strong>${destroyed}/${total} (${accuracy}%)</strong></div>
+          <div class="stat-row"><span>MONSTERS PURGED:</span> <strong>${destroyed}/${total} (${accuracy}%)</strong></div>
           ${noMissBonus > 0 ? `<div class="stat-row gold-text"><span>NO-MISS BONUS:</span> <strong>+${noMissBonus}</strong></div>` : ""}
           <div class="stat-row highlight"><span>FINAL SCORE:</span> <strong>${score}</strong></div>
           <div class="stat-row"><span>TOP RECORD:</span> <strong>${highScore}</strong></div>
         </div>
-        <button id="btn-restart" class="btn btn-primary">NEXT OPERATION</button>
+        <button id="btn-restart" class="btn btn-primary">CONTINUE JOURNEY</button>
       </div>
     `;
     document.getElementById("btn-restart")?.addEventListener("click", () => this.events.onRestart());
