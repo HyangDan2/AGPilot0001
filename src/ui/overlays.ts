@@ -44,6 +44,11 @@ export class UIManager {
           <button id="btn-mute" class="btn btn-sm">${isMuted ? "UNMUTE" : "MUTE"}</button>
           <button id="btn-motion" class="btn btn-sm">${reducedMotion ? "MOTION: REDUCED" : "MOTION: NORMAL"}</button>
         </div>
+
+        <div class="platform-links">
+          <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_blank" rel="noopener noreferrer">🎮 GAMEHUB</a>
+          <a href="https://hyangdan2.github.io/" class="btn-hub" target="_blank" rel="noopener noreferrer">🏛 HD²LAB HQ</a>
+        </div>
       </div>
     `;
 
@@ -93,6 +98,10 @@ export class UIManager {
         <button id="btn-resume" class="btn btn-primary">RESUME FLIGHT</button>
         <button id="btn-restart" class="btn">RESTART MISSION</button>
       </div>
+      <div class="platform-links">
+        <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_blank" rel="noopener noreferrer">🎮 GAMEHUB</a>
+        <a href="https://hyangdan2.github.io/" class="btn-hub" target="_blank" rel="noopener noreferrer">🏛 HD²LAB HQ</a>
+      </div>
     `;
     this.container.appendChild(el);
 
@@ -123,6 +132,10 @@ export class UIManager {
           <div class="stat-row highlight"><span>TOP RECORD:</span> <strong>${highScore}</strong></div>
         </div>
         <button id="btn-restart" class="btn btn-primary">RETRY BATTLE</button>
+        <div class="platform-links">
+          <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_blank" rel="noopener noreferrer">🎮 GAMEHUB</a>
+          <a href="https://hyangdan2.github.io/" class="btn-hub" target="_blank" rel="noopener noreferrer">🏛 HD²LAB HQ</a>
+        </div>
       </div>
     `;
     document.getElementById("btn-restart")?.addEventListener("click", () => this.events.onRestart());
@@ -150,6 +163,10 @@ export class UIManager {
           <div class="stat-row"><span>TOP RECORD:</span> <strong>${highScore}</strong></div>
         </div>
         <button id="btn-restart" class="btn btn-primary">CONTINUE JOURNEY</button>
+        <div class="platform-links">
+          <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_blank" rel="noopener noreferrer">🎮 GAMEHUB</a>
+          <a href="https://hyangdan2.github.io/" class="btn-hub" target="_blank" rel="noopener noreferrer">🏛 HD²LAB HQ</a>
+        </div>
       </div>
     `;
     document.getElementById("btn-restart")?.addEventListener("click", () => this.events.onRestart());

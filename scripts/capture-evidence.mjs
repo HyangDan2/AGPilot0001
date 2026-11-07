@@ -68,7 +68,29 @@ async function main() {
       await page.close();
     }
 
-    // 5. Eira Evasive Roll & Maneuver (390x844)
+    // 5. Eira Alternating Melee Slash (Cyan L->R and Gold R->L)
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        hook.startWithSeed(42, 5);
+        const w = hook.getWorld();
+        w.player.meleeSwing = {
+          id: 777,
+          direction: "r2l",
+          tick: w.tick,
+          duration: 4,
+          hitEnemyIds: [],
+        };
+      });
+      await page.waitForTimeout(300);
+      await page.screenshot({ path: path.join(outDir, "melee-slash-mobile-390x844.png") });
+      await page.close();
+    }
+
+    // 6. Eira Evasive Roll & Maneuver (390x844)
     {
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
       await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
@@ -92,14 +114,26 @@ async function main() {
       await page.click("#btn-start");
       await page.evaluate(() => {
         const hook = window.__testHook;
-        hook.startWithSeed(42, 101); // 101s in, Leviathan dragon engaged
+        hook.startWithSeed(42, 65); // 65s in, Leviathan dragon engaged
       });
       await page.waitForTimeout(1000);
       await page.screenshot({ path: path.join(outDir, "boss-mobile-390x844.png") });
       await page.close();
     }
 
-    // 7. Victory Screen (Skybreak Accomplished)
+    // 7. Tactical Pause Screen with HD2Lab & GameHub Platform Navigation
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.waitForTimeout(400);
+      await page.click("#btn-pause");
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: path.join(outDir, "pause-mobile-390x844.png") });
+      await page.close();
+    }
+
+    // 8. Victory Screen (Skybreak Accomplished)
     {
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
       await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");

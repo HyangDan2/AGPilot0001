@@ -2,7 +2,7 @@ import sharp from "sharp";
 import fs from "node:fs";
 import path from "node:path";
 
-const SOURCE_PATH = "/Users/jaehyukshim/.gemini/antigravity/brain/166f5de2-9b13-47cb-8b13-54a546b1085f/valkyrie_eira_monster_spritesheet_1794003529343.jpg";
+const SOURCE_PATH = path.resolve("art/source/valkyrie_eira_monster_spritesheet.jpg");
 const OUT_DIR = path.resolve("public/assets/enemies");
 const EVIDENCE_DIR = path.resolve("docs/evidence");
 

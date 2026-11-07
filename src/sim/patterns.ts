@@ -55,19 +55,37 @@ export function updateEnemyPath(enemy: Enemy, player: Player): void {
     }
 
     case "hover": {
-      // Enter to y=240, hover and drift horizontally
       const targetY = enemy.sy || 240;
-      if (enemy.y < targetY) {
+      if (enemy.mode === 0) {
+        // ENTER: descend towards target Y
         enemy.y += 180 * DT;
-      } else if (enemy.kind === "leviathan" || enemy.kind === "albatross") {
-        // Bosses stay engaged on screen until defeated
-        enemy.x = enemy.x0 + Math.sin((t - 1.5) * 1.1) * 120;
-      } else if (t < 9) {
-        enemy.x = enemy.x0 + Math.sin((t - 1.5) * 1.4) * 180;
+        enemy.heading = Math.PI;
+        if (enemy.y >= targetY) {
+          enemy.y = targetY;
+          enemy.mode = 1;
+          enemy.sx = 0; // hold timer
+        }
+      } else if (enemy.mode === 1) {
+        // HOLD / SWEEP: horizontal drifting
+        enemy.sx += DT;
+        const holdTime = enemy.sx;
+        if (enemy.kind === "leviathan" || enemy.kind === "albatross") {
+          // Bosses stay engaged on screen until defeated
+          enemy.x = enemy.x0 + Math.sin(holdTime * 1.1) * 120;
+          enemy.heading = Math.PI - Math.cos(holdTime * 1.1) * 0.15;
+        } else {
+          // Regular enemies hold and sweep for 6.5s then exit
+          enemy.x = enemy.x0 + Math.sin(holdTime * 1.4) * 180;
+          enemy.heading = Math.PI - Math.cos(holdTime * 1.4) * 0.2;
+          if (holdTime >= 6.5) {
+            enemy.mode = 2; // EXIT
+          }
+        }
       } else {
-        enemy.y -= 160 * DT; // regular planes retreat upwards
+        // EXIT: retreat upwards smoothly
+        enemy.y -= 160 * DT;
+        enemy.heading = 0;
       }
-      enemy.heading = Math.PI;
       break;
     }
 
@@ -81,15 +99,38 @@ export function updateEnemyPath(enemy: Enemy, player: Player): void {
     case "loopL":
     case "loopR": {
       const dir = enemy.path === "loopL" ? -1 : 1;
-      if (t < 1.5) {
+      const loopDuration = 1.6;
+      const omega = (Math.PI * 2) / loopDuration;
+      const radius = 80;
+
+      if (enemy.mode === 0) {
+        // ENTER: descend
         enemy.y += 200 * DT;
         enemy.heading = Math.PI;
-      } else if (t < 3.2) {
-        const loopAngle = (t - 1.5) * (Math.PI * 2 / 1.7);
-        enemy.x += Math.sin(loopAngle) * dir * 180 * DT;
-        enemy.y -= Math.cos(loopAngle) * 180 * DT;
-        enemy.heading = Math.PI + loopAngle * dir;
+        if (t >= 1.2) {
+          enemy.mode = 1;
+          enemy.sx = 0; // loop timer
+          enemy.x0 = enemy.x;
+          enemy.y0 = enemy.y;
+        }
+      } else if (enemy.mode === 1) {
+        // SWEEP: execute full 360 circle
+        enemy.sx += DT;
+        const tau = enemy.sx;
+        const angle = omega * tau;
+
+        enemy.x = enemy.x0 + dir * radius * (1 - Math.cos(angle));
+        enemy.y = enemy.y0 + radius * Math.sin(angle);
+        enemy.heading = Math.PI + dir * angle;
+
+        if (tau >= loopDuration) {
+          enemy.mode = 2; // EXIT
+          enemy.x = enemy.x0;
+          enemy.y = enemy.y0;
+          enemy.heading = Math.PI;
+        }
       } else {
+        // EXIT: continue downward descent
         enemy.y += 240 * DT;
         enemy.heading = Math.PI;
       }

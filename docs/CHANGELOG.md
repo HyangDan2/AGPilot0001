@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.5.0] - 2026-11-07
+### Added
+- **Alternating Left/Right Sword Combat (좌우 교대 검격)**:
+  - Strictly alternating slash sequence: LEFT → RIGHT → LEFT → RIGHT (1: L→R, 2: R→L, 3: L→R, 4: R→L) tied to dedicated high-definition animation frames (`slash_0` and `slash_1`).
+  - Swept capsule/arc melee Hitbox (130px reach, 140° frontal arc) with 1 hit per enemy per swing ID.
+  - Hybrid combat: distant enemies take Arc Blade projectiles (1 dmg); close enemies take direct Oathblade melee damage (2 normal, 3 enhanced when power level >= 2).
+  - Tactile arcade hitstop crunch (deterministic 2-tick freeze on melee strike).
+  - Directional swept slash arcs (radiant cyan for L→R, radiant cyan-gold for R→L) with high-velocity cutting sparks.
+  - Unit tests verifying alternating sequence, swept hit range, hybrid damage, and hitstop in `tests/melee.test.ts`.
+- **Eira Character Visual Upgrade**:
+  - Enlarged in-game display size to default 160px logical pixels (from 96px) ensuring clear visibility of silver braid, winged helmet, blue/gold armor, and layered skirt while keeping Hurtbox radius strictly at 10.
+  - Portable asset packer scripts (`scripts/pack-eira-flight.mjs`, `scripts/pack-fantasy-enemies.mjs`) referencing repository-relative paths in `art/source/`.
+- **Fantasy Celestial Kingdom Environment (4 Continuous Stages)**:
+  - Replaced WWII ocean and islands with a 4-zone Celestial Kingdom:
+    1. *Celestial Sanctuary* (0..25s): Brilliant azure dawn, golden divine sunrays, floating sanctuary landing dais.
+    2. *Ruined Sky Kingdom* (25..50s): Royal sunset, distant floating castle citadels with cascading waterfalls and spires.
+    3. *Twilight Rift* (50..75s): Arcane violet storm, crackling lightning ribbons, and floating monolithic ruins with glowing cyan/gold runes.
+    4. *Abyssal Throne* (75s+ / Boss): Obsidian storm vortex, rotating dark rings, and dragon domain lightning.
+  - 4-layer parallax: Far sky & auroras (0.0x), Distant citadels (0.2x), Mid floating temple ruins (0.5x), Near passing clouds & drifting mana crystal shards (1.1x).
+- **Enemy Flight Continuity**:
+  - Refactored `src/sim/patterns.ts` (`hover`, `loopL`, `loopR`) to strictly obey `ENTER → HOLD → SWEEP → EXIT` state transitions without coordinate jumps.
+  - Added automated continuity tests in `tests/patterns.test.ts` (10 tests) asserting no single-tick teleportation steps.
+- **Mobile Safe Area & Viewport**:
+  - Implemented `100dvh`, `-webkit-fill-available`, and `env(safe-area-inset-top/bottom/left/right)` protecting HUD and touch controls (minimum 44×44px hit targets) from browser URL and home bars.
+- **Combat Pacing & Dynamic Spawn Director**:
+  - First enemy wave engages within 1.8s; reinforcement waves spawn every 2~3s; active on-screen enemies capped at 16 to preserve performance on mobile.
+- **HD2Lab Platform & GameHub Integration**:
+  - Added HTTPS navigation buttons to GameHub (`https://hyangdan2.github.io/GameHub/`) and HD2Lab Home (`https://hyangdan2.github.io/`) on Title, Pause, GameOver, and Victory screens.
+  - Registered AGPilot0001 in `HyangDan2/GameHub` catalog (`data/games.json`, `assets/games/valkyrie-eira.webp`, `docs/onboarding/valkyrie-eira.md`).
+
 ## [0.3.0] - 2026-11-07
 ### Added
 - **VALKYRIE EIRA (SKYBREAK) Master Fantasy Redesign**:

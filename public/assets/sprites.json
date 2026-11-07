@@ -16,7 +16,7 @@
     "meta": "assets/enemies/enemies-atlas.json"
   },
   "sprites": {
-    "player": { "w": 96, "h": 96, "drawW": 96, "drawH": 96, "facing": "up", "src": "assets/characters/eira/eira-flight.png" },
+    "player": { "w": 160, "h": 160, "drawW": 160, "drawH": 160, "facing": "up", "src": "assets/characters/eira/eira-flight.png" },
     "kestrel": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down", "src": "assets/enemies/shadow_gargoyle.png" },
     "kestrelRed": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down", "src": "assets/enemies/crimson_drake.png" },
     "harrier": { "w": 84, "h": 84, "drawW": 84, "drawH": 84, "facing": "down", "src": "assets/enemies/skyfang_phantom.png" },

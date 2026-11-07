@@ -5,6 +5,7 @@ import {
   GameEvent,
   InputFrame,
   Player,
+  SlashDirection,
   World,
 } from "./types";
 
@@ -29,6 +30,9 @@ export function createPlayer(): Player {
     fireCooldown: 0,
     prevRoll: false,
     deaths: 0,
+    slashDirection: "r2l", // alternates to "l2r" on first swing
+    comboCount: 0,
+    meleeSwing: null,
   };
 }
 
@@ -98,6 +102,14 @@ export function updatePlayer(
   p.x = Math.max(margin, Math.min(FIELD_W - margin, p.x));
   p.y = Math.max(margin, Math.min(FIELD_H - margin, p.y));
 
+  // Update active melee swing
+  if (p.meleeSwing) {
+    p.meleeSwing.duration--;
+    if (p.meleeSwing.duration <= 0) {
+      p.meleeSwing = null;
+    }
+  }
+
   // Firing
   if (p.fireCooldown > 0) {
     p.fireCooldown--;
@@ -112,6 +124,26 @@ export function updatePlayer(
 function firePlayerWeapon(world: World, events: GameEvent[]): void {
   const p = world.player;
   const shotSpeed = 960; // px/s upward
+
+  // Alternating sword slash: LEFT -> RIGHT -> LEFT -> RIGHT (1:L->R, 2:R->L, 3:L->R, 4:R->L)
+  const nextDir: SlashDirection = p.slashDirection === "l2r" ? "r2l" : "l2r";
+  p.slashDirection = nextDir;
+  p.comboCount = (p.comboCount % 4) + 1;
+  const swingId = world.nextId++;
+  p.meleeSwing = {
+    id: swingId,
+    direction: nextDir,
+    tick: world.tick,
+    duration: 8,
+    hitEnemyIds: [],
+  };
+  events.push({
+    t: "meleeSlash",
+    direction: nextDir,
+    swingId,
+    x: p.x,
+    y: p.y - 20,
+  });
 
   if (p.power === 1) {
     p.fireCooldown = 9; // ~6.6 shots/sec

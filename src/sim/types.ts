@@ -30,6 +30,8 @@ export type PickupKind = "pow" | "roll" | "medal";
 
 export type GameEvent =
   | { t: "shot"; level: 1 | 2 | 3 }
+  | { t: "meleeSlash"; direction: SlashDirection; swingId: number; x: number; y: number }
+  | { t: "meleeHit"; id: number; x: number; y: number; dmg: number }
   | { t: "hit"; id: number; x: number; y: number }
   | { t: "explode"; size: ExplosionSize; x: number; y: number }
   | { t: "pickup"; kind: PickupKind; x: number; y: number }
@@ -41,6 +43,16 @@ export type GameEvent =
   | { t: "bossPhase"; phase: number }
   | { t: "stageClear" }
   | { t: "gameOver" };
+
+export type SlashDirection = "l2r" | "r2l";
+
+export interface MeleeSwing {
+  id: number;
+  direction: SlashDirection;
+  tick: number;
+  duration: number;
+  hitEnemyIds: number[];
+}
 
 export type EnemyKind =
   | "kestrel"
@@ -132,6 +144,9 @@ export interface Player {
   fireCooldown: number;
   prevRoll: boolean;
   deaths: number;
+  slashDirection: SlashDirection;
+  comboCount: number;
+  meleeSwing: MeleeSwing | null;
 }
 
 export interface Formation {
@@ -178,5 +193,6 @@ export interface World {
   bossId: number;
   bossPhase: number;
   invulnerable: boolean;
+  hitstopTimer: number;
   ended: boolean;
 }

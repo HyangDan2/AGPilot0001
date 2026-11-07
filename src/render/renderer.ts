@@ -104,6 +104,8 @@ export class GameRenderer {
     for (const e of events) {
       if (e.t === "explode") {
         this.spawnExplosion(e.x, e.y, e.size);
+      } else if (e.t === "meleeHit") {
+        this.spawnMeleeSparks(e.x, e.y, e.dmg);
       } else if (e.t === "hit") {
         this.spawnSparks(e.x, e.y);
       } else if (e.t === "pickup") {
@@ -111,6 +113,25 @@ export class GameRenderer {
       } else if (e.t === "warning") {
         this.warningTimer = 180; // 3 seconds of arcade warning banner
       }
+    }
+  }
+
+  private spawnMeleeSparks(x: number, y: number, dmg: number): void {
+    const count = dmg >= 3 ? 24 : 16;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 140 + Math.random() * 260;
+      this.particles.push({
+        x: x + (Math.random() - 0.5) * 16,
+        y: y + (Math.random() - 0.5) * 16,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0,
+        maxLife: 14 + Math.random() * 10,
+        size: 3 + Math.random() * 3,
+        color: Math.random() > 0.4 ? "#ffffff" : dmg >= 3 ? "#f8c050" : "#44d7f5",
+        kind: "spark",
+      });
     }
   }
 
@@ -265,142 +286,396 @@ export class GameRenderer {
       ctx.translate(dx, dy);
     }
 
-    // 1. Deep Celestial Ocean & Sky
-    this.drawSkyAndSea(world.scrollY);
+    // 1. Layer 1 (0.0x): Far Sky & Celestial Aurora across 4 Continuous Stages
+    this.drawCelestialSky(world.scrollY, world.stageTick, world.phase);
 
-    // 2. Archipelago Islands & Ancient Sanctuary Reefs (Midground Parallax)
-    this.drawIslands(world.scrollY);
+    // 2. Layer 2 (0.2x): Distant Floating Continents & Citadels
+    this.drawDistantCitadels(world.scrollY, world.stageTick);
 
-    // 3. Ancient Sky Sanctuary Landing Dais (intro takeoff sequence)
+    // 3. Layer 3 (0.5x): Mid Floating Temple Ruins & Runic Monoliths
+    this.drawFloatingRuins(world.scrollY, world.stageTick);
+
+    // 4. Ancient Sky Sanctuary Landing Dais (intro takeoff sequence)
     if (world.stageTick < 300) {
       this.drawSanctuary(world.scrollY);
     }
 
-    // 4. Low-altitude Cloud Shadows
+    // 5. Low-altitude Cloud Shadows
     this.drawCloudShadows(world.scrollY);
 
-    // 5. Floating Ancient Bastions & Ground Targets
+    // 6. Floating Ancient Bastions & Ground Targets
     for (const enemy of world.enemies) {
       if (enemy.ground && enemy.alive) {
         this.drawEnemy(enemy);
       }
     }
 
-    // 6. Airborne Monsters (Gargoyles, Drakes, Phantoms, Behemoths, Bosses)
+    // 7. Airborne Monsters (Gargoyles, Drakes, Phantoms, Behemoths, Bosses)
     for (const enemy of world.enemies) {
       if (!enemy.ground && enemy.alive) {
         this.drawEnemy(enemy);
       }
     }
 
-    // 7. Pickups (Mana Crystals, Roll, Medals)
+    // 8. Pickups (Mana Crystals, Roll, Medals)
     for (const pickup of world.pickups) {
       if (pickup.alive) {
         this.drawPickup(pickup);
       }
     }
 
-    // 8. Projectiles (Player Arc Blades & Enemy Arcane Orbs)
+    // 9. Projectiles (Player Arc Blades & Enemy Arcane Orbs)
     this.drawBullets(world);
 
-    // 9. Valkyrie Eira
+    // 10. Melee Slash Arc (Swept Blade Visuals)
+    if (world.player.downTimer === 0 && world.player.meleeSwing) {
+      this.drawMeleeSlash(world.player);
+    }
+
+    // 11. Valkyrie Eira (Default 160px Scale)
     if (world.player.downTimer === 0) {
       this.drawPlayer(world.player, world.tick);
     }
 
-    // 10. Particle System (Explosions, Mana Sparks, Smoke)
+    // 12. Particle System (Explosions, Mana Sparks, Smoke)
     this.updateAndDrawParticles();
 
-    // 11. High-altitude Fluffy Clouds (Foreground Parallax)
-    this.drawHighClouds(world.scrollY);
+    // 13. Layer 4 (1.1x): High-altitude Clouds & Floating Debris
+    this.drawHighCloudsAndDebris(world.scrollY, world.stageTick);
 
     ctx.restore();
 
-    // 12. Warning Banner (if active)
+    // 14. Warning Banner (if active)
     if (this.warningTimer > 0) {
       this.drawWarningBanner();
       this.warningTimer--;
     }
 
-    // 13. In-Game HUD (Neon Arcane Interface)
+    // 15. In-Game HUD (Neon Arcane Interface)
     this.drawHUD(world);
   }
 
-  private drawSkyAndSea(scrollY: number): void {
+  private drawCelestialSky(scrollY: number, stageTick: number, phase: string): void {
     const ctx = this.ctx;
-
-    // Atmospheric Celestial Sky & Sea Gradient
     const grad = ctx.createLinearGradient(0, 0, 0, FIELD_H);
-    grad.addColorStop(0, "#081738");
-    grad.addColorStop(0.4, "#0e2c5e");
-    grad.addColorStop(0.7, "#092244");
-    grad.addColorStop(1, "#07162d");
+
+    // 4 Continuous Stages Progression:
+    // Stage 1 (0..1500 ticks = 0..25s): Celestial Sanctuary (Brilliant azure dawn, golden halo rays)
+    // Stage 2 (1500..3000 ticks = 25..50s): Ruined Sky Kingdom (Royal indigo twilight, golden dusk)
+    // Stage 3 (3000..4500 ticks = 50..75s): Twilight Rift (Arcane purple storm, mana lightning)
+    // Stage 4 (>4500 ticks or boss): Abyssal Throne (Dark obsidian vortex, crimson embers)
+
+    if (stageTick < 1500) {
+      grad.addColorStop(0, "#081938");
+      grad.addColorStop(0.4, "#0f326e");
+      grad.addColorStop(0.8, "#184f9e");
+      grad.addColorStop(1, "#2568bf");
+    } else if (stageTick < 3000) {
+      grad.addColorStop(0, "#0e1136");
+      grad.addColorStop(0.4, "#1d1a58");
+      grad.addColorStop(0.8, "#392268");
+      grad.addColorStop(1, "#603278");
+    } else if (stageTick < 4500 && phase !== "boss") {
+      grad.addColorStop(0, "#0b0a24");
+      grad.addColorStop(0.4, "#191244");
+      grad.addColorStop(0.8, "#2d1656");
+      grad.addColorStop(1, "#441a6b");
+    } else {
+      // Abyssal Throne Boss Realm
+      grad.addColorStop(0, "#050612");
+      grad.addColorStop(0.4, "#0c0a22");
+      grad.addColorStop(0.8, "#170e30");
+      grad.addColorStop(1, "#26113b");
+    }
+
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, FIELD_W, FIELD_H);
 
-    // Procedural multi-wave caustics & sun glints
-    ctx.lineWidth = 1.5;
-    const waveGap = 64;
-    const offset = scrollY % waveGap;
-
-    for (let y = -waveGap + offset; y < FIELD_H + waveGap; y += waveGap) {
-      ctx.strokeStyle = "rgba(68, 215, 245, 0.14)";
+    // Dynamic Heavenly Sunbeams / Arcane Auroras (Layer 1: 0.0x)
+    ctx.save();
+    if (stageTick < 1500) {
+      // Golden / Cyan Sunrays streaming from upper skies
+      ctx.fillStyle = "rgba(248, 192, 80, 0.07)";
+      for (let i = 0; i < 5; i++) {
+        const xOffset = 80 + i * 140 + Math.sin(scrollY * 0.01 + i) * 20;
+        ctx.beginPath();
+        ctx.moveTo(xOffset, 0);
+        ctx.lineTo(xOffset + 70, 0);
+        ctx.lineTo(xOffset + 240, FIELD_H);
+        ctx.lineTo(xOffset + 110, FIELD_H);
+        ctx.closePath();
+        ctx.fill();
+      }
+    } else if (stageTick < 3000) {
+      // Twilight golden aura bands
+      ctx.fillStyle = "rgba(248, 192, 80, 0.05)";
       ctx.beginPath();
-      for (let x = 0; x <= FIELD_W; x += 30) {
-        const waveY = y + Math.sin((x + scrollY * 0.7) * 0.035) * 7 + Math.cos((x * 0.02) - scrollY * 0.02) * 4;
-        if (x === 0) ctx.moveTo(x, waveY);
-        else ctx.lineTo(x, waveY);
+      ctx.ellipse(360, 200, 480, 140, -0.1, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (stageTick < 4500 && phase !== "boss") {
+      // Crackling arcane rift aurora
+      ctx.strokeStyle = "rgba(121, 85, 234, 0.18)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let x = 0; x <= FIELD_W; x += 40) {
+        const y = 300 + Math.sin((x + scrollY * 0.5) * 0.02) * 50;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       }
       ctx.stroke();
-
-      ctx.strokeStyle = "rgba(180, 240, 255, 0.07)";
+    } else {
+      // Abyssal Throne: Dark storm vortex rings spinning slowly
+      const vortexAngle = (stageTick * 0.015) % (Math.PI * 2);
+      ctx.strokeStyle = "rgba(121, 85, 234, 0.22)";
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      for (let x = 15; x <= FIELD_W; x += 30) {
-        const waveY = y + 26 + Math.cos((x - scrollY * 0.5) * 0.04) * 5;
-        if (x === 15) ctx.moveTo(x, waveY);
-        else ctx.lineTo(x, waveY);
-      }
+      ctx.ellipse(360, 220, 320, 180, vortexAngle, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255, 84, 104, 0.15)";
+      ctx.beginPath();
+      ctx.ellipse(360, 220, 210, 110, -vortexAngle * 1.5, 0, Math.PI * 2);
       ctx.stroke();
     }
+    ctx.restore();
   }
 
-  private drawIslands(scrollY: number): void {
+  private drawDistantCitadels(scrollY: number, stageTick: number): void {
     const ctx = this.ctx;
     ctx.save();
 
-    const islands = [
-      { x: 560, y: (scrollY * 0.35 + 200) % 2000 - 400, r: 120 },
-      { x: 140, y: (scrollY * 0.35 + 850) % 2000 - 400, r: 90 },
-      { x: 480, y: (scrollY * 0.35 + 1550) % 2000 - 400, r: 140 },
+    // Layer 2 Parallax (0.2x speed)
+    const yOffset = (scrollY * 0.2) % 1800;
+
+    const citadels = [
+      { x: 180, y: -200 + yOffset, scale: 0.75 },
+      { x: 540, y: 700 + yOffset, scale: 0.85 },
+      { x: 280, y: 1600 + yOffset, scale: 0.8 },
     ];
 
-    for (const isl of islands) {
-      if (isl.y < -250 || isl.y > FIELD_H + 250) continue;
+    for (const c of citadels) {
+      if (c.y < -350 || c.y > FIELD_H + 350) continue;
 
-      // Shallow emerald coral lagoon
-      ctx.fillStyle = "rgba(15, 125, 140, 0.4)";
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.scale(c.scale, c.scale);
+
+      // Distant continent floating island mass
+      ctx.fillStyle = stageTick < 3000 ? "rgba(28, 48, 96, 0.5)" : "rgba(35, 25, 65, 0.55)";
       ctx.beginPath();
-      ctx.arc(isl.x, isl.y, isl.r + 34, 0, Math.PI * 2);
+      ctx.moveTo(-160, 0);
+      ctx.quadraticCurveTo(-180, 80, -90, 140);
+      ctx.quadraticCurveTo(0, 180, 80, 130);
+      ctx.quadraticCurveTo(170, 70, 150, 0);
+      ctx.closePath();
       ctx.fill();
 
-      // Golden sand shore
-      ctx.fillStyle = "#cca862";
+      // Ancient spires and citadel towers
+      ctx.fillStyle = stageTick < 3000 ? "rgba(45, 75, 135, 0.6)" : "rgba(55, 38, 95, 0.65)";
+      // Main central palace
+      ctx.fillRect(-40, -90, 80, 95);
+      // Central spire
       ctx.beginPath();
-      ctx.arc(isl.x, isl.y, isl.r + 14, 0, Math.PI * 2);
+      ctx.moveTo(-25, -90);
+      ctx.lineTo(0, -150);
+      ctx.lineTo(25, -90);
+      ctx.closePath();
       ctx.fill();
 
-      // Lush tropical canopy
-      ctx.fillStyle = "#1c5a32";
+      // Flanking turrets
+      ctx.fillRect(-90, -65, 36, 70);
+      ctx.fillRect(54, -65, 36, 70);
       ctx.beginPath();
-      ctx.arc(isl.x, isl.y, isl.r, 0, Math.PI * 2);
+      ctx.moveTo(-80, -65);
+      ctx.lineTo(-72, -105);
+      ctx.lineTo(-64, -65);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(64, -65);
+      ctx.lineTo(72, -105);
+      ctx.lineTo(80, -65);
+      ctx.closePath();
       ctx.fill();
 
-      // High canopy highlights
-      ctx.fillStyle = "#277a45";
+      // Celestial Waterfall spilling from the floating continent into mist
+      ctx.strokeStyle = "rgba(68, 215, 245, 0.4)";
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(isl.x - 12, isl.y - 12, isl.r * 0.75, 0, Math.PI * 2);
+      ctx.moveTo(-60, 10);
+      ctx.lineTo(-60, 200);
+      ctx.moveTo(40, 15);
+      ctx.lineTo(40, 190);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  private drawFloatingRuins(scrollY: number, stageTick: number): void {
+    const ctx = this.ctx;
+    ctx.save();
+
+    // Layer 3 Parallax (0.5x speed)
+    const yOffset = (scrollY * 0.5) % 2200;
+
+    const ruins = [
+      { x: 540, y: (yOffset + 200) % 2200 - 400, r: 130 },
+      { x: 160, y: (yOffset + 950) % 2200 - 400, r: 100 },
+      { x: 440, y: (yOffset + 1700) % 2200 - 400, r: 145 },
+    ];
+
+    for (const r of ruins) {
+      if (r.y < -300 || r.y > FIELD_H + 300) continue;
+
+      ctx.save();
+      ctx.translate(r.x, r.y);
+
+      // Floating stone mass underbelly
+      ctx.fillStyle = stageTick < 3000 ? "#2b3b5c" : "#38234d";
+      ctx.beginPath();
+      ctx.moveTo(-r.r, 0);
+      ctx.quadraticCurveTo(-r.r * 0.8, r.r * 0.9, -r.r * 0.2, r.r * 1.1);
+      ctx.quadraticCurveTo(0, r.r * 1.3, r.r * 0.3, r.r * 0.9);
+      ctx.quadraticCurveTo(r.r, r.r * 0.6, r.r, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Top marble platform surface
+      ctx.fillStyle = stageTick < 3000 ? "#e2e8f0" : "#d8cee8";
+      ctx.strokeStyle = "#cca862";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, r.r, r.r * 0.42, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Sacred Runic Inscriptions (Cyan / Gold glowing runes)
+      ctx.strokeStyle = "rgba(68, 215, 245, 0.75)";
+      ctx.shadowColor = "#44d7f5";
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, r.r * 0.65, -0.4, 1.8);
+      ctx.arc(0, 0, r.r * 0.65, 2.3, 3.8);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Classical Marble Columns & Pedestals
+      ctx.fillStyle = "#cbd5e1";
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 1.5;
+      const colX = [-r.r * 0.55, -r.r * 0.2, r.r * 0.25, r.r * 0.6];
+      for (const cx of colX) {
+        const colH = 34 + (Math.abs(cx) % 15);
+        ctx.fillRect(cx - 6, -colH, 12, colH);
+        ctx.strokeRect(cx - 6, -colH, 12, colH);
+        // Column capital
+        ctx.fillRect(cx - 8, -colH - 4, 16, 5);
+      }
+
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  private drawHighCloudsAndDebris(scrollY: number, stageTick: number): void {
+    const ctx = this.ctx;
+    ctx.save();
+
+    // Layer 4 Parallax (1.1x speed): Near passing clouds & floating crystalline debris
+    const cloudOffset = (scrollY * 1.1) % 2400;
+
+    const clouds = [
+      { x: 120, y: -260 + cloudOffset, r: 135 },
+      { x: 600, y: 550 + cloudOffset, r: 175 },
+      { x: 240, y: 1350 + cloudOffset, r: 155 },
+    ];
+
+    ctx.fillStyle = stageTick < 3000 ? "rgba(240, 248, 255, 0.16)" : "rgba(215, 205, 240, 0.14)";
+    for (const c of clouds) {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+      ctx.arc(c.x + 60, c.y - 25, c.r * 0.8, 0, Math.PI * 2);
+      ctx.arc(c.x - 50, c.y + 30, c.r * 0.75, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // Drifting magical mana crystal shards
+    ctx.fillStyle = "rgba(68, 215, 245, 0.7)";
+    ctx.shadowColor = "#44d7f5";
+    ctx.shadowBlur = 6;
+    const debrisY = (scrollY * 1.3) % FIELD_H;
+    for (let i = 0; i < 4; i++) {
+      const dx = 100 + i * 160 + Math.sin(scrollY * 0.02 + i) * 35;
+      const dy = (debrisY + i * 280) % FIELD_H;
+      ctx.beginPath();
+      ctx.moveTo(dx, dy - 6);
+      ctx.lineTo(dx + 4, dy);
+      ctx.lineTo(dx, dy + 6);
+      ctx.lineTo(dx - 4, dy);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+  }
+
+  private drawMeleeSlash(p: Player): void {
+    if (!p.meleeSwing) return;
+    const ctx = this.ctx;
+    const swing = p.meleeSwing;
+    const progress = 1 - swing.duration / 8; // 0..1
+    const isL2R = swing.direction === "l2r";
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+
+    // Frontal arc spans 140 degrees (from -160 to -20 deg, where -90 is straight up)
+    // L->R: sweeps from left (-155 deg) towards right (-25 deg)
+    // R->L: sweeps from right (-25 deg) towards left (-155 deg)
+    const arcSpan = (130 * Math.PI) / 180;
+    const startAngle = isL2R
+      ? (-155 * Math.PI) / 180 + progress * 0.25
+      : (-25 * Math.PI) / 180 - progress * 0.25;
+    const currentAngle = isL2R
+      ? startAngle + progress * arcSpan
+      : startAngle - progress * arcSpan;
+
+    const reach = 130;
+    const arcGrad = ctx.createRadialGradient(0, 0, reach * 0.35, 0, 0, reach);
+
+    if (isL2R) {
+      // Radiant Cyan for L->R
+      arcGrad.addColorStop(0, "rgba(68, 215, 245, 0.0)");
+      arcGrad.addColorStop(0.65, "rgba(68, 215, 245, 0.45)");
+      arcGrad.addColorStop(0.9, "rgba(255, 255, 255, 0.95)");
+      arcGrad.addColorStop(1, "rgba(68, 215, 245, 0.85)");
+    } else {
+      // Radiant Cyan-Gold for R->L
+      arcGrad.addColorStop(0, "rgba(248, 192, 80, 0.0)");
+      arcGrad.addColorStop(0.55, "rgba(68, 215, 245, 0.45)");
+      arcGrad.addColorStop(0.85, "rgba(255, 255, 255, 0.95)");
+      arcGrad.addColorStop(1, "rgba(248, 192, 80, 0.9)");
+    }
+
+    ctx.fillStyle = arcGrad;
+    ctx.shadowColor = isL2R ? "#44d7f5" : "#f8c050";
+    ctx.shadowBlur = 18;
+
+    ctx.beginPath();
+    ctx.arc(0, 0, reach, startAngle, currentAngle, !isL2R);
+    ctx.arc(0, 0, reach - 34 * (1 - progress * 0.4), currentAngle, startAngle, isL2R);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sharp cutting blade line
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(0, 0, reach, startAngle, currentAngle, !isL2R);
+    ctx.stroke();
 
     ctx.restore();
   }
@@ -498,29 +773,6 @@ export class GameRenderer {
     ctx.restore();
   }
 
-  private drawHighClouds(scrollY: number): void {
-    const ctx = this.ctx;
-    ctx.save();
-
-    ctx.fillStyle = "rgba(235, 245, 255, 0.16)";
-    const cloudOffset = (scrollY * 1.85) % 2200;
-
-    const clouds = [
-      { x: 120, y: -260 + cloudOffset, r: 130 },
-      { x: 580, y: 350 + cloudOffset, r: 170 },
-      { x: 260, y: 1100 + cloudOffset, r: 150 },
-    ];
-
-    for (const c of clouds) {
-      ctx.beginPath();
-      ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
-      ctx.arc(c.x + 55, c.y - 20, c.r * 0.8, 0, Math.PI * 2);
-      ctx.arc(c.x - 45, c.y + 25, c.r * 0.75, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
   private drawPlayer(p: Player, tick: number): void {
     const ctx = this.ctx;
     ctx.save();
@@ -547,19 +799,19 @@ export class GameRenderer {
     // Divine ground drop shadow
     ctx.fillStyle = "rgba(0, 0, 0, 0.38)";
     ctx.beginPath();
-    ctx.ellipse(0, 42, 32 * scale, 18 * scale, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 56, 48 * scale, 24 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Divine Flight Particle Aura (cyan and golden specks trailing downward)
-    ctx.fillStyle = "rgba(68, 215, 245, 0.4)";
-    for (const ox of [-14, 14]) {
+    ctx.fillStyle = "rgba(68, 215, 245, 0.45)";
+    for (const ox of [-20, 20]) {
       ctx.beginPath();
-      ctx.arc(ox, 38 + (tick % 5) * 3, 3, 0, Math.PI * 2);
+      ctx.arc(ox, 52 + (tick % 5) * 4, 3.5, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.fillStyle = "rgba(248, 192, 80, 0.35)";
+    ctx.fillStyle = "rgba(248, 192, 80, 0.4)";
     ctx.beginPath();
-    ctx.arc(0, 44 + (tick % 7) * 2, 2.5, 0, Math.PI * 2);
+    ctx.arc(0, 60 + (tick % 7) * 3, 3, 0, Math.PI * 2);
     ctx.fill();
 
     if (this.eiraLoaded && this.eiraImg) {
@@ -575,12 +827,15 @@ export class GameRenderer {
           EIRA_FRAMES[frameKey].sy,
           EIRA_CELL,
           EIRA_CELL,
-          -54,
-          -54,
-          108,
-          108,
+          -90,
+          -90,
+          180,
+          180,
         );
         ctx.restore();
+      } else if (p.meleeSwing) {
+        // Alternating sword slash motion (slash_0: L->R, slash_1: R->L)
+        frameKey = p.meleeSwing.direction === "l2r" ? "slash_0" : "slash_1";
       } else if (p.fireCooldown > 6) {
         frameKey = "thrust";
       } else if (p.vx < -60) {
@@ -593,16 +848,19 @@ export class GameRenderer {
       }
 
       const frame = EIRA_FRAMES[frameKey] || EIRA_FRAMES.idle_0;
+      // Default 160px render scale for high-definition character clarity
+      const drawSize = 160;
+      const half = drawSize / 2;
       ctx.drawImage(
         this.eiraImg,
         frame.sx,
         frame.sy,
         EIRA_CELL,
         EIRA_CELL,
-        -48,
-        -48,
-        96,
-        96,
+        -half,
+        -half,
+        drawSize,
+        drawSize,
       );
     } else {
       // Procedural fallback: Valkyrie winged silhouette
@@ -611,12 +869,12 @@ export class GameRenderer {
 
     // Invulnerability Protective Ward Barrier
     if (p.rollTimer > 0 || p.invuln > 0) {
-      ctx.strokeStyle = "rgba(68, 215, 245, 0.75)";
+      ctx.strokeStyle = "rgba(68, 215, 245, 0.85)";
       ctx.shadowColor = "#44d7f5";
-      ctx.shadowBlur = 10;
-      ctx.lineWidth = 3;
+      ctx.shadowBlur = 12;
+      ctx.lineWidth = 3.5;
       ctx.beginPath();
-      ctx.arc(0, 0, 52 * scale, 0, Math.PI * 2);
+      ctx.arc(0, 0, 75 * scale, 0, Math.PI * 2);
       ctx.stroke();
       ctx.shadowBlur = 0;
     }

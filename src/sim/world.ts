@@ -1,4 +1,5 @@
 import {
+  checkMeleeHits,
   hitEnemy,
   hitPlayer,
   playerCollectsPickup,
@@ -43,6 +44,7 @@ export function createWorld(options?: WorldOptions): World {
     bossId: 0,
     bossPhase: 0,
     invulnerable: options?.invulnerable ?? false,
+    hitstopTimer: 0,
     ended: false,
   };
 }
@@ -50,6 +52,12 @@ export function createWorld(options?: WorldOptions): World {
 export function step(world: World, input: InputFrame): GameEvent[] {
   const events: GameEvent[] = [];
   world.tick++;
+
+  // Tactical hitstop (freeze-frame crunch on heavy melee strikes)
+  if (world.hitstopTimer > 0) {
+    world.hitstopTimer--;
+    return events;
+  }
 
   // Terminal states reject play input
   if (world.phase === "clear" || world.phase === "over") {
@@ -119,6 +127,9 @@ export function step(world: World, input: InputFrame): GameEvent[] {
   // Update Player
   updatePlayer(world, input, events);
 
+  // Melee Swept Arc Collision
+  checkMeleeHits(world, events);
+
   // Update Enemies
   for (const enemy of world.enemies) {
     if (!enemy.alive) continue;
@@ -157,6 +168,13 @@ function triggerStageWaves(world: World, events: GameEvent[]): void {
   while (world.waveCursor < STAGE1_WAVES.length) {
     const wave = STAGE1_WAVES[world.waveCursor];
     if (currentSec < wave.at) break;
+
+    // Cap active on-screen enemies to prevent mobile frame drop and uncluttered combat
+    const activeEnemies = world.enemies.filter((e) => e.alive).length;
+    if (activeEnemies >= 16 && wave.kind !== "albatross" && wave.kind !== "leviathan") {
+      // Delay wave spawn until screen cleared slightly
+      break;
+    }
 
     world.waveCursor++;
     spawnWave(world, wave, events);

@@ -1,4 +1,5 @@
-import { Bullet, Enemy, Pickup, Player } from "./types";
+import { ENEMY_DEFS } from "./enemies";
+import { Bullet, Enemy, GameEvent, Pickup, Player, World } from "./types";
 
 export function circlesIntersect(
   x1: number,
@@ -52,6 +53,86 @@ export function hitEnemy(enemy: Enemy, bullet: Bullet): boolean {
   }
 
   return circlesIntersect(enemy.x, enemy.y, enemy.r, bullet.x, bullet.y, bullet.r);
+}
+
+export function checkMeleeHits(world: World, events: GameEvent[]): void {
+  const p = world.player;
+  if (!p.meleeSwing || p.downTimer > 0 || p.rollTimer > 0) {
+    return;
+  }
+
+  const swing = p.meleeSwing;
+  const MELEE_REACH = 130;
+  const MELEE_ARC_COS = 0.342; // cos(70 deg) -> 140 deg frontal arc
+  const meleeDamage = p.power >= 2 ? 3 : 2;
+
+  for (const enemy of world.enemies) {
+    if (!enemy.alive || swing.hitEnemyIds.includes(enemy.id)) {
+      continue;
+    }
+
+    const dx = enemy.x - p.x;
+    const dy = enemy.y - p.y;
+    const dist = Math.hypot(dx, dy);
+
+    // Frontal arc check (dy < 0 in screen space is ahead of player)
+    const isCloseEnough = dist <= MELEE_REACH + enemy.r;
+    const isFrontal = dist > 0 ? (-dy / dist) >= MELEE_ARC_COS : true;
+    const isPointBlank = dist <= 36 + enemy.r;
+
+    if (isCloseEnough && (isFrontal || isPointBlank)) {
+      swing.hitEnemyIds.push(enemy.id);
+      enemy.hp -= meleeDamage;
+      enemy.flash = 8;
+      world.hitstopTimer = 2; // Tactile 2-tick hitstop
+
+      events.push({
+        t: "meleeHit",
+        id: enemy.id,
+        x: (p.x + enemy.x) / 2,
+        y: (p.y + enemy.y) / 2,
+        dmg: meleeDamage,
+      });
+      events.push({
+        t: "hit",
+        id: enemy.id,
+        x: enemy.x,
+        y: enemy.y,
+      });
+
+      if (enemy.hp <= 0) {
+        enemy.alive = false;
+        world.stats.killed++;
+        world.score += ENEMY_DEFS[enemy.kind]?.score ?? 100;
+        events.push({
+          t: "explode",
+          size: enemy.kind === "leviathan" ? "l" : enemy.kind === "albatross" || enemy.kind === "condor" ? "m" : "s",
+          x: enemy.x,
+          y: enemy.y,
+        });
+
+        if (enemy.formation > 0) {
+          const f = world.formations.get(enemy.formation);
+          if (f) {
+            f.killed++;
+            f.lastX = enemy.x;
+            f.lastY = enemy.y;
+            if (f.killed === f.total && f.reward) {
+              world.pickups.push({
+                id: world.nextId++,
+                kind: f.reward,
+                x: f.lastX,
+                y: f.lastY,
+                age: 0,
+                alive: true,
+              });
+              events.push({ t: "pickup", kind: f.reward, x: f.lastX, y: f.lastY });
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 export function playerCollectsPickup(player: Player, pickup: Pickup): boolean {
