@@ -1,5 +1,27 @@
 # Quality Assurance & Verification Record
 
+## Local Verification Summary (v0.8.0 - 2026-11-07)
+- Date: 2026-11-07
+- Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.8.0
+- Scope: Gameplay & Quality Correction Release (Halvard Altar, BGM Machine, Idle & Roll Animations, Midboss Resumption, Destructible Aegis Orbs, Progressive 3-Lane Blades, Continuous Ult)
+- Node Version: v22.23.4 (npm 10.9.9)
+- Assets Check: 12 items validated, total 2.58 MB (`scripts/check-assets.mjs`)
+- Audio Check: 34 audio files validated (OGG + M4A), total 4.06 MB (`scripts/check-audio.mjs`)
+- ESLint: 0 errors, 0 warnings
+- TypeScript Strict Check: 0 errors (`tsc --noEmit`)
+- Vitest Model Tests: 41 passed across 8 test suites (`tests/campaign.test.ts`, `tests/expansion.test.ts`, `tests/melee.test.ts`, `tests/patterns.test.ts`, `tests/sim.test.ts`, `tests/playthrough.test.ts`, `tests/restart.test.ts`, `tests/scaffold.test.ts`)
+- Playwright E2E Tests: 11 passed across 6 responsive viewports (320x568 to 1440x900)
+- Screenshot Inspection: 19 evidence captures inspected in `docs/evidence/` including:
+  - `departure-altar-mobile-390x844.png`: Celestial Halvard departure rune altar with concentric octagonal/circular marble dais, gold trim, glowing cyan/golden runes, twin Valkyrie wing statues, flanking marble columns, and Bifrost aurora (runways and dashed lines completely removed).
+  - `lane-power-mobile-390x844.png`: Progressive 3-lane Arc Blade visual tiers (Cyan, Blue-White, Gold Halo, Platinum + Radiant Gold Core) with in-game HUD lane multipliers (`LANES L:2.0x C:2.5x R:1.5x`).
+  - `aegis-orb-mobile-390x844.png`: Destructible Azure Aegis Orbs with single alive orb orbiting after single bullet hit.
+  - `confirm-modal-mobile-390x844.png`: Main Menu return confirmation modal with CANCEL / CONFIRM options.
+  - `pause-mobile-390x844.png`: Tactical pause menu featuring `MAIN MENU`, `RESTART STAGE`, `RESUME FLIGHT`, and same-tab `GAMEHUB` / `HD²LAB HQ` links.
+  - `stage2-combat-mobile-390x844.png`: Stage 2 Ragnarok Rift gameplay with dark obsidian and violet void, drifting shattered Bifrost rainbow shards, jagged citadels, and crimson stage badge.
+  - `ultimate-mobile-390x844.png`: Gungnir Ultimate v2 continuous tick holy beam with 70 total damage.
+  - `victory-mobile-390x844.png`: Final Campaign Complete victory screen with `[NEW CAMPAIGN]` and `[MAIN MENU]` options.
+- Build Output: dist/index.html (0.82 kB), dist/assets/index-*.css (8.69 kB), dist/assets/index-*.js (80.52 kB)
+
 ## Local Verification Summary (v0.7.1 - 2026-11-07)
 - Date: 2026-11-07
 - Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.7.1

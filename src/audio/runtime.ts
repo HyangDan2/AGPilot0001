@@ -1,5 +1,7 @@
 import { GameEvent } from "../sim/types";
 
+export type BGMId = "bgm_title" | "bgm_stage" | "bgm_stage1" | "bgm_stage2" | "bgm_midboss" | "bgm_boss";
+
 export class AudioRuntime {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -10,7 +12,9 @@ export class AudioRuntime {
 
   private bufferCache = new Map<string, AudioBuffer>();
   private activeBgmSource: AudioBufferSourceNode | null = null;
-  private currentBgmId: string | null = null;
+  private activeBgmGain: GainNode | null = null;
+  private currentBgmId: BGMId | null = null;
+  public currentStage: 1 | 2 = 1;
   private manifestLoaded = false;
   private preferredExt = "ogg";
 
@@ -78,7 +82,8 @@ export class AudioRuntime {
       this.bufferCache.set(id, decoded);
 
       // If this was pending current BGM, start it
-      if (this.currentBgmId === id && !this.activeBgmSource) {
+      const resolvedCurrent = this.currentBgmId === "bgm_stage1" ? "bgm_stage" : this.currentBgmId;
+      if (resolvedCurrent === id && !this.activeBgmSource) {
         this.playBgmInternal(id);
       }
     } catch {
@@ -91,17 +96,78 @@ export class AudioRuntime {
     if (this.masterGain && this.ctx) {
       this.masterGain.gain.setValueAtTime(muted ? 0 : 0.75, this.ctx.currentTime);
     }
+    if (!muted && this.currentBgmId && !this.activeBgmSource) {
+      this.playBgmInternal(this.currentBgmId, 0.3);
+    }
   }
 
-  public playBGM(id: "bgm_title" | "bgm_stage" | "bgm_boss"): void {
-    if (this.currentBgmId === id && this.activeBgmSource) return;
-    this.currentBgmId = id;
-    this.stopBGM();
-    this.playBgmInternal(id);
+  public playBGM(id: BGMId, crossfadeDuration = 0.35): void {
+    const resolvedId = id === "bgm_stage1" ? "bgm_stage" : id;
+    if (this.currentBgmId === resolvedId && this.activeBgmSource) return;
+    this.currentBgmId = resolvedId;
+
+    if (!this.ctx || !this.bgmGain) return;
+
+    // Smoothly crossfade: fade out previous BGM source
+    if (this.activeBgmSource && this.activeBgmGain) {
+      const oldSrc = this.activeBgmSource;
+      const oldGain = this.activeBgmGain;
+      const now = this.ctx.currentTime;
+      try {
+        oldGain.gain.setValueAtTime(oldGain.gain.value, now);
+        oldGain.gain.linearRampToValueAtTime(0.0001, now + crossfadeDuration);
+        setTimeout(() => {
+          try {
+            oldSrc.stop();
+            oldSrc.disconnect();
+            oldGain.disconnect();
+          } catch {
+            // Ignore stop error
+          }
+        }, crossfadeDuration * 1000 + 40);
+      } catch {
+        try {
+          oldSrc.stop();
+        } catch {
+          // Ignore stop error
+        }
+      }
+      this.activeBgmSource = null;
+      this.activeBgmGain = null;
+    } else if (this.activeBgmSource) {
+      this.stopBGM(crossfadeDuration);
+    }
+
+    this.playBgmInternal(resolvedId, crossfadeDuration);
   }
 
-  public stopBGM(): void {
-    if (this.activeBgmSource) {
+  public stopBGM(fadeDuration = 0.25): void {
+    if (this.activeBgmSource && this.activeBgmGain && this.ctx) {
+      const oldSrc = this.activeBgmSource;
+      const oldGain = this.activeBgmGain;
+      const now = this.ctx.currentTime;
+      try {
+        oldGain.gain.setValueAtTime(oldGain.gain.value, now);
+        oldGain.gain.linearRampToValueAtTime(0.0001, now + fadeDuration);
+        setTimeout(() => {
+          try {
+            oldSrc.stop();
+            oldSrc.disconnect();
+            oldGain.disconnect();
+          } catch {
+            // Ignore stop error
+          }
+        }, fadeDuration * 1000 + 40);
+      } catch {
+        try {
+          oldSrc.stop();
+        } catch {
+          // Ignore stop error
+        }
+      }
+      this.activeBgmSource = null;
+      this.activeBgmGain = null;
+    } else if (this.activeBgmSource) {
       try {
         this.activeBgmSource.stop();
         this.activeBgmSource.disconnect();
@@ -112,18 +178,25 @@ export class AudioRuntime {
     }
   }
 
-  private playBgmInternal(id: string): void {
+  private playBgmInternal(id: string, fadeDuration = 0.35): void {
     if (!this.ctx || !this.bgmGain || this.isMuted) return;
-    const buf = this.bufferCache.get(id);
+    const resolvedId = id === "bgm_stage1" ? "bgm_stage" : id;
+    const buf = this.bufferCache.get(resolvedId);
     if (!buf) return; // Wait for buffer or fallback
 
     try {
       const src = this.ctx.createBufferSource();
       src.buffer = buf;
       src.loop = true;
-      src.connect(this.bgmGain);
+      const trackGain = this.ctx.createGain();
+      const now = this.ctx.currentTime;
+      trackGain.gain.setValueAtTime(0.0001, now);
+      trackGain.gain.linearRampToValueAtTime(1.0, now + fadeDuration);
+      src.connect(trackGain);
+      trackGain.connect(this.bgmGain);
       src.start(0);
       this.activeBgmSource = src;
+      this.activeBgmGain = trackGain;
     } catch {
       // Play error
     }
@@ -165,8 +238,11 @@ export class AudioRuntime {
           this.playAudioOrSynth("sfx_explode_l", () => this.synthExplosion("l"));
           break;
         case "warning":
-          this.playBGM("bgm_boss");
+          this.playBGM(e.isMidboss ? "bgm_midboss" : "bgm_boss");
           this.playAudioOrSynth("sfx_warning", () => this.synthWarning());
+          break;
+        case "midbossDefeated":
+          this.playBGM(this.currentStage === 2 ? "bgm_stage2" : "bgm_stage");
           break;
         case "stageClear":
           this.stopBGM();

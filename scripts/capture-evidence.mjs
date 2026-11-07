@@ -18,6 +18,22 @@ async function main() {
   try {
     const browser = await chromium.launch();
 
+    // 0. Halvard Celestial Departure Altar (Norse Rune Altar with Wing Statues & Marble Columns)
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        const w = hook.getWorld();
+        w.stageTick = 40;
+        w.scrollY = 30;
+      });
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: path.join(outDir, "departure-altar-mobile-390x844.png") });
+      await page.close();
+    }
+
     // 1. Mobile Portrait (390x844) - Title
     {
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -209,6 +225,44 @@ async function main() {
       });
       await page.waitForTimeout(300);
       await page.screenshot({ path: path.join(outDir, "ultimate-mobile-390x844.png") });
+      await page.close();
+    }
+
+    // 10. Destructible Azure Aegis Orbs (One alive orb orbiting after single bullet hit)
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        hook.startWithSeed(42, 8);
+        const w = hook.getWorld();
+        if (w.player.aegisOrbs && w.player.aegisOrbs.length > 1) {
+          w.player.aegisOrbs[0].alive = false; // Destroy 1st orb
+          w.player.aegisOrbs[1].alive = true; // 2nd orb active
+        }
+      });
+      await page.waitForTimeout(300);
+      await page.screenshot({ path: path.join(outDir, "aegis-orb-mobile-390x844.png") });
+      await page.close();
+    }
+
+    // 11. Progressive 3-Lane Arc Blade Power-Up with HUD Indicators
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        hook.startWithSeed(42, 6);
+        const w = hook.getWorld();
+        w.player.power = 3;
+        w.player.lanePower = { center: 2.5, left: 2.0, right: 1.5, nextLane: "center" };
+      });
+      await page.keyboard.down("Space");
+      await page.waitForTimeout(600);
+      await page.screenshot({ path: path.join(outDir, "lane-power-mobile-390x844.png") });
+      await page.keyboard.up("Space");
       await page.close();
     }
 

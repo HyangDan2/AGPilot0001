@@ -4,7 +4,8 @@ import { STAGE1_WAVES } from "../src/sim/stage1";
 import { STAGE2_WAVES } from "../src/sim/stage2";
 import { fireEnemyBullet } from "../src/sim/patterns";
 import { GameApp } from "../src/core/loop";
-import { NO_INPUT } from "../src/sim/types";
+import { GameEvent, NO_INPUT } from "../src/sim/types";
+import { damageEnemy } from "../src/sim/enemies";
 
 describe("Two-Stage Premium Campaign (v0.7.1)", () => {
   it("Stage 1 has exactly 53 normal enemies", () => {
@@ -211,17 +212,137 @@ describe("Azure Aegis Orbs & Gungnir Ultimate v2", () => {
 
     // Trigger Ultimate via input
     step(w, { ...NO_INPUT, ult: true });
+    expect(w.player.ultimateTimer).toBe(90);
 
-    // Initial impact frame: deals 40 damage (100 -> 60 HP)
+    // Initial 30 ticks: Awakening & Summoning (no damage yet)
     const target = w.enemies.find((e) => e.id === 501);
-    expect(target?.hp).toBe(60);
+    expect(target?.hp).toBe(100);
 
-    // Step through follow-up shockwaves at ticks 60, 45, 30 (3 x 10 = 30 dmg)
-    for (let t = 0; t < 65; t++) {
+    // Advance 30 ticks to tick 60
+    for (let t = 0; t < 30; t++) {
+      step(w, NO_INPUT);
+    }
+    expect(w.player.ultimateTimer).toBe(60);
+
+    // Step through the 42 continuous beam damage ticks (ticks 60 -> 18)
+    for (let t = 0; t < 42; t++) {
       step(w, NO_INPUT);
     }
 
-    // 60 - 30 = 30 HP remaining (total 70 damage dealt)
+    // 100 - 70 continuous damage = 30 HP remaining (total exactly 70 damage dealt)
     expect(target?.hp).toBe(30);
+  });
+
+  it("single bullet destroys exactly one Aegis Orb while the other remains active", () => {
+    const w = createWorld({ seed: 777, startAt: 10 });
+    expect(w.player.aegisOrbs.filter((o) => o.alive).length).toBe(2);
+
+    // Place an enemy bullet right where Orb 0 will be on the step
+    const orb0 = w.player.aegisOrbs[0];
+    const nextAngle = (w.player.orbitSwords.angle + 0.08) % (Math.PI * 2);
+    const ox = w.player.x + Math.cos(nextAngle + orb0.angleOffset) * 72;
+    const oy = w.player.y + Math.sin(nextAngle + orb0.angleOffset) * 72;
+
+    w.bullets.push({
+      id: 9991,
+      x: ox,
+      y: oy,
+      vx: 0,
+      vy: 0,
+      r: 6,
+      owner: "enemy",
+      alive: true,
+      dmg: 1,
+    });
+
+    step(w, NO_INPUT);
+
+    // Orb 0 was destroyed, but Orb 1 is still alive!
+    expect(w.player.aegisOrbs[0].alive).toBe(false);
+    expect(w.player.aegisOrbs[1].alive).toBe(true);
+    expect(w.player.aegisOrbs.filter((o) => o.alive).length).toBe(1);
+
+    // Aegis pickup restores the destroyed orb
+    w.pickups.push({
+      id: 9992,
+      kind: "aegis",
+      x: w.player.x,
+      y: w.player.y,
+      age: 0,
+      alive: true,
+    });
+
+    step(w, NO_INPUT);
+    expect(w.player.aegisOrbs.filter((o) => o.alive).length).toBe(2);
+  });
+
+  it("POW pickup upgrades 3-lane power cyclically (center -> left -> right) beyond Lv 3", () => {
+    const w = createWorld({ seed: 888, startAt: 10 });
+    w.player.power = 3;
+    expect(w.player.lanePower.center).toBe(1.0);
+    expect(w.player.lanePower.left).toBe(1.0);
+    expect(w.player.lanePower.right).toBe(1.0);
+    expect(w.player.lanePower.nextLane).toBe("center");
+
+    // Collect 1st POW -> upgrades center to 1.5x
+    w.pickups.push({ id: 1, kind: "pow", x: w.player.x, y: w.player.y, age: 0, alive: true });
+    step(w, NO_INPUT);
+    expect(w.player.lanePower.center).toBe(1.5);
+    expect(w.player.lanePower.nextLane).toBe("left");
+
+    // Collect 2nd POW -> upgrades left to 1.5x
+    w.pickups.push({ id: 2, kind: "pow", x: w.player.x, y: w.player.y, age: 0, alive: true });
+    step(w, NO_INPUT);
+    expect(w.player.lanePower.left).toBe(1.5);
+    expect(w.player.lanePower.nextLane).toBe("right");
+
+    // Collect 3rd POW -> upgrades right to 1.5x
+    w.pickups.push({ id: 3, kind: "pow", x: w.player.x, y: w.player.y, age: 0, alive: true });
+    step(w, NO_INPUT);
+    expect(w.player.lanePower.right).toBe(1.5);
+    expect(w.player.lanePower.nextLane).toBe("center");
+  });
+
+  it("Midboss defeat emits midbossDefeated and re-anchors stageTick to resume wave in 2s", () => {
+    const w = createWorld({ seed: 999, startStage: 1, startAt: 34 });
+    w.stageTick = 2100; // 35.0s
+    w.waveCursor = 14; // Wave cursor pointing to the post-midboss wave at index 14 (at 48.0s)
+
+    // Midboss enemy (albatross)
+    const midboss = {
+      id: 7001,
+      kind: "albatross" as const,
+      x: 360,
+      y: 200,
+      x0: 360,
+      y0: 200,
+      hp: 1,
+      maxHp: 140,
+      r: 90,
+      alive: true,
+      age: 0,
+      flash: 0,
+      parts: [],
+      heading: 0,
+      ground: false,
+      path: "hover" as const,
+      fireTimer: 999,
+      formation: -1,
+      sx: 0,
+      sy: 200,
+      mode: 1,
+    };
+    w.enemies.push(midboss);
+
+    // Hit midboss to death via unified damage pipeline
+    const events: GameEvent[] = [];
+    damageEnemy(w, midboss, 10, events);
+
+    expect(events.some((e) => e.t === "midbossDefeated")).toBe(true);
+    expect(w.phase).toBe("play");
+
+    // The stageTick should have been re-anchored to ~2.0s before the next wave (at 48.0s -> 46.0s = 2760 ticks)
+    // rather than waiting 14 seconds!
+    expect(w.stageTick).toBe(2760); // (48 - 2) * 60 = 2760
   });
 });

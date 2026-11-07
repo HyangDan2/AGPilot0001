@@ -90,6 +90,7 @@ export class GameApp {
 
   private startGame(): void {
     this.audio.init();
+    this.audio.currentStage = 1;
     this.audio.playBGM("bgm_stage");
     this.world = createWorld({ seed: Date.now() });
     this.ui.showInGameHUD(this.settings.muted);
@@ -97,7 +98,8 @@ export class GameApp {
   }
 
   private restartGame(): void {
-    this.audio.playBGM("bgm_stage");
+    this.audio.currentStage = this.world.currentStage === 2 ? 2 : 1;
+    this.audio.playBGM(this.world.currentStage === 2 ? "bgm_stage2" : "bgm_stage");
     this.world = createWorld({ seed: Date.now(), startStage: this.world.currentStage });
     this.ui.showInGameHUD(this.settings.muted);
     this.startLoop();
@@ -125,6 +127,7 @@ export class GameApp {
     const prevMana = this.world.player.mana;
     const prevDeaths = this.world.player.deaths;
     const prevGraze = this.world.player.grazeCount;
+    const prevLanePower = { ...this.world.player.lanePower };
 
     this.world = createWorld({
       seed: Date.now(),
@@ -136,8 +139,10 @@ export class GameApp {
     this.world.player.mana = prevMana;
     this.world.player.deaths = prevDeaths;
     this.world.player.grazeCount = prevGraze;
+    this.world.player.lanePower = prevLanePower;
 
-    this.audio.playBGM("bgm_stage");
+    this.audio.currentStage = 2;
+    this.audio.playBGM("bgm_stage2");
     this.ui.showInGameHUD(this.settings.muted);
     this.startLoop();
   }

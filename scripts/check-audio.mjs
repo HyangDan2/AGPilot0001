@@ -18,6 +18,8 @@ function main() {
   const requiredIds = [
     "bgm_title",
     "bgm_stage",
+    "bgm_stage2",
+    "bgm_midboss",
     "bgm_boss",
     "jingle_clear",
     "jingle_gameover",

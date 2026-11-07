@@ -1,5 +1,56 @@
 # Changelog
 
+## [0.8.0] - 2026-11-07
+### Added
+- **Halvard Departure Artwork Replacement (Phase 1)**:
+  - Replaced the previous rectangular runway and dashed lane in `drawSanctuary()` with a grand Norse celestial sanctuary altar:
+    - Stepped concentric octagonal and circular white marble dais with polished gold rim bands.
+    - Sacred glowing cyan rune circles, ordinal rune glyphs, and central 8-point golden octagram star.
+    - Massive flanking temple marble pillars with fluted groves and ornate golden capitals.
+    - Twin sculpted Valkyrie Wing Statues on marble pedestals flanking the sanctuary.
+    - Distant golden citadel spires, arching Yggdrasil branches, and prismatic Bifrost aurora light sheen.
+    - Ascending blue mana particles and gold divine motes.
+    - Completely eliminated all runway geometries and dashed lines.
+- **Stage 2 & Midboss Audio State Machine with Crossfade (Phase 2)**:
+  - Added dedicated BGM tracks: `bgm_stage2` (148 BPM fast Nordic battle) and `bgm_midboss` (142 BPM syncopated battle horns).
+  - Implemented 0.35s smooth linear crossfade between all BGM transitions.
+  - Distinct BGM states: Title (`bgm_title`), Stage 1 (`bgm_stage`), Stage 2 (`bgm_stage2`), Midboss (`bgm_midboss`), Final Boss (`bgm_boss`).
+  - Emits `midbossDefeated` to immediately restore current stage BGM without delay.
+  - Tab switch and mute/unmute state consistency preserved.
+- **Eira 8-Step Idle Animation & Ready Stance (Phase 3)**:
+  - 8-step idle cycle with sinusoidal levitation bob (±3.5px).
+  - Combat ready stance: Oathblade drawn diagonally back/right at ready angle.
+  - Animated fluttering silver braid and tiered ivory skirt highlights.
+  - Priority stack resolution: Roll > Melee > Directional Bank > Recoil Thrust (active recoil only) > 8-step Idle Base.
+- **Midboss Post-Battle Delay Removal (Phase 4)**:
+  - Defeating a midboss (`albatross` or `kraken`) emits `midbossDefeated` and re-anchors `world.stageTick` to resume the next wave in ~2.0s rather than waiting 14 seconds.
+- **Eira 12-Step Axial Roll Rotation Upgrade (Phase 5)**:
+  - 12-step axial 3D rotation sequence across the 72-tick roll duration.
+  - 360° perspective rotation with dynamic scaling (`scaleX`, `scaleY`, `scale`).
+  - 3 Cyan afterimages with trailing phase lag.
+  - Invulnerability ward with dual chromatic ripple refraction rings.
+- **Continuous Tick Ultimate Damage Pipeline (Phase 6)**:
+  - Restructured Gungnir 90-tick timeline: Awakening (15 ticks) + Summoning (15 ticks) + Active Beam (42 ticks) + Recovery (18 ticks).
+  - Screen bullet wipe occurs at tick 60.
+  - Continuous damage formula across 42 active beam ticks: `Math.floor(70*(e+1)/42) - Math.floor(70*e/42)` dealing exactly 70 total divine damage across the corridor and damaging multi-part boss nodes.
+- **Destructible Azure Aegis Orbs (Phase 7)**:
+  - Modular `AegisOrb` structures with individual `alive` states.
+  - Incoming enemy bullet destroys only the single orb it impacts (+15 Mana, +250 score, `orbDestroyed` event); the remaining orb continues orbiting.
+  - Added `aegis` pickup item restoring 1 destroyed orb (or granting +20 Mana / +2000 score if both intact).
+  - Both orbs fully restored upon player respawn and stage transition.
+- **Progressive Three-Lane Arc Blade Power-Up (Phase 8)**:
+  - Beyond Power Level 3, POW pickups cyclically upgrade lanes: `Center -> Left -> Right` by +0.5x base damage (up to max 3.0x).
+  - 4 Bullet Visual Tiers: Tier 0 (Cyan), Tier 1 (Blue-White), Tier 2 (Blue-White + Gold halo), Tier 3 (Platinum-White + Radiant Gold core sparks).
+  - In-game HUD displays lane multipliers (`LANES L:1.0x C:1.5x R:1.0x`).
+- **Gameplay Corrections & Pipeline Unification (Phase 9)**:
+  - Fixed Vee formation math for even counts, ensuring Stage 2 normal enemies total is strictly 70.
+  - Unified `damageEnemy` and `killEnemy` pipeline across bullets, melee, orbs, and ultimate.
+- **Quality Gates & Evidence (Phase 10)**:
+  - Full suite of 41 unit tests passing (`tests/campaign.test.ts`, `tests/expansion.test.ts`, etc.).
+  - 34 audio files (OGG + M4A) and 12 art assets validated.
+  - 11 Playwright E2E browser tests passing.
+  - Visual evidence screenshots captured in `docs/evidence/`: `departure-altar-mobile-390x844.png`, `lane-power-mobile-390x844.png`, `aegis-orb-mobile-390x844.png`.
+
 ## [0.7.1] - 2026-11-07
 ### Added
 - **Two-Stage Premium Campaign (2스테이지 프리미엄 캠페인)**:

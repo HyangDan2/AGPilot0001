@@ -171,6 +171,95 @@ function generateStageBGM(duration = 28.0) {
   });
 }
 
+// 2.5. bgm_stage2: Ragnarok Rift - Dark fast Norse combat beats with industrial war drums (24s loop)
+function generateStage2BGM(duration = 24.0) {
+  return synthesizeTrack(duration, (t) => {
+    let mixL = 0;
+    let mixR = 0;
+
+    // Tempo: 148 BPM
+    const beat = t * (148 / 60);
+
+    // Heavy driving industrial kick on every beat with syncopated offbeats
+    const kPhase = beat % 1;
+    const kick = Math.sin(t * Math.PI * 2 * 85 * Math.exp(-kPhase * 20)) * Math.exp(-kPhase * 8) * 0.55;
+    mixL += kick;
+    mixR += kick;
+
+    // Sharp metallic snare on beats 2 and 4
+    const snareBeat = (beat + 1) % 2;
+    if (snareBeat < 0.3) {
+      const noise = ((Math.sin(t * 12345) * 43758) % 1) * Math.exp(-snareBeat * 16) * 0.35;
+      mixL += noise;
+      mixR += noise;
+    }
+
+    // Aggressive driving 16th saw bassline in D minor (38, 38, 41, 38, 43, 38, 45, 48)
+    const bassNotes = [38, 38, 41, 38, 43, 38, 45, 48];
+    const bNote = bassNotes[Math.floor(beat * 4) % bassNotes.length];
+    const bFreq = noteToFreq(bNote);
+    const bPhase = (beat * 4) % 1;
+    const bSaw = (((t * bFreq) % 1) * 2 - 1) * Math.exp(-bPhase * 6) * 0.28;
+    mixL += bSaw * 1.1;
+    mixR += bSaw * 0.9;
+
+    // Minor arpeggiated combat synth (D minor / F / A / C)
+    const arpNotes = [62, 65, 69, 72, 74, 69, 65, 62];
+    const aNote = arpNotes[Math.floor(beat * 8) % arpNotes.length];
+    const aFreq = noteToFreq(aNote);
+    const aPhase = (beat * 8) % 1;
+    const aSquare = (Math.sin(t * Math.PI * 2 * aFreq) > 0 ? 1 : -1) * Math.exp(-aPhase * 9) * 0.14;
+    mixL += aSquare * 1.2;
+    mixR += aSquare * 0.8;
+
+    return [mixL, mixR];
+  });
+}
+
+// 2.8. bgm_midboss: Urgent syncopated war cadence with dramatic brass pulses (16s loop)
+function generateMidbossBGM(duration = 16.0) {
+  return synthesizeTrack(duration, (t) => {
+    let mixL = 0;
+    let mixR = 0;
+
+    // Tempo: 142 BPM
+    const beat = t * (142 / 60);
+
+    // Double-pulse war kick
+    const subPhase = (beat * 2) % 1;
+    const kick = Math.sin(t * Math.PI * 2 * 95 * Math.exp(-subPhase * 16)) * Math.exp(-subPhase * 9) * 0.45;
+    mixL += kick;
+    mixR += kick;
+
+    // Tense war horn stabs in minor chords
+    const bar = Math.floor(beat / 4);
+    const chords = [
+      [50, 53, 57], // Dm
+      [49, 52, 56], // C#dim
+      [51, 55, 58], // D#m
+      [46, 50, 53], // Bb
+    ];
+    const chord = chords[bar % chords.length];
+    for (const n of chord) {
+      const f = noteToFreq(n);
+      const saw = ((t * f) % 1) * 2 - 1;
+      const env = Math.exp(-(beat % 1) * 4) * 0.12;
+      mixL += saw * env * 1.1;
+      mixR += saw * env * 0.9;
+    }
+
+    // High tension staccato pulse
+    const pulseNote = 74;
+    const pFreq = noteToFreq(pulseNote);
+    const pSaw = ((t * pFreq) % 1) * 2 - 1;
+    const pEnv = Math.exp(-((beat * 4) % 1) * 12) * 0.09;
+    mixL += pSaw * pEnv;
+    mixR += pSaw * pEnv;
+
+    return [mixL, mixR];
+  });
+}
+
 // 3. bgm_boss: Tense minor-key pulse & rapid arpeggios (20s loop)
 function generateBossBGM(duration = 20.0) {
   return synthesizeTrack(duration, (t) => {
@@ -309,6 +398,8 @@ async function main() {
   const tracks = [
     { id: "bgm_title", kind: "bgm", loop: true, loopStart: 0, loopEnd: 24.0, gain: 0.75, data: generateTitleBGM(24.0) },
     { id: "bgm_stage", kind: "bgm", loop: true, loopStart: 0, loopEnd: 28.0, gain: 0.75, data: generateStageBGM(28.0) },
+    { id: "bgm_stage2", kind: "bgm", loop: true, loopStart: 0, loopEnd: 24.0, gain: 0.75, data: generateStage2BGM(24.0) },
+    { id: "bgm_midboss", kind: "bgm", loop: true, loopStart: 0, loopEnd: 16.0, gain: 0.8, data: generateMidbossBGM(16.0) },
     { id: "bgm_boss", kind: "bgm", loop: true, loopStart: 0, loopEnd: 20.0, gain: 0.8, data: generateBossBGM(20.0) },
     { id: "jingle_clear", kind: "jingle", loop: false, gain: 0.85, data: generateJingleClear() },
     { id: "jingle_gameover", kind: "jingle", loop: false, gain: 0.85, data: generateJingleGameOver() },

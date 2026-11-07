@@ -1,4 +1,4 @@
-import { ENEMY_DEFS } from "./enemies";
+import { damageEnemy } from "./enemies";
 import { Bullet, Enemy, GameEvent, Pickup, Player, World } from "./types";
 
 export function circlesIntersect(
@@ -82,8 +82,6 @@ export function checkMeleeHits(world: World, events: GameEvent[]): void {
 
     if (isCloseEnough && (isFrontal || isPointBlank)) {
       swing.hitEnemyIds.push(enemy.id);
-      enemy.hp -= meleeDamage;
-      enemy.flash = 8;
       world.hitstopTimer = 2; // Tactile 2-tick hitstop
 
       events.push({
@@ -93,44 +91,8 @@ export function checkMeleeHits(world: World, events: GameEvent[]): void {
         y: (p.y + enemy.y) / 2,
         dmg: meleeDamage,
       });
-      events.push({
-        t: "hit",
-        id: enemy.id,
-        x: enemy.x,
-        y: enemy.y,
-      });
 
-      if (enemy.hp <= 0) {
-        enemy.alive = false;
-        world.stats.killed++;
-        world.score += ENEMY_DEFS[enemy.kind]?.score ?? 100;
-        events.push({
-          t: "explode",
-          size: enemy.kind === "leviathan" ? "l" : enemy.kind === "albatross" || enemy.kind === "condor" ? "m" : "s",
-          x: enemy.x,
-          y: enemy.y,
-        });
-
-        if (enemy.formation > 0) {
-          const f = world.formations.get(enemy.formation);
-          if (f) {
-            f.killed++;
-            f.lastX = enemy.x;
-            f.lastY = enemy.y;
-            if (f.killed === f.total && f.reward) {
-              world.pickups.push({
-                id: world.nextId++,
-                kind: f.reward,
-                x: f.lastX,
-                y: f.lastY,
-                age: 0,
-                alive: true,
-              });
-              events.push({ t: "pickup", kind: f.reward, x: f.lastX, y: f.lastY });
-            }
-          }
-        }
-      }
+      damageEnemy(world, enemy, meleeDamage, events, (p.x + enemy.x) / 2, (p.y + enemy.y) / 2);
     }
   }
 }
@@ -164,39 +126,43 @@ export function checkGraze(world: World, events: GameEvent[]): void {
 
 export function checkOrbitSwordHits(world: World, events: GameEvent[]): void {
   const p = world.player;
-  if (p.downTimer > 0 || !p.orbitSwords.active) return;
+  if (p.downTimer > 0 || !p.orbitSwords?.active) return;
 
   const swordRadius = 72;
-  const angles = [p.orbitSwords.angle, p.orbitSwords.angle + Math.PI];
 
-  for (const ang of angles) {
-    const sx = p.x + Math.cos(ang) * swordRadius;
-    const sy = p.y + Math.sin(ang) * swordRadius;
+  // 1. Destroy/parry enemy bullets using individual destructible Aegis Orbs
+  for (const b of world.bullets) {
+    if (!b.alive || b.owner !== "enemy") continue;
 
-    // Destroy/parry enemy bullets near sword
-    for (const b of world.bullets) {
-      if (b.alive && b.owner === "enemy") {
-        if (Math.hypot(b.x - sx, b.y - sy) <= 22 + b.r) {
-          b.alive = false;
-          world.score += 50;
-          events.push({ t: "hit", id: b.id, x: b.x, y: b.y });
-        }
+    for (const orb of p.aegisOrbs) {
+      if (!orb.alive) continue;
+      const ox = p.x + Math.cos(p.orbitSwords.angle + orb.angleOffset) * swordRadius;
+      const oy = p.y + Math.sin(p.orbitSwords.angle + orb.angleOffset) * swordRadius;
+
+      if (Math.hypot(b.x - ox, b.y - oy) <= 18 + b.r) {
+        b.alive = false;
+        orb.alive = false; // Destructible: this specific orb is broken!
+        p.mana = Math.min(p.maxMana, p.mana + 15);
+        world.score += 250;
+        events.push({ t: "orbDestroyed", id: orb.id, x: ox, y: oy });
+        events.push({ t: "explode", size: "s", x: ox, y: oy });
+        events.push({ t: "hit", id: b.id, x: b.x, y: b.y });
+        break; // Only 1 orb destroyed per bullet!
       }
     }
+  }
 
-    // Damage enemies contacting the orbiting swords
+  // 2. Damage enemies contacting alive Aegis Orbs
+  for (const orb of p.aegisOrbs) {
+    if (!orb.alive) continue;
+    const ox = p.x + Math.cos(p.orbitSwords.angle + orb.angleOffset) * swordRadius;
+    const oy = p.y + Math.sin(p.orbitSwords.angle + orb.angleOffset) * swordRadius;
+
     for (const enemy of world.enemies) {
-      if (enemy.alive && Math.hypot(enemy.x - sx, enemy.y - sy) <= 24 + enemy.r) {
+      if (enemy.alive && Math.hypot(enemy.x - ox, enemy.y - oy) <= 22 + enemy.r) {
         if (world.tick % 8 === 0) {
-          enemy.hp -= 1;
-          enemy.flash = 4;
           p.mana = Math.min(p.maxMana, p.mana + 1);
-          events.push({ t: "hit", id: enemy.id, x: sx, y: sy });
-          if (enemy.hp <= 0) {
-            enemy.alive = false;
-            world.stats.killed++;
-            events.push({ t: "explode", size: "s", x: enemy.x, y: enemy.y });
-          }
+          damageEnemy(world, enemy, 1, events, ox, oy);
         }
       }
     }

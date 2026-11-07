@@ -28,7 +28,7 @@ export const NO_INPUT: Readonly<InputFrame> = Object.freeze({
 });
 
 export type ExplosionSize = "s" | "m" | "l" | "boss";
-export type PickupKind = "pow" | "roll" | "medal";
+export type PickupKind = "pow" | "roll" | "medal" | "aegis";
 
 export type GameEvent =
   | { t: "shot"; level: 1 | 2 | 3 }
@@ -43,7 +43,9 @@ export type GameEvent =
   | { t: "graze"; x: number; y: number; bulletId: number }
   | { t: "playerDown"; x: number; y: number }
   | { t: "respawn" }
-  | { t: "warning" }
+  | { t: "warning"; isMidboss?: boolean }
+  | { t: "midbossDefeated"; kind: EnemyKind }
+  | { t: "orbDestroyed"; id: number; x: number; y: number }
   | { t: "bossPhase"; phase: number }
   | { t: "stageClear"; stage: number }
   | { t: "gameOver" };
@@ -129,6 +131,22 @@ export interface Bullet {
   owner: "player" | "enemy";
   alive: boolean;
   grazed?: boolean;
+  lane?: "center" | "left" | "right";
+  tier?: number;
+}
+
+export interface AegisOrb {
+  id: number;
+  angleOffset: number;
+  alive: boolean;
+  hp: number;
+}
+
+export interface LanePower {
+  center: number;
+  left: number;
+  right: number;
+  nextLane: "center" | "left" | "right";
 }
 
 export interface Pickup {
@@ -162,6 +180,8 @@ export interface Player {
   ultimateTimer: number;
   prevUlt: boolean;
   grazeCount: number;
+  aegisOrbs: AegisOrb[];
+  lanePower: LanePower;
   orbitSwords: {
     angle: number;
     active: boolean;

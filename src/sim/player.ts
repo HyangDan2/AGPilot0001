@@ -8,6 +8,7 @@ import {
   SlashDirection,
   World,
 } from "./types";
+import { damageEnemy } from "./enemies";
 
 export const PLAYER_SPEED = 420; // logical px / s
 export const PLAYER_HIT_RADIUS = 10;
@@ -38,6 +39,16 @@ export function createPlayer(): Player {
     ultimateTimer: 0,
     prevUlt: false,
     grazeCount: 0,
+    aegisOrbs: [
+      { id: 1, angleOffset: 0, alive: true, hp: 1 },
+      { id: 2, angleOffset: Math.PI, alive: true, hp: 1 },
+    ],
+    lanePower: {
+      center: 1.0,
+      left: 1.0,
+      right: 1.0,
+      nextLane: "center",
+    },
     orbitSwords: {
       angle: 0,
       active: true,
@@ -82,19 +93,46 @@ export function updatePlayer(
   if (p.ultimateTimer > 0) {
     p.ultimateTimer--;
 
-    // Follow-up Divine Impact shockwave ticks (10 x 3 at ticks 60, 45, 30 for 70 total damage)
-    if (p.ultimateTimer === 60 || p.ultimateTimer === 45 || p.ultimateTimer === 30) {
-      const beamHalfWidth = 72;
-      for (const enemy of world.enemies) {
-        if (enemy.alive && Math.abs(enemy.x - p.x) <= beamHalfWidth + enemy.r && enemy.y <= p.y + 30) {
-          enemy.hp -= 10;
-          enemy.flash = 6;
-          events.push({ t: "meleeHit", id: enemy.id, x: enemy.x, y: enemy.y, dmg: 10 });
-          if (enemy.hp <= 0) {
-            enemy.alive = false;
-            world.stats.killed++;
-            world.score += 250;
-            events.push({ t: "explode", size: "m", x: enemy.x, y: enemy.y });
+    // Active Beam Phase (42 ticks: from timer 60 down to 19)
+    if (p.ultimateTimer <= 60 && p.ultimateTimer >= 19) {
+      // Clear enemy bullets at start of Active Beam (tick 60)
+      if (p.ultimateTimer === 60) {
+        for (const b of world.bullets) {
+          if (b.alive && b.owner === "enemy") {
+            b.alive = false;
+            world.score += 100;
+            events.push({ t: "hit", id: b.id, x: b.x, y: b.y });
+          }
+        }
+      }
+
+      // Continuous tick damage calculation: total exactly 70 over 42 ticks
+      const elapsed = 60 - p.ultimateTimer; // 0..41
+      const dmg = Math.floor((70 * (elapsed + 1)) / 42) - Math.floor((70 * elapsed) / 42);
+
+      if (dmg > 0) {
+        const beamHalfWidth = 72;
+        for (const enemy of world.enemies) {
+          if (!enemy.alive) continue;
+          if (Math.abs(enemy.x - p.x) <= beamHalfWidth + enemy.r && enemy.y <= p.y + 30) {
+            damageEnemy(world, enemy, dmg, events, enemy.x, enemy.y);
+          }
+          // Boss parts damage
+          if (enemy.parts.length > 0) {
+            for (const part of enemy.parts) {
+              if (!part.alive) continue;
+              const px = enemy.x + part.dx;
+              const py = enemy.y + part.dy;
+              if (Math.abs(px - p.x) <= beamHalfWidth + part.r && py <= p.y + 30) {
+                part.hp -= dmg;
+                part.flash = 6;
+                if (part.hp <= 0) {
+                  part.alive = false;
+                  world.score += 500;
+                  events.push({ t: "explode", size: "m", x: px, y: py });
+                }
+              }
+            }
           }
         }
       }
@@ -103,34 +141,9 @@ export function updatePlayer(
 
   if (ultTriggered && p.mana >= 100 && p.ultimateTimer === 0 && p.downTimer === 0) {
     p.mana = 0;
-    p.ultimateTimer = 90; // Multi-phase Gungnir Ultimate duration
+    p.ultimateTimer = 90; // Multi-phase Gungnir Ultimate duration: 15 Awakening + 15 Summoning + 42 Active + 18 Recovery
     p.invuln = Math.max(p.invuln, 90);
     events.push({ t: "ultimate", x: p.x, y: p.y });
-
-    // Cancel all active enemy bullets on screen
-    for (const b of world.bullets) {
-      if (b.alive && b.owner === "enemy") {
-        b.alive = false;
-        world.score += 100;
-        events.push({ t: "hit", id: b.id, x: b.x, y: b.y });
-      }
-    }
-
-    // Initial Divine Impact (40 damage)
-    const beamHalfWidth = 72;
-    for (const enemy of world.enemies) {
-      if (enemy.alive && Math.abs(enemy.x - p.x) <= beamHalfWidth + enemy.r && enemy.y <= p.y + 30) {
-        enemy.hp -= 40;
-        enemy.flash = 12;
-        events.push({ t: "meleeHit", id: enemy.id, x: enemy.x, y: enemy.y, dmg: 40 });
-        if (enemy.hp <= 0) {
-          enemy.alive = false;
-          world.stats.killed++;
-          world.score += 500;
-          events.push({ t: "explode", size: "l", x: enemy.x, y: enemy.y });
-        }
-      }
-    }
   }
 
   // Handle evasive roll (X / button)
@@ -259,8 +272,11 @@ function firePlayerWeapon(world: World, events: GameEvent[]): void {
     events.push({ t: "shot", level: 2 });
   } else {
     p.fireCooldown = 8;
-    // 3-way spread
+    // 3-way spread with progressive lane power (Center, Left, Right)
     const spreadVx = 180;
+    const cMult = p.lanePower?.center ?? 1.0;
+    const lMult = p.lanePower?.left ?? 1.0;
+    const rMult = p.lanePower?.right ?? 1.0;
     world.bullets.push(
       {
         id: world.nextId++,
@@ -269,9 +285,11 @@ function firePlayerWeapon(world: World, events: GameEvent[]): void {
         vx: 0,
         vy: -shotSpeed,
         r: 7,
-        dmg: 1,
+        dmg: 1 * cMult,
         owner: "player",
         alive: true,
+        lane: "center",
+        tier: Math.round((cMult - 1.0) / 0.5),
       },
       {
         id: world.nextId++,
@@ -280,9 +298,11 @@ function firePlayerWeapon(world: World, events: GameEvent[]): void {
         vx: -spreadVx,
         vy: -shotSpeed * 0.96,
         r: 6,
-        dmg: 1,
+        dmg: 1 * lMult,
         owner: "player",
         alive: true,
+        lane: "left",
+        tier: Math.round((lMult - 1.0) / 0.5),
       },
       {
         id: world.nextId++,
@@ -291,9 +311,11 @@ function firePlayerWeapon(world: World, events: GameEvent[]): void {
         vx: spreadVx,
         vy: -shotSpeed * 0.96,
         r: 6,
-        dmg: 1,
+        dmg: 1 * rMult,
         owner: "player",
         alive: true,
+        lane: "right",
+        tier: Math.round((rMult - 1.0) / 0.5),
       },
     );
     events.push({ t: "shot", level: 3 });
@@ -314,6 +336,20 @@ export function killPlayer(world: World, events: GameEvent[]): void {
   if (p.power > 1) {
     p.power = (p.power - 1) as 1 | 2;
   }
+  // Reduce lane power by 0.5 on life loss (min 1.0)
+  if (p.lanePower) {
+    p.lanePower.center = Math.max(1.0, p.lanePower.center - 0.5);
+    p.lanePower.left = Math.max(1.0, p.lanePower.left - 0.5);
+    p.lanePower.right = Math.max(1.0, p.lanePower.right - 0.5);
+  }
+  // Restore Aegis Orbs on respawn
+  if (p.aegisOrbs) {
+    for (const orb of p.aegisOrbs) {
+      orb.alive = true;
+      orb.hp = 1;
+    }
+  }
+
   events.push({ t: "playerDown", x: p.x, y: p.y });
   events.push({ t: "explode", size: "l", x: p.x, y: p.y });
 }

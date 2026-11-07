@@ -886,71 +886,241 @@ export class GameRenderer {
     ctx.save();
     ctx.translate(FIELD_W / 2, cy);
 
-    // Divine light shaft and cloud mist beneath dais
-    ctx.fillStyle = "rgba(68, 215, 245, 0.22)";
+    // 1. Distant Floating Golden Citadel & Yggdrasil Branches (Above Altar)
+    ctx.save();
+    ctx.globalAlpha = 0.65;
+    // Yggdrasil Luminous Branch Silhouette
+    ctx.strokeStyle = "rgba(121, 85, 234, 0.45)";
+    ctx.lineWidth = 14;
     ctx.beginPath();
-    ctx.moveTo(-90, 260);
-    ctx.lineTo(90, 260);
-    ctx.lineTo(160, 480);
-    ctx.lineTo(-160, 480);
-    ctx.closePath();
-    ctx.fill();
-
-    // Massive stone drop shadow
-    ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-    ctx.fillRect(-105, -310, 210, 620);
-
-    // White marble sanctuary landing platform
-    ctx.fillStyle = "#e0e6ed";
-    ctx.strokeStyle = "#44d7f5";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(-98, -315, 196, 630, [45, 45, 15, 15]);
-    ctx.fill();
+    ctx.moveTo(-340, -420);
+    ctx.bezierCurveTo(-160, -480, 80, -380, 340, -450);
     ctx.stroke();
-
-    // Inner sacred marble tile inlay
-    ctx.fillStyle = "#cbd5e1";
-    ctx.beginPath();
-    ctx.roundRect(-86, -300, 172, 600, [35, 35, 10, 10]);
-    ctx.fill();
-
-    // Glowing cyan runic pathway
-    ctx.strokeStyle = "#44d7f5";
-    ctx.shadowColor = "#44d7f5";
-    ctx.shadowBlur = 12;
+    ctx.strokeStyle = "rgba(248, 192, 80, 0.4)";
     ctx.lineWidth = 4;
-    ctx.setLineDash([28, 20]);
     ctx.beginPath();
-    ctx.moveTo(0, -280);
-    ctx.lineTo(0, 260);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.shadowBlur = 0;
-
-    // Center sacred magic rune circle
-    ctx.strokeStyle = "#f8c050";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(0, -100, 48, 0, Math.PI * 2);
+    ctx.moveTo(-340, -420);
+    ctx.bezierCurveTo(-160, -480, 80, -380, 340, -450);
     ctx.stroke();
 
-    // 4 Corner Floating Crystal Monoliths
-    for (const [px, py] of [[-74, -260], [74, -260], [-74, 200], [74, 200]]) {
-      ctx.fillStyle = "#44d7f5";
-      ctx.shadowColor = "#44d7f5";
-      ctx.shadowBlur = 10;
+    // Floating Golden Citadel Spires
+    ctx.fillStyle = "rgba(248, 192, 80, 0.35)";
+    for (const [cx, w, h] of [[-120, 28, 90], [-60, 36, 130], [0, 44, 160], [60, 36, 130], [120, 28, 90]]) {
       ctx.beginPath();
-      ctx.moveTo(px, py - 18);
-      ctx.lineTo(px + 10, py);
-      ctx.lineTo(px, py + 18);
-      ctx.lineTo(px - 10, py);
+      ctx.moveTo(cx - w / 2, -320);
+      ctx.lineTo(cx, -320 - h);
+      ctx.lineTo(cx + w / 2, -320);
       ctx.closePath();
       ctx.fill();
     }
-    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // 2. Divine Bifrost Celestial Aura (Prismatic Radial Backlight)
+    const auroraGrad = ctx.createRadialGradient(0, 0, 40, 0, 0, 320);
+    auroraGrad.addColorStop(0, "rgba(68, 215, 245, 0.35)");
+    auroraGrad.addColorStop(0.4, "rgba(121, 85, 234, 0.2)");
+    auroraGrad.addColorStop(0.8, "rgba(248, 192, 80, 0.15)");
+    auroraGrad.addColorStop(1, "rgba(8, 13, 35, 0)");
+    ctx.fillStyle = auroraGrad;
+    ctx.beginPath();
+    ctx.arc(0, 0, 320, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3. Massive Altar Base Shadow
+    ctx.fillStyle = "rgba(4, 7, 18, 0.55)";
+    ctx.beginPath();
+    ctx.ellipse(0, 40, 260, 230, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 4. Stepped Concentric Norse Altar Dais (Octagonal & Circular Marble)
+    // Tier 1: Outer stepped octagonal plinth (r = 230)
+    ctx.fillStyle = "#cbd5e1";
+    ctx.strokeStyle = "#94a3b8";
+    ctx.lineWidth = 4;
+    this.drawRegularPolygon(ctx, 0, 0, 230, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    // Gold trim band on Tier 1
+    ctx.strokeStyle = "#f8c050";
+    ctx.lineWidth = 3;
+    this.drawRegularPolygon(ctx, 0, 0, 218, 8);
+    ctx.stroke();
+
+    // Tier 2: Mid stepped circular marble dais (r = 180)
+    ctx.fillStyle = "#e2e8f0";
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, 180, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Gold trim ring on Tier 2
+    ctx.strokeStyle = "#f8c050";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 168, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Tier 3: Inner Sacred High Altar (r = 130, pure polished white marble)
+    ctx.fillStyle = "#f8fafc";
+    ctx.strokeStyle = "#44d7f5";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 130, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // 5. Sacred Concentric Runic Circles & Star Glyph (Glowing Cyan & Gold)
+    ctx.save();
+    ctx.shadowColor = "#44d7f5";
+    ctx.shadowBlur = 14;
+    ctx.strokeStyle = "#44d7f5";
+    ctx.lineWidth = 2.4;
+
+    // Outer Rune Ring
+    ctx.beginPath();
+    ctx.arc(0, 0, 115, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 16 Cardinal & Ordinal Rune Glyphs on Outer Ring
+    for (let r = 0; r < 16; r++) {
+      const theta = (r * Math.PI) / 8;
+      const rx1 = Math.cos(theta) * 105;
+      const ry1 = Math.sin(theta) * 105;
+      const rx2 = Math.cos(theta) * 125;
+      const ry2 = Math.sin(theta) * 125;
+      ctx.beginPath();
+      ctx.moveTo(rx1, ry1);
+      ctx.lineTo(rx2, ry2);
+      ctx.stroke();
+    }
+
+    // Mid Concentric Rune Circle with Golden Octagram Star
+    ctx.strokeStyle = "#f8c050";
+    ctx.shadowColor = "#f8c050";
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, 80, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 8-Point Intersecting Golden Star
+    ctx.beginPath();
+    for (let s = 0; s < 8; s++) {
+      const a = (s * Math.PI) / 4;
+      const nextA = ((s + 3) * Math.PI) / 4;
+      ctx.moveTo(Math.cos(a) * 80, Math.sin(a) * 80);
+      ctx.lineTo(Math.cos(nextA) * 80, Math.sin(nextA) * 80);
+    }
+    ctx.stroke();
+
+    // Central Radiant Valkyrie Crest (Central Eye / Sun Rune)
+    ctx.fillStyle = "#f8c050";
+    ctx.beginPath();
+    ctx.arc(0, 0, 24, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(0, 0, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 6. Massive Flanking Temple Columns with Gold Capitals (x = -260, +260)
+    for (const px of [-260, 260]) {
+      // Column Base
+      ctx.fillStyle = "#cbd5e1";
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 2;
+      ctx.fillRect(px - 26, -240, 52, 480);
+      ctx.strokeRect(px - 26, -240, 52, 480);
+
+      // Fluted pillar groves
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 1.5;
+      for (const gx of [-16, -6, 6, 16]) {
+        ctx.beginPath();
+        ctx.moveTo(px + gx, -230);
+        ctx.lineTo(px + gx, 230);
+        ctx.stroke();
+      }
+
+      // Ornate Gold Capital & Base
+      ctx.fillStyle = "#f8c050";
+      ctx.fillRect(px - 32, -250, 64, 18);
+      ctx.fillRect(px - 32, 232, 64, 18);
+    }
+
+    // 7. Flanking Sculpted Valkyrie Wing Statues on Marble Pedestals (x = -175, +175)
+    for (const [sx, flip] of [[-175, 1], [175, -1]]) {
+      // Marble Pedestal
+      ctx.fillStyle = "#e2e8f0";
+      ctx.strokeStyle = "#94a3b8";
+      ctx.lineWidth = 2;
+      ctx.fillRect(sx - 20, -70, 40, 90);
+      ctx.strokeRect(sx - 20, -70, 40, 90);
+
+      // Gold Trim
+      ctx.fillStyle = "#f8c050";
+      ctx.fillRect(sx - 22, -74, 44, 8);
+
+      // Sculpted Valkyrie Wings (Spread upwards)
+      ctx.save();
+      ctx.translate(sx, -80);
+      ctx.scale(flip, 1);
+      ctx.fillStyle = "#f8fafc";
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 1.8;
+
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(15, -45, 35, -80, 55, -95);
+      ctx.bezierCurveTo(35, -60, 20, -35, 12, -15);
+      ctx.bezierCurveTo(25, -45, 38, -65, 45, -75);
+      ctx.bezierCurveTo(25, -40, 15, -20, 6, -5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 8. Rising Divine Blue Mana Motes & Golden Sparks
+    ctx.save();
+    for (let p = 0; p < 18; p++) {
+      const seed = p * 137.5;
+      const pr = 40 + (seed % 140);
+      const pa = (seed * Math.PI) / 180 + (cy * 0.004);
+      const px = Math.cos(pa) * pr;
+      const py = Math.sin(pa) * pr - (cy * 0.2 % 100);
+      ctx.fillStyle = p % 2 === 0 ? "rgba(68, 215, 245, 0.75)" : "rgba(248, 192, 80, 0.75)";
+      ctx.shadowColor = p % 2 === 0 ? "#44d7f5" : "#f8c050";
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(px, py, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
 
     ctx.restore();
+  }
+
+  private drawRegularPolygon(
+    ctx: CanvasRenderingContext2D,
+    cx: number,
+    cy: number,
+    r: number,
+    sides: number,
+  ): void {
+    ctx.beginPath();
+    for (let i = 0; i < sides; i++) {
+      const angle = (i * 2 * Math.PI) / sides;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
   }
 
   private drawCloudShadows(scrollY: number): void {
@@ -985,15 +1155,34 @@ export class GameRenderer {
     const bankAngle = (p.vx / 420) * 0.18;
     ctx.rotate(bankAngle);
 
+    // Phase 3: Levitation vertical sinusoidal bob in idle stance
+    const idleBob = p.rollTimer > 0 ? 0 : Math.sin((tick * Math.PI) / 24) * 3.5;
+    ctx.translate(0, idleBob);
+
     let scale = 1;
     let isRolling = false;
-    let rollFrameIndex = 0;
+    let rollProgress = 0;
+    let rollFrameKey = "roll_0";
     if (p.rollTimer > 0) {
       isRolling = true;
-      const progress = 1 - p.rollTimer / 72;
-      scale = 1 + Math.sin(progress * Math.PI) * 0.45;
-      ctx.scale(scale, scale);
-      rollFrameIndex = Math.min(3, Math.floor(progress * 4));
+      rollProgress = 1 - p.rollTimer / 72;
+      // Phase 5: 12-step axial rotation across 72 ticks
+      const rollStep12 = Math.min(11, Math.floor(rollProgress * 12));
+      const rollFrames = [
+        "roll_0", "roll_1", "roll_2", "roll_3",
+        "roll_0", "roll_1", "roll_2", "roll_3",
+        "roll_0", "roll_1", "roll_2", "roll_3",
+      ];
+      rollFrameKey = rollFrames[rollStep12];
+
+      // 360° axial rotation angle
+      const spinAngle = rollProgress * Math.PI * 2;
+      ctx.rotate(spinAngle);
+
+      scale = 1 + Math.sin(rollProgress * Math.PI) * 0.42;
+      const scaleX = (0.35 + 0.65 * Math.abs(Math.cos(spinAngle))) * scale;
+      const scaleY = (0.75 + 0.25 * Math.abs(Math.sin(spinAngle))) * scale;
+      ctx.scale(scaleX, scaleY);
     }
 
     // Divine ground drop shadow
@@ -1014,41 +1203,51 @@ export class GameRenderer {
     ctx.arc(0, 60 + (tick % 7) * 3, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    if (this.eiraLoaded && this.eiraImg) {
-      let frameKey = "idle_0";
-      if (isRolling) {
-        frameKey = `roll_${rollFrameIndex}`;
-        // Cyan afterimage during roll
+    // Phase 5: 3 Cyan/Azure Afterimages during Roll
+    if (isRolling && this.eiraLoaded && this.eiraImg) {
+      for (const lag of [0.06, 0.12, 0.18]) {
+        const pastProgress = Math.max(0, rollProgress - lag);
+        const pastAngle = pastProgress * Math.PI * 2;
         ctx.save();
-        ctx.globalAlpha = 0.3;
+        ctx.rotate(pastAngle - rollProgress * Math.PI * 2);
+        ctx.globalAlpha = 0.35 * (1 - lag / 0.22);
         ctx.drawImage(
           this.eiraImg,
-          EIRA_FRAMES[frameKey].sx,
-          EIRA_FRAMES[frameKey].sy,
+          EIRA_FRAMES[rollFrameKey].sx,
+          EIRA_FRAMES[rollFrameKey].sy,
           EIRA_CELL,
           EIRA_CELL,
-          -90,
-          -90,
-          180,
-          180,
+          -80,
+          -80,
+          160,
+          160,
         );
         ctx.restore();
+      }
+    }
+
+    if (this.eiraLoaded && this.eiraImg) {
+      // Phase 3: Animation Priority Resolution
+      let frameKey = "idle_0";
+      if (isRolling) {
+        frameKey = rollFrameKey;
       } else if (p.meleeSwing) {
-        // Alternating sword slash motion (slash_0: L->R, slash_1: R->L)
         frameKey = p.meleeSwing.direction === "l2r" ? "slash_0" : "slash_1";
-      } else if (p.fireCooldown > 6) {
+      } else if (Math.abs(p.vx) > 80) {
+        frameKey = p.vx < 0 ? "bank_left" : "bank_right";
+      } else if (p.fireCooldown > 12) {
         frameKey = "thrust";
-      } else if (p.vx < -60) {
-        frameKey = "bank_left";
-      } else if (p.vx > 60) {
-        frameKey = "bank_right";
       } else {
-        const animStep = Math.floor((tick % 32) / 8);
-        frameKey = `idle_${animStep}`;
+        // Phase 3: 8-step Idle Cycle
+        const idleCycle = [
+          "idle_0", "idle_1", "idle_2", "idle_3",
+          "hover", "idle_2", "idle_1", "idle_0",
+        ];
+        const animStep8 = Math.floor((tick % 48) / 6);
+        frameKey = idleCycle[animStep8];
       }
 
       const frame = EIRA_FRAMES[frameKey] || EIRA_FRAMES.idle_0;
-      // Default 160px render scale for high-definition character clarity
       const drawSize = 160;
       const half = drawSize / 2;
       ctx.drawImage(
@@ -1064,32 +1263,46 @@ export class GameRenderer {
       );
     } else {
       // Procedural fallback: Valkyrie winged silhouette
-      this.drawProceduralValkyrie(ctx, p, scale);
+      this.drawProceduralValkyrie(ctx, p, scale, tick);
     }
 
-    // Invulnerability Protective Ward Barrier
+    // Invulnerability Protective Ward Barrier with Chromatic Refraction Ring
     if (p.rollTimer > 0 || p.invuln > 0) {
+      ctx.save();
       ctx.strokeStyle = "rgba(68, 215, 245, 0.85)";
       ctx.shadowColor = "#44d7f5";
-      ctx.shadowBlur = 12;
+      ctx.shadowBlur = 14;
       ctx.lineWidth = 3.5;
       ctx.beginPath();
       ctx.arc(0, 0, 75 * scale, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+
+      // Secondary Refraction Ripple
+      ctx.strokeStyle = "rgba(121, 85, 234, 0.55)";
+      ctx.lineWidth = 2.0;
+      ctx.beginPath();
+      ctx.arc(0, 0, (75 + Math.sin(tick * 0.18) * 6) * scale, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
 
     ctx.restore();
   }
 
-  private drawProceduralValkyrie(ctx: CanvasRenderingContext2D, _p: Player, scale: number): void {
-    // Ivory Skirt Billowing
+  private drawProceduralValkyrie(
+    ctx: CanvasRenderingContext2D,
+    _p: Player,
+    scale: number,
+    tick = 0,
+  ): void {
+    // Phase 3: 8-Step Fluttering Ivory Skirt
+    const skirtFlutter = Math.sin((tick % 48) / 48 * Math.PI * 2) * 4 * scale;
     ctx.fillStyle = "#e2e8f0";
     ctx.beginPath();
     ctx.moveTo(-18 * scale, 8 * scale);
     ctx.lineTo(18 * scale, 8 * scale);
-    ctx.lineTo(28 * scale, 38 * scale);
-    ctx.lineTo(-28 * scale, 38 * scale);
+    ctx.lineTo((28 * scale) + skirtFlutter, 38 * scale);
+    ctx.lineTo((-28 * scale) + skirtFlutter * 0.5, 38 * scale);
     ctx.closePath();
     ctx.fill();
 
@@ -1099,11 +1312,19 @@ export class GameRenderer {
     ctx.fillStyle = "#f8c050";
     ctx.fillRect(-6 * scale, -8 * scale, 12 * scale, 12 * scale);
 
-    // Silver Braid & Winged Helmet
+    // Silver Braid with Flutter
+    const braidCurl = Math.sin((tick % 48) / 48 * Math.PI * 2 + 1.2) * 5 * scale;
     ctx.fillStyle = "#cbd5e1";
     ctx.beginPath();
     ctx.arc(0, -20 * scale, 12 * scale, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.lineWidth = 4 * scale;
+    ctx.beginPath();
+    ctx.moveTo(-6 * scale, -16 * scale);
+    ctx.quadraticCurveTo(-14 * scale + braidCurl, 0, -8 * scale + braidCurl, 24 * scale);
+    ctx.stroke();
 
     // Helm Wings
     ctx.fillStyle = "#ffffff";
@@ -1116,24 +1337,29 @@ export class GameRenderer {
       ctx.fill();
     }
 
-    // Oathblade Forward
+    // Phase 3: Ready Stance - Sword Held Diagonally Back/Right
     ctx.strokeStyle = "#44d7f5";
+    ctx.shadowColor = "#44d7f5";
+    ctx.shadowBlur = 8;
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(14 * scale, 0);
-    ctx.lineTo(14 * scale, -44 * scale);
+    ctx.moveTo(12 * scale, 2 * scale);
+    ctx.lineTo(34 * scale, 32 * scale);
     ctx.stroke();
+    ctx.shadowBlur = 0;
   }
 
   private drawAzureAegisOrbs(p: Player, tick: number): void {
-    if (p.downTimer > 0 || !p.orbitSwords?.active) return;
+    if (p.downTimer > 0 || !p.orbitSwords?.active || !p.aegisOrbs) return;
     const ctx = this.ctx;
     const orbRadius = 72;
-    const angles = [p.orbitSwords.angle, p.orbitSwords.angle + Math.PI];
 
     ctx.save();
-    for (let i = 0; i < angles.length; i++) {
-      const ang = angles[i];
+    // Phase 7: Render only ALIVE Aegis Orbs
+    for (let i = 0; i < p.aegisOrbs.length; i++) {
+      const orb = p.aegisOrbs[i];
+      if (!orb.alive) continue;
+      const ang = p.orbitSwords.angle + orb.angleOffset;
       const ox = p.x + Math.cos(ang) * orbRadius;
       const oy = p.y + Math.sin(ang) * orbRadius;
 
@@ -1178,29 +1404,9 @@ export class GameRenderer {
       ctx.beginPath();
       ctx.arc(0, 0, 8.5, 0, Math.PI * 2);
       ctx.fill();
-
-      // Sharp white specular center dot
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(-2, -2, 2.2, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.shadowBlur = 0;
 
       ctx.restore();
-
-      // 4. Micro Orbit Particle Trail
-      if (tick % 2 === 0) {
-        this.particles.push({
-          x: ox + (Math.random() - 0.5) * 4,
-          y: oy + (Math.random() - 0.5) * 4,
-          vx: -Math.sin(ang) * 35,
-          vy: Math.cos(ang) * 35,
-          life: 0,
-          maxLife: 12,
-          size: 2.4,
-          color: i === 0 ? "#44d7f5" : "#f8c050",
-          kind: "spark",
-        });
-      }
     }
     ctx.restore();
   }
@@ -1557,23 +1763,67 @@ export class GameRenderer {
       if (!b.alive) continue;
 
       if (b.owner === "player") {
-        // Glowing Crescent Arc Blade
         ctx.save();
         ctx.translate(b.x, b.y);
-        ctx.shadowColor = "#44d7f5";
-        ctx.shadowBlur = 12;
 
-        ctx.fillStyle = "#ffffff";
-        ctx.strokeStyle = "#44d7f5";
-        ctx.lineWidth = 2.5;
+        // Phase 8: Progressive Three-Lane Arc Blade Visuals
+        const tier = b.tier ?? 0;
+        let glowColor = "#44d7f5";
+        let strokeColor = "#44d7f5";
+        let fillColor = "#ffffff";
+        let lineWidth = 2.5;
+        let shadowBlur = 12;
+
+        if (tier === 1) {
+          // Tier 1: Compressed Blue-White
+          glowColor = "#60a5fa";
+          strokeColor = "#93c5fd";
+          fillColor = "#ffffff";
+          lineWidth = 3.0;
+          shadowBlur = 15;
+        } else if (tier === 2) {
+          // Tier 2: Blue-White with Gold Halo
+          glowColor = "#f8c050";
+          strokeColor = "#fcd34d";
+          fillColor = "#f0fdf4";
+          lineWidth = 3.5;
+          shadowBlur = 18;
+        } else if (tier >= 3) {
+          // Tier 3: Radiant Platinum with Golden Core Sparks
+          glowColor = "#ffd700";
+          strokeColor = "#ffffff";
+          fillColor = "#ffffff";
+          lineWidth = 4.2;
+          shadowBlur = 24;
+        }
+
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = shadowBlur;
+        ctx.fillStyle = fillColor;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = lineWidth;
+
+        // Lane tilt matching bullet horizontal trajectory
+        if (b.vx !== 0) {
+          ctx.rotate(b.vx * 0.0012);
+        }
 
         ctx.beginPath();
         ctx.moveTo(-11, 4);
-        ctx.quadraticCurveTo(0, -16, 11, 4);
-        ctx.quadraticCurveTo(0, -6, -11, 4);
+        ctx.quadraticCurveTo(0, -18, 11, 4);
+        ctx.quadraticCurveTo(0, -7, -11, 4);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+
+        // Tier 3 radiant gold core sparks
+        if (tier >= 3) {
+          ctx.fillStyle = "#ffd700";
+          ctx.shadowBlur = 8;
+          for (const ox of [-6, 0, 6]) {
+            ctx.fillRect(ox, -3, 2, 2);
+          }
+        }
 
         ctx.restore();
       } else {
@@ -1625,6 +1875,37 @@ export class GameRenderer {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("POW", 0, 1);
+    } else if (p.kind === "aegis") {
+      // Phase 7: Azure Aegis Shield Rune Orb
+      ctx.shadowColor = "#44d7f5";
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = "rgba(68, 215, 245, 0.35)";
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "#44d7f5";
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(0, 0, 15, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = "#f8c050";
+      ctx.beginPath();
+      ctx.moveTo(0, -11);
+      ctx.lineTo(9, -4);
+      ctx.lineTo(6, 8);
+      ctx.lineTo(0, 12);
+      ctx.lineTo(-6, 8);
+      ctx.lineTo(-9, -4);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#0b1329";
+      ctx.font = "900 11px monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🛡", 0, 0);
     } else {
       // Evasion Rune / Medal
       ctx.shadowColor = "#44d7f5";
@@ -1740,6 +2021,30 @@ export class GameRenderer {
     for (let i = 1; i <= 3; i++) {
       ctx.fillStyle = i <= world.player.power ? "#44d7f5" : "rgba(68, 215, 245, 0.2)";
       ctx.fillRect(72 + (i - 1) * 16, FIELD_H - 96, 11, 11);
+    }
+
+    // Phase 8: 3-LANE ARC BLADE EMPOWERMENT MULTIPLIERS
+    if (world.player.lanePower) {
+      const { left, center, right } = world.player.lanePower;
+      ctx.font = "800 10px monospace";
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#8fa5d8";
+      ctx.fillText("LANES", 32, FIELD_H - 110);
+      const lanes = [
+        { label: "L", mult: left },
+        { label: "C", mult: center },
+        { label: "R", mult: right },
+      ];
+      lanes.forEach((l, idx) => {
+        const lx = 74 + idx * 38;
+        const isUpgraded = l.mult > 1.0;
+        ctx.fillStyle = isUpgraded
+          ? l.mult >= 3.0
+            ? "#ffd700"
+            : "#44d7f5"
+          : "rgba(217, 229, 255, 0.35)";
+        ctx.fillText(`${l.label}:${l.mult.toFixed(1)}x`, lx, FIELD_H - 110);
+      });
     }
 
     // MANA / ULTIMATE GAUGE (Gungnir's Judgement) - Top Center prominent display

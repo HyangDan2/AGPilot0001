@@ -6,19 +6,17 @@ import {
   hitPlayer,
   playerCollectsPickup,
 } from "./collision";
-import { ENEMY_DEFS, spawnEnemy, updateEnemyAI } from "./enemies";
+import { spawnEnemy, updateEnemyAI, damageEnemy } from "./enemies";
 import { createPlayer, killPlayer, updatePlayer } from "./player";
 import { rand } from "./rng";
 import { STAGE1_WAVES, WaveDef } from "./stage1";
 import { STAGE2_WAVES } from "./stage2";
 import {
   DT,
-  Enemy,
   FIELD_H,
   FIELD_W,
   GameEvent,
   InputFrame,
-  PickupKind,
   TICK_HZ,
   World,
   WorldOptions,
@@ -209,9 +207,12 @@ function spawnWave(world: World, wave: WaveDef, events: GameEvent[]): void {
     });
   }
 
-  if (wave.kind === "leviathan" || wave.kind === "kraken") {
+  if (wave.kind === "albatross" || wave.kind === "kraken") {
     world.phase = "boss";
-    events.push({ t: "warning" });
+    events.push({ t: "warning", isMidboss: true });
+  } else if (wave.kind === "leviathan") {
+    world.phase = "boss";
+    events.push({ t: "warning", isMidboss: false });
   }
 
   const baseX = wave.x ?? FIELD_W / 2;
@@ -220,11 +221,22 @@ function spawnWave(world: World, wave: WaveDef, events: GameEvent[]): void {
   const path = wave.path ?? "straight";
 
   if (wave.formation === "vee") {
-    // V-formation: 1 leader, pairs behind and outward
-    spawnEnemy(world, wave.kind, baseX, baseY, path, formationId);
-    for (let i = 1; i <= Math.floor(count / 2); i++) {
-      spawnEnemy(world, wave.kind, baseX - i * spacing, baseY - i * spacing, path, formationId);
-      spawnEnemy(world, wave.kind, baseX + i * spacing, baseY - i * spacing, path, formationId);
+    // V-formation: strictly spawn exactly 'count' enemies
+    if (count % 2 === 1) {
+      // Odd count (e.g. 5, 3): 1 leader + symmetric pairs on flanks
+      spawnEnemy(world, wave.kind, baseX, baseY, path, formationId);
+      const pairs = Math.floor(count / 2);
+      for (let i = 1; i <= pairs; i++) {
+        spawnEnemy(world, wave.kind, baseX - i * spacing, baseY - i * spacing, path, formationId);
+        spawnEnemy(world, wave.kind, baseX + i * spacing, baseY - i * spacing, path, formationId);
+      }
+    } else {
+      // Even count (e.g. 4): symmetric dual wings flanking center
+      const pairs = count / 2;
+      for (let i = 0; i < pairs; i++) {
+        spawnEnemy(world, wave.kind, baseX - (i + 0.5) * spacing, baseY - i * spacing, path, formationId);
+        spawnEnemy(world, wave.kind, baseX + (i + 0.5) * spacing, baseY - i * spacing, path, formationId);
+      }
     }
   } else if (wave.formation === "line") {
     // Single file line
@@ -272,9 +284,7 @@ function handlePlayerBulletCollisions(world: World, events: GameEvent[]): void {
 
       if (hitEnemy(enemy, bullet)) {
         bullet.alive = false;
-        enemy.flash = 4;
         world.player.mana = Math.min(world.player.maxMana, world.player.mana + 2);
-        events.push({ t: "hit", id: enemy.id, x: bullet.x, y: bullet.y });
 
         // Boss part damage first
         let partDamaged = false;
@@ -286,6 +296,7 @@ function handlePlayerBulletCollisions(world: World, events: GameEvent[]): void {
               partDamaged = true;
               if (part.hp <= 0) {
                 part.alive = false;
+                world.score += 500;
                 events.push({ t: "explode", size: "m", x: enemy.x + part.dx, y: enemy.y + part.dy });
               }
               break;
@@ -294,50 +305,9 @@ function handlePlayerBulletCollisions(world: World, events: GameEvent[]): void {
         }
 
         if (!partDamaged) {
-          enemy.hp -= bullet.dmg;
-        }
-
-        // Enemy death
-        if (enemy.hp <= 0 && enemy.alive) {
-          killEnemy(world, enemy, events);
+          damageEnemy(world, enemy, bullet.dmg, events, bullet.x, bullet.y);
         }
         break;
-      }
-    }
-  }
-}
-
-function killEnemy(world: World, enemy: Enemy, events: GameEvent[]): void {
-  enemy.alive = false;
-  world.stats.killed++;
-  world.player.mana = Math.min(world.player.maxMana, world.player.mana + 8);
-  const def = ENEMY_DEFS[enemy.kind];
-  world.score += def.score;
-
-  if (enemy.kind === "leviathan") {
-    world.phase = "clearing";
-    world.phaseTimer = 180;
-  }
-
-  const explSize =
-    enemy.kind === "leviathan"
-      ? "boss"
-      : enemy.kind === "albatross" || enemy.kind === "condor"
-        ? "l"
-        : enemy.kind === "gunboat" || enemy.kind === "harrier"
-          ? "m"
-          : "s";
-  events.push({ t: "explode", size: explSize, x: enemy.x, y: enemy.y });
-
-  // Formation reward check
-  if (enemy.formation > 0) {
-    const f = world.formations.get(enemy.formation);
-    if (f) {
-      f.killed++;
-      f.lastX = enemy.x;
-      f.lastY = enemy.y;
-      if (f.killed === f.total && f.reward) {
-        spawnPickup(world, f.reward, f.lastX, f.lastY);
       }
     }
   }
@@ -355,22 +325,6 @@ function handleEnemyBulletCollisions(world: World, events: GameEvent[]): void {
   }
 }
 
-function spawnPickup(
-  world: World,
-  kind: PickupKind,
-  x: number,
-  y: number,
-): void {
-  world.pickups.push({
-    id: world.nextId++,
-    kind,
-    x,
-    y,
-    age: 0,
-    alive: true,
-  });
-}
-
 function handlePickupCollisions(world: World, events: GameEvent[]): void {
   const p = world.player;
   for (const item of world.pickups) {
@@ -384,10 +338,42 @@ function handlePickupCollisions(world: World, events: GameEvent[]): void {
         if (p.power < 3) {
           p.power = (p.power + 1) as 2 | 3;
         } else {
-          world.score += 1000;
+          // Progressive three-lane power-up (Center -> Left -> Right)
+          const MAX_LANE_MULT = 3.0;
+          const currentMult = p.lanePower[p.lanePower.nextLane];
+          if (currentMult < MAX_LANE_MULT) {
+            p.lanePower[p.lanePower.nextLane] = Math.min(MAX_LANE_MULT, currentMult + 0.5);
+            // Cycle: center -> left -> right -> center
+            if (p.lanePower.nextLane === "center") {
+              p.lanePower.nextLane = "left";
+            } else if (p.lanePower.nextLane === "left") {
+              p.lanePower.nextLane = "right";
+            } else {
+              p.lanePower.nextLane = "center";
+            }
+          } else {
+            // Check if any other lane still needs upgrade
+            if (p.lanePower.center < MAX_LANE_MULT) p.lanePower.nextLane = "center";
+            else if (p.lanePower.left < MAX_LANE_MULT) p.lanePower.nextLane = "left";
+            else if (p.lanePower.right < MAX_LANE_MULT) p.lanePower.nextLane = "right";
+            else {
+              world.score += 1000;
+              p.mana = Math.min(p.maxMana, p.mana + 25);
+            }
+          }
         }
       } else if (item.kind === "roll") {
         p.rolls = Math.min(6, p.rolls + 1);
+      } else if (item.kind === "aegis") {
+        // Restore 1 destroyed Aegis Orb
+        const deadOrb = p.aegisOrbs.find((o) => !o.alive);
+        if (deadOrb) {
+          deadOrb.alive = true;
+          deadOrb.hp = 1;
+        } else {
+          p.mana = Math.min(p.maxMana, p.mana + 20);
+          world.score += 2000;
+        }
       } else if (item.kind === "medal") {
         world.score += 5000;
       }

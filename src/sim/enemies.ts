@@ -3,10 +3,13 @@ import {
   EnemyKind,
   GameEvent,
   PathKind,
+  TICK_HZ,
   World,
 } from "./types";
 import { fireEnemyBullet, updateEnemyPath } from "./patterns";
 import { rand } from "./rng";
+import { STAGE1_WAVES } from "./stage1";
+import { STAGE2_WAVES } from "./stage2";
 
 export interface EnemyDef {
   kind: EnemyKind;
@@ -309,10 +312,81 @@ function updateLeviathanAI(
 
   // Boss core destroyed check
   if (enemy.hp <= 0 && enemy.alive) {
-    enemy.alive = false;
-    world.score += ENEMY_DEFS.leviathan.score;
+    killEnemy(world, enemy, events);
+  }
+}
+
+export function killEnemy(world: World, enemy: Enemy, events: GameEvent[]): void {
+  if (!enemy.alive) return;
+  enemy.alive = false;
+  world.stats.killed++;
+  world.player.mana = Math.min(world.player.maxMana, world.player.mana + 8);
+  const def = ENEMY_DEFS[enemy.kind];
+  world.score += def?.score ?? 100;
+
+  if (enemy.kind === "leviathan") {
     world.phase = "clearing";
-    world.phaseTimer = 180; // 3 seconds of victory explosions
-    events.push({ t: "explode", size: "boss", x: enemy.x, y: enemy.y });
+    world.phaseTimer = 180;
+  }
+
+  // Midboss defeat handling (Albatross or Kraken)
+  if (enemy.kind === "albatross" || enemy.kind === "kraken") {
+    events.push({ t: "midbossDefeated", kind: enemy.kind });
+    world.phase = "play";
+    // Advance stageTick so next wave begins in ~2.0 seconds
+    const waves = world.currentStage === 2 ? STAGE2_WAVES : STAGE1_WAVES;
+    if (world.waveCursor < waves.length) {
+      const nextWave = waves[world.waveCursor];
+      const targetSec = Math.max(0, nextWave.at - 2.0);
+      world.stageTick = Math.round(targetSec * TICK_HZ);
+    }
+  }
+
+  const explSize =
+    enemy.kind === "leviathan"
+      ? "boss"
+      : enemy.kind === "albatross" || enemy.kind === "condor" || enemy.kind === "kraken"
+        ? "l"
+        : enemy.kind === "gunboat" || enemy.kind === "harrier"
+          ? "m"
+          : "s";
+  events.push({ t: "explode", size: explSize, x: enemy.x, y: enemy.y });
+
+  // Formation reward check
+  if (enemy.formation > 0) {
+    const f = world.formations.get(enemy.formation);
+    if (f) {
+      f.killed++;
+      f.lastX = enemy.x;
+      f.lastY = enemy.y;
+      if (f.killed === f.total && f.reward) {
+        world.pickups.push({
+          id: world.nextId++,
+          kind: f.reward,
+          x: f.lastX,
+          y: f.lastY,
+          age: 0,
+          alive: true,
+        });
+        events.push({ t: "pickup", kind: f.reward, x: f.lastX, y: f.lastY });
+      }
+    }
+  }
+}
+
+export function damageEnemy(
+  world: World,
+  enemy: Enemy,
+  amount: number,
+  events: GameEvent[],
+  hitX?: number,
+  hitY?: number,
+): void {
+  if (!enemy.alive) return;
+  enemy.hp -= amount;
+  enemy.flash = Math.max(enemy.flash, 6);
+  events.push({ t: "hit", id: enemy.id, x: hitX ?? enemy.x, y: hitY ?? enemy.y });
+  if (enemy.hp <= 0) {
+    killEnemy(world, enemy, events);
   }
 }

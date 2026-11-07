@@ -113,20 +113,23 @@ describe("Expansion Combat Mechanics", () => {
     expect(world.player.ultimateTimer).toBe(90);
     expect(world.player.invuln).toBeGreaterThanOrEqual(90);
 
-    // All enemy bullets must be destroyed
-    expect(world.bullets.filter((b) => b.owner === "enemy" && b.alive).length).toBe(0);
-
-    // Enemy in beam corridor received 40 initial impact damage
-    const enemy = world.enemies.find((e) => e.id === 201);
-    expect(enemy?.hp).toBe(10); // 50 - 40
-
-    // Step through follow-up shockwave ticks (e.g. 35 ticks until ultimateTimer passes 60)
-    for (let t = 0; t < 35; t++) {
+    // Step 30 ticks through Awakening & Summoning to reach active beam at tick 60
+    for (let t = 0; t < 30; t++) {
       step(world, NO_INPUT);
     }
-    // Follow-up shockwave at tick 60 destroyed remaining 10 HP
+    expect(world.player.ultimateTimer).toBe(60);
+
+    // At tick 60 (beam active start), bullet wipe triggers
+    expect(world.bullets.filter((b) => b.owner === "enemy" && b.alive).length).toBe(0);
+
+    // Step through the 42 continuous beam damage ticks (ticks 60 -> 18)
+    for (let t = 0; t < 42; t++) {
+      step(world, NO_INPUT);
+    }
+
+    // Enemy with 50 HP in corridor must be completely destroyed by the 70 total continuous damage
     const deadEnemy = world.enemies.find((e) => e.id === 201);
-    expect(deadEnemy).toBeUndefined(); // Killed by shockwave tick
+    expect(deadEnemy).toBeUndefined();
   });
 
   it("does not activate ultimate without full mana", () => {

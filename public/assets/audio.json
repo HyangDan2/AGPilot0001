@@ -21,6 +21,22 @@
       "loopStart": 0,
       "loopEnd": 28
     },
+    "bgm_stage2": {
+      "base": "assets/audio/bgm_stage2",
+      "kind": "bgm",
+      "gain": 0.75,
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 24
+    },
+    "bgm_midboss": {
+      "base": "assets/audio/bgm_midboss",
+      "kind": "bgm",
+      "gain": 0.8,
+      "loop": true,
+      "loopStart": 0,
+      "loopEnd": 16
+    },
     "bgm_boss": {
       "base": "assets/audio/bgm_boss",
       "kind": "bgm",

@@ -26,6 +26,11 @@ describe("Enemy Flight Patterns Continuity", () => {
     prevUlt: false,
     grazeCount: 0,
     orbitSwords: { angle: 0, active: true },
+    aegisOrbs: [
+      { id: 0, angleOffset: 0, alive: true, hp: 1 },
+      { id: 1, angleOffset: Math.PI, alive: true, hp: 1 },
+    ],
+    lanePower: { center: 1.0, left: 1.0, right: 1.0, nextLane: "center" },
   };
 
   const allPaths: PathKind[] = [
