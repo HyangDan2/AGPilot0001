@@ -70,6 +70,13 @@ export function spawnEnemy(
       { name: "engineL", dx: -70, dy: 10, r: 30, hp: 40, maxHp: 40, alive: true, flash: 0 },
       { name: "engineR", dx: 70, dy: 10, r: 30, hp: 40, maxHp: 40, alive: true, flash: 0 },
     ];
+  } else if (kind === "kraken") {
+    enemy.parts = [
+      { name: "tentacleL2", dx: -120, dy: 30, r: 30, hp: 50, maxHp: 50, alive: true, flash: 0 },
+      { name: "tentacleL1", dx: -60, dy: 45, r: 30, hp: 50, maxHp: 50, alive: true, flash: 0 },
+      { name: "tentacleR1", dx: 60, dy: 45, r: 30, hp: 50, maxHp: 50, alive: true, flash: 0 },
+      { name: "tentacleR2", dx: 120, dy: 30, r: 30, hp: 50, maxHp: 50, alive: true, flash: 0 },
+    ];
   } else if (kind === "leviathan") {
     enemy.parts = [
       { name: "engineL2", dx: -180, dy: -20, r: 36, hp: 60, maxHp: 60, alive: true, flash: 0 },
@@ -137,8 +144,40 @@ export function updateEnemyAI(
       break;
     }
 
+    case "siren": {
+      // Abyssal Phantom: rapid aimed needle bullet
+      if (enemy.age === 35 && rand(world) < 0.7) {
+        fireEnemyBullet(world, enemy.x, enemy.y + 16, 280, true);
+      }
+      break;
+    }
+
+    case "seraph": {
+      // Shadow Drake: twin spread
+      if (enemy.age === 42 && rand(world) < 0.8) {
+        fireEnemyBullet(world, enemy.x, enemy.y + 18, 250, true, -0.15);
+        fireEnemyBullet(world, enemy.x, enemy.y + 18, 250, true, 0.15);
+      }
+      break;
+    }
+
+    case "golem": {
+      // Obsidian Golem: 3-way heavy barrage
+      if (enemy.age % 70 === 0) {
+        fireEnemyBullet(world, enemy.x, enemy.y + 24, 220, true, -0.2);
+        fireEnemyBullet(world, enemy.x, enemy.y + 24, 240, true, 0);
+        fireEnemyBullet(world, enemy.x, enemy.y + 24, 220, true, 0.2);
+      }
+      break;
+    }
+
     case "albatross": {
       updateAlbatrossAI(enemy, world, events);
+      break;
+    }
+
+    case "kraken": {
+      updateKrakenAI(enemy, world, events);
       break;
     }
 
@@ -176,6 +215,37 @@ function updateAlbatrossAI(
   if (enemy.hp <= 0 && enemy.alive) {
     enemy.alive = false;
     world.score += ENEMY_DEFS.albatross.score;
+    _events.push({ t: "explode", size: "l", x: enemy.x, y: enemy.y });
+  }
+}
+
+function updateKrakenAI(
+  enemy: Enemy,
+  world: World,
+  _events: GameEvent[],
+): void {
+  const t = enemy.age;
+
+  // Swirling plasma orbs
+  if (t % 70 === 0) {
+    for (let i = -2; i <= 2; i++) {
+      fireEnemyBullet(world, enemy.x, enemy.y + 50, 240, true, i * 0.18);
+    }
+  }
+
+  // Tentacle targeted crossfire
+  if (t % 95 === 0) {
+    for (const part of enemy.parts) {
+      if (part.alive) {
+        fireEnemyBullet(world, enemy.x + part.dx, enemy.y + part.dy, 260, true);
+      }
+    }
+  }
+
+  // Defeat check
+  if (enemy.hp <= 0 && enemy.alive) {
+    enemy.alive = false;
+    world.score += ENEMY_DEFS.kraken.score;
     _events.push({ t: "explode", size: "l", x: enemy.x, y: enemy.y });
   }
 }

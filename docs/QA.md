@@ -1,5 +1,25 @@
 # Quality Assurance & Verification Record
 
+## Local Verification Summary (v0.7.1 - 2026-11-07)
+- Date: 2026-11-07
+- Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.7.1
+- Scope: Two-Stage Premium Campaign + Combat Animation Polish + Pause Main Menu Fix
+- Node Version: v22.23.4 (npm 10.9.9)
+- Assets Check: 12 items validated, total 2.58 MB (`scripts/check-assets.mjs`)
+- Audio Check: 30 audio files validated, total 2.71 MB (`scripts/check-audio.mjs`)
+- ESLint: 0 errors, 0 warnings
+- TypeScript Strict Check: 0 errors (`tsc --noEmit`)
+- Vitest Model Tests: 38 passed across 8 test suites (`tests/campaign.test.ts`, `tests/expansion.test.ts`, `tests/melee.test.ts`, `tests/patterns.test.ts`, `tests/sim.test.ts`, `tests/playthrough.test.ts`, `tests/restart.test.ts`, `tests/scaffold.test.ts`)
+- Playwright E2E Tests: 11 passed across 6 responsive viewports (320x568 to 1440x900)
+- Screenshot Inspection: 16 evidence captures inspected in `docs/evidence/` including:
+  - `confirm-modal-mobile-390x844.png`: Main Menu return confirmation modal with CANCEL / CONFIRM options.
+  - `pause-mobile-390x844.png`: Tactical pause menu featuring `MAIN MENU`, `RESTART STAGE`, `RESUME FLIGHT`, and same-tab `GAMEHUB` / `HD²LAB HQ` links.
+  - `stageclear-mobile-390x844.png`: Stage 1 clear overlay displaying Halvard stats, score tally, and `[ENTER RAGNAROK RIFT]` campaign progression.
+  - `stage2-combat-mobile-390x844.png`: Stage 2 Ragnarok Rift gameplay with dark obsidian and violet void, drifting shattered Bifrost rainbow shards, jagged citadels with molten red glow windows, Azure Aegis Orbs, and crimson stage badge.
+  - `ultimate-mobile-390x844.png`: Gungnir Ultimate v2 multi-phase beam with holy corona, ascending rune rings, and 70 total damage.
+  - `victory-mobile-390x844.png`: Final Campaign Complete victory screen with `[NEW CAMPAIGN]` and `[MAIN MENU]` options.
+- Build Output: dist/index.html (0.82 kB), dist/assets/index-*.css (8.69 kB), dist/assets/index-*.js (73.06 kB)
+
 ## Local Verification Summary (v0.6.0 - 2026-11-07)
 - Date: 2026-11-07
 - Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.6.0

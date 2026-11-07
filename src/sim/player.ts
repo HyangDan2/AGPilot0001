@@ -81,11 +81,29 @@ export function updatePlayer(
 
   if (p.ultimateTimer > 0) {
     p.ultimateTimer--;
+
+    // Follow-up Divine Impact shockwave ticks (10 x 3 at ticks 60, 45, 30 for 70 total damage)
+    if (p.ultimateTimer === 60 || p.ultimateTimer === 45 || p.ultimateTimer === 30) {
+      const beamHalfWidth = 72;
+      for (const enemy of world.enemies) {
+        if (enemy.alive && Math.abs(enemy.x - p.x) <= beamHalfWidth + enemy.r && enemy.y <= p.y + 30) {
+          enemy.hp -= 10;
+          enemy.flash = 6;
+          events.push({ t: "meleeHit", id: enemy.id, x: enemy.x, y: enemy.y, dmg: 10 });
+          if (enemy.hp <= 0) {
+            enemy.alive = false;
+            world.stats.killed++;
+            world.score += 250;
+            events.push({ t: "explode", size: "m", x: enemy.x, y: enemy.y });
+          }
+        }
+      }
+    }
   }
 
   if (ultTriggered && p.mana >= 100 && p.ultimateTimer === 0 && p.downTimer === 0) {
     p.mana = 0;
-    p.ultimateTimer = 90; // 1.5 seconds beam duration
+    p.ultimateTimer = 90; // Multi-phase Gungnir Ultimate duration
     p.invuln = Math.max(p.invuln, 90);
     events.push({ t: "ultimate", x: p.x, y: p.y });
 
@@ -98,13 +116,13 @@ export function updatePlayer(
       }
     }
 
-    // Piercing holy damage to enemies in the corridor
-    const beamHalfWidth = 64;
+    // Initial Divine Impact (40 damage)
+    const beamHalfWidth = 72;
     for (const enemy of world.enemies) {
-      if (enemy.alive && Math.abs(enemy.x - p.x) <= beamHalfWidth + enemy.r && enemy.y <= p.y + 20) {
-        enemy.hp -= 30;
-        enemy.flash = 8;
-        events.push({ t: "meleeHit", id: enemy.id, x: enemy.x, y: enemy.y, dmg: 30 });
+      if (enemy.alive && Math.abs(enemy.x - p.x) <= beamHalfWidth + enemy.r && enemy.y <= p.y + 30) {
+        enemy.hp -= 40;
+        enemy.flash = 12;
+        events.push({ t: "meleeHit", id: enemy.id, x: enemy.x, y: enemy.y, dmg: 40 });
         if (enemy.hp <= 0) {
           enemy.alive = false;
           world.stats.killed++;

@@ -10,6 +10,7 @@ import { ENEMY_DEFS, spawnEnemy, updateEnemyAI } from "./enemies";
 import { createPlayer, killPlayer, updatePlayer } from "./player";
 import { rand } from "./rng";
 import { STAGE1_WAVES, WaveDef } from "./stage1";
+import { STAGE2_WAVES } from "./stage2";
 import {
   DT,
   Enemy,
@@ -119,9 +120,9 @@ export function step(world: World, input: InputFrame): GameEvent[] {
   }
 
   // Active Play / Boss Phase:
-  // Advance stage tick only if no blocking boss (albatross or leviathan) is alive
+  // Advance stage tick only if no blocking boss (albatross, leviathan, kraken) is alive
   const bossAlive = world.enemies.some(
-    (e) => (e.kind === "albatross" || e.kind === "leviathan") && e.alive,
+    (e) => (e.kind === "albatross" || e.kind === "leviathan" || e.kind === "kraken") && e.alive,
   );
   if (!bossAlive) {
     world.stageTick++;
@@ -174,14 +175,16 @@ export function step(world: World, input: InputFrame): GameEvent[] {
 
 function triggerStageWaves(world: World, events: GameEvent[]): void {
   const currentSec = world.stageTick / TICK_HZ;
+  const waves = world.currentStage === 2 ? STAGE2_WAVES : STAGE1_WAVES;
 
-  while (world.waveCursor < STAGE1_WAVES.length) {
-    const wave = STAGE1_WAVES[world.waveCursor];
+  while (world.waveCursor < waves.length) {
+    const wave = waves[world.waveCursor];
     if (currentSec < wave.at) break;
 
     // Cap active on-screen enemies to prevent mobile frame drop and uncluttered combat
     const activeEnemies = world.enemies.filter((e) => e.alive).length;
-    if (activeEnemies >= 16 && wave.kind !== "albatross" && wave.kind !== "leviathan") {
+    const isBoss = wave.kind === "albatross" || wave.kind === "leviathan" || wave.kind === "kraken";
+    if (activeEnemies >= 16 && !isBoss) {
       // Delay wave spawn until screen cleared slightly
       break;
     }
@@ -206,7 +209,7 @@ function spawnWave(world: World, wave: WaveDef, events: GameEvent[]): void {
     });
   }
 
-  if (wave.kind === "leviathan") {
+  if (wave.kind === "leviathan" || wave.kind === "kraken") {
     world.phase = "boss";
     events.push({ t: "warning" });
   }

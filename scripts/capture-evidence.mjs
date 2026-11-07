@@ -130,10 +130,15 @@ async function main() {
       await page.click("#btn-pause");
       await page.waitForTimeout(400);
       await page.screenshot({ path: path.join(outDir, "pause-mobile-390x844.png") });
+
+      // 7.1 Confirm Return Modal
+      await page.click("#btn-main-menu");
+      await page.waitForTimeout(300);
+      await page.screenshot({ path: path.join(outDir, "confirm-modal-mobile-390x844.png") });
       await page.close();
     }
 
-    // 8. Victory Screen (Skybreak Accomplished)
+    // 8. Stage 1 Clear Screen (Transition to Stage 2 Ragnarok Rift)
     {
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
       await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
@@ -141,9 +146,46 @@ async function main() {
       await page.evaluate(() => {
         const hook = window.__testHook;
         const w = hook.getWorld();
-        w.score = 88500;
-        w.stats.killed = 39;
-        w.stats.spawned = 40;
+        w.currentStage = 1;
+        w.score = 65000;
+        w.phase = "clearing";
+        w.phaseTimer = 2;
+      });
+      await page.waitForTimeout(600);
+      await page.screenshot({ path: path.join(outDir, "stageclear-mobile-390x844.png") });
+      await page.close();
+    }
+
+    // 8.5 Stage 2 Combat (Ragnarok Rift Obsidian & Violet Void with Shattered Shards)
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        const w = hook.getWorld();
+        w.currentStage = 2;
+        w.stageTick = 800;
+        w.player.orbitSwords = { active: true, angle: 0.8 };
+        w.player.mana = 90;
+      });
+      await page.waitForTimeout(600);
+      await page.screenshot({ path: path.join(outDir, "stage2-combat-mobile-390x844.png") });
+      await page.close();
+    }
+
+    // 9. Victory Screen (Ragnarok Transcended)
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        const w = hook.getWorld();
+        w.currentStage = 2;
+        w.score = 158500;
+        w.stats.killed = 68;
+        w.stats.spawned = 70;
         w.phase = "clearing";
         w.phaseTimer = 2;
       });

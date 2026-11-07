@@ -41,6 +41,8 @@ export class GameApp {
       onStart: () => this.startGame(),
       onResume: () => this.togglePause(),
       onRestart: () => this.restartGame(),
+      onReturnToTitle: () => this.returnToTitle(),
+      onNextStage: () => this.startNextStage(),
       onToggleMute: () => this.toggleMute(),
       onToggleReducedMotion: () => this.toggleReducedMotion(),
       onRoll: () => {
@@ -96,7 +98,46 @@ export class GameApp {
 
   private restartGame(): void {
     this.audio.playBGM("bgm_stage");
-    this.world = createWorld({ seed: Date.now() });
+    this.world = createWorld({ seed: Date.now(), startStage: this.world.currentStage });
+    this.ui.showInGameHUD(this.settings.muted);
+    this.startLoop();
+  }
+
+  public returnToTitle(): void {
+    this.stopLoop();
+    this.isPaused = false;
+    this.ui.hidePauseMenu();
+    this.audio.stopBGM();
+    this.audio.playBGM("bgm_title");
+    if (this.world.score > this.highScore) {
+      saveHighScore(this.world.score);
+      this.highScore = loadHighScore();
+    }
+    this.world = createWorld();
+    this.ui.showTitle(this.highScore, this.settings.muted, this.settings.reducedMotion);
+    this.renderer.render(this.world);
+  }
+
+  private startNextStage(): void {
+    const prevScore = this.world.score;
+    const prevLives = this.world.player.lives;
+    const prevPower = this.world.player.power;
+    const prevMana = this.world.player.mana;
+    const prevDeaths = this.world.player.deaths;
+    const prevGraze = this.world.player.grazeCount;
+
+    this.world = createWorld({
+      seed: Date.now(),
+      startStage: 2,
+    });
+    this.world.score = prevScore;
+    this.world.player.lives = prevLives;
+    this.world.player.power = prevPower;
+    this.world.player.mana = prevMana;
+    this.world.player.deaths = prevDeaths;
+    this.world.player.grazeCount = prevGraze;
+
+    this.audio.playBGM("bgm_stage");
     this.ui.showInGameHUD(this.settings.muted);
     this.startLoop();
   }
@@ -196,13 +237,24 @@ export class GameApp {
         this.stopLoop();
         saveHighScore(this.world.score);
         this.highScore = loadHighScore();
-        this.ui.showVictory(
-          this.world.score,
-          this.highScore,
-          this.world.stats.killed,
-          this.world.stats.spawned,
-          this.world.player.deaths === 0 ? this.world.stats.noMissBonus : 0,
-        );
+        if (e.stage === 1) {
+          this.ui.showStageClear(
+            1,
+            this.world.score,
+            this.highScore,
+            this.world.stats.killed,
+            this.world.stats.spawned,
+            this.world.player.deaths === 0 ? this.world.stats.noMissBonus : 0,
+          );
+        } else {
+          this.ui.showVictory(
+            this.world.score,
+            this.highScore,
+            this.world.stats.killed,
+            this.world.stats.spawned,
+            this.world.player.deaths === 0 ? this.world.stats.noMissBonus : 0,
+          );
+        }
       }
     }
   }

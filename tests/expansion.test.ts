@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createWorld, step } from "../src/sim/world";
 import { NO_INPUT } from "../src/sim/types";
+import { STAGE2_WAVES } from "../src/sim/stage2";
+import { fireEnemyBullet } from "../src/sim/patterns";
 
 describe("Expansion Combat Mechanics", () => {
   it("grazes enemy bullets within 12~36px to grant score and mana", () => {
@@ -86,7 +88,7 @@ describe("Expansion Combat Mechanics", () => {
       y: 400,
       x0: 360,
       y0: 400,
-      path: "hover",
+      path: "straight",
       age: 0,
       hp: 50,
       maxHp: 50,
@@ -114,9 +116,17 @@ describe("Expansion Combat Mechanics", () => {
     // All enemy bullets must be destroyed
     expect(world.bullets.filter((b) => b.owner === "enemy" && b.alive).length).toBe(0);
 
-    // Enemy in beam corridor received 30 damage
+    // Enemy in beam corridor received 40 initial impact damage
     const enemy = world.enemies.find((e) => e.id === 201);
-    expect(enemy?.hp).toBe(20); // 50 - 30
+    expect(enemy?.hp).toBe(10); // 50 - 40
+
+    // Step through follow-up shockwave ticks (e.g. 35 ticks until ultimateTimer passes 60)
+    for (let t = 0; t < 35; t++) {
+      step(world, NO_INPUT);
+    }
+    // Follow-up shockwave at tick 60 destroyed remaining 10 HP
+    const deadEnemy = world.enemies.find((e) => e.id === 201);
+    expect(deadEnemy).toBeUndefined(); // Killed by shockwave tick
   });
 
   it("does not activate ultimate without full mana", () => {
@@ -129,5 +139,23 @@ describe("Expansion Combat Mechanics", () => {
     expect(events.some((e) => e.t === "ultimate")).toBe(false);
     expect(world.player.mana).toBe(95);
     expect(world.player.ultimateTimer).toBe(0);
+  });
+
+  it("verifies Stage 2 has exactly 70 normal enemies and 1.2x bullet speed", () => {
+    const normalCount = STAGE2_WAVES
+      .filter((w) => w.kind !== "albatross" && w.kind !== "leviathan" && w.kind !== "kraken")
+      .reduce((sum, w) => sum + (w.count ?? 1), 0);
+    expect(normalCount).toBe(70);
+
+    // Bullet speed test
+    const w1 = createWorld({ seed: 42, startStage: 1 });
+    fireEnemyBullet(w1, 360, 100, 200, false);
+    const b1 = w1.bullets[0];
+
+    const w2 = createWorld({ seed: 42, startStage: 2 });
+    fireEnemyBullet(w2, 360, 100, 200, false);
+    const b2 = w2.bullets[0];
+
+    expect(b2.vy).toBeCloseTo(b1.vy * 1.2, 2);
   });
 });

@@ -158,17 +158,19 @@ export function fireEnemyBullet(
   angleOffset = 0,
 ): void {
   const p = world.player;
+  const stageSpeedMultiplier = world.currentStage === 2 ? 1.2 : 1.0;
+  const actualSpeed = speed * stageSpeedMultiplier;
   let vx = 0;
-  let vy = speed;
+  let vy = actualSpeed;
 
   if (aimAtPlayer && p.downTimer === 0) {
     const angle = Math.atan2(p.y - y, p.x - x) + angleOffset;
-    vx = Math.cos(angle) * speed;
-    vy = Math.sin(angle) * speed;
+    vx = Math.cos(angle) * actualSpeed;
+    vy = Math.sin(angle) * actualSpeed;
   } else if (angleOffset !== 0) {
     const angle = Math.PI / 2 + angleOffset;
-    vx = Math.cos(angle) * speed;
-    vy = Math.sin(angle) * speed;
+    vx = Math.cos(angle) * actualSpeed;
+    vy = Math.sin(angle) * actualSpeed;
   }
 
   world.bullets.push({

@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.7.1] - 2026-11-07
+### Added
+- **Two-Stage Premium Campaign (2스테이지 프리미엄 캠페인)**:
+  - Abandoned 10-stage dilution in favor of two highly distinct, polished stages:
+    - **Stage 1 (HALVARD : Celestial Sanctuary)**:
+      - Norse mythology celestial sanctum with golden sunrays, Bifrost entrance gates, floating ivory temples, waterfalls, and 53 normal enemies.
+      - Midboss: Runic Gryphon (`albatross`); Final Boss: Corrupted Celestial Guardian.
+    - **Stage 2 (RAGNAROK RIFT : Shattered Bifrost Void)**:
+      - Shattered Bifrost rainbow shards, dark obsidian & violet storm void (`#060714` -> `#160a2c` -> `#2c0e3e` -> `#451249`), jagged obsidian citadels with molten red glow windows, crimson rift lightning.
+      - Exactly 70 normal enemies (+33% enemy density over Stage 1).
+      - Bullet speed multiplier of 1.2x across all enemy attacks for intensified challenge.
+      - Stage 2 specialized monsters: Abyssal Phantom (`siren`), Shadow Drake (`seraph`), Obsidian Golem (`golem`).
+      - Midboss: Abyssal Sentinel (`kraken`) with 4 destructible tentacle nodes; Final Boss: Abyssal Sky Dragon (`leviathan`).
+  - **Seamless Stage Progression**:
+    - Clearing Stage 1 displays the tactical `STAGE 01 CLEARED` screen with score tally and `[ENTER RAGNAROK RIFT]` button.
+    - Carries over accumulated score, lives, power, and mana while resetting stage tick.
+- **Pause Menu Return to Title (Phase 0 Fix)**:
+  - Added dedicated `MAIN MENU` button to Pause overlay.
+  - Clicking `MAIN MENU` opens a modal dialog: *"Current stage flight progress will be lost. Do you wish to continue?"* with `[CANCEL]` and `[CONFIRM]` buttons.
+  - Clean lifecycle cleanup in `GameApp.returnToTitle()`: cancels RAF loop, stops BGM, persists high scores to local storage, resets world state, and renders the title screen without browser reload.
+  - Added `MAIN MENU` button to Game Over and Final Campaign Victory screens.
+  - Updated GameHub navigation link to same-tab (`target="_self"`).
+- **Azure Aegis Orbs (이지스 오브 방어 위성)**:
+  - Replaced rotating swords with dual Azure Aegis Orbs:
+    - Outer translucent pulsing shield field, rotating runic ripple ring with dashed gold runes, and bright azure core with white center dot.
+    - Preserves bullet parrying, score rewards, mana generation (+15 Mana per parry), and orbit collision damage.
+- **Gungnir Ultimate v2 Multi-Phase Mechanics**:
+  - Implemented 4 visual and damage phases:
+    1. *Awakening*: Orbs converge, concentric Norse rune circles expand.
+    2. *Summoning*: Colossal divine light lance descends from the heavens.
+    3. *Divine Impact*: Deals 40 instant impact damage on activation frame and clears screen bullets; followed by 3 shockwave pulses at ticks 60, 45, 30 dealing 10 damage each (total 70 divine damage).
+    4. *Recovery*: Holy embers fade and Eira returns to diagonal combat ready stance.
+- **Quality Gates & Regression Suite**:
+  - Added `tests/campaign.test.ts` verifying Stage 1 (53 enemies) & Stage 2 (70 enemies), 1.2x bullet speed multiplier, progression continuity, pause menu return to title, Aegis Orb parry, and Gungnir 70 total damage.
+  - 8 test files, 38 unit tests, and 11 Playwright e2e tests all passing.
+  - Evidence screenshots captured in `docs/evidence/` including Stage 2 combat, Confirm modal, Stage Clear, and Victory screens.
+
 ## [0.6.0] - 2026-11-07
 ### Added
 - **Gungnir's Judgement Ultimate Skill (궁극기: 궁니르의 심판)**:

@@ -2,6 +2,8 @@ export interface UIEvents {
   onStart: () => void;
   onResume: () => void;
   onRestart: () => void;
+  onReturnToTitle: () => void;
+  onNextStage?: () => void;
   onToggleMute: () => void;
   onToggleReducedMotion: () => void;
   onRoll: () => void;
@@ -110,11 +112,12 @@ export class UIManager {
       <h2>TACTICAL PAUSE</h2>
       <div class="menu-actions">
         <button id="btn-resume" class="btn btn-primary">RESUME FLIGHT</button>
-        <button id="btn-restart" class="btn">RESTART MISSION</button>
+        <button id="btn-restart" class="btn">RESTART STAGE</button>
+        <button id="btn-main-menu" class="btn">MAIN MENU</button>
       </div>
       <div class="platform-links">
-        <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_blank" rel="noopener noreferrer">🎮 GAMEHUB</a>
-        <a href="https://hyangdan2.github.io/" class="btn-hub" target="_blank" rel="noopener noreferrer">🏛 HD²LAB HQ</a>
+        <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_self">🎮 GAMEHUB</a>
+        <a href="https://hyangdan2.github.io/" class="btn-hub" target="_self">🏛 HD²LAB HQ</a>
       </div>
     `;
     this.container.appendChild(el);
@@ -127,9 +130,41 @@ export class UIManager {
       el.remove();
       this.events.onRestart();
     });
+    document.getElementById("btn-main-menu")?.addEventListener("click", () => {
+      this.showConfirmReturnModal(() => {
+        el.remove();
+        this.events.onReturnToTitle();
+      });
+    });
+  }
+
+  private showConfirmReturnModal(onConfirm: () => void): void {
+    const modal = document.createElement("div");
+    modal.id = "confirm-modal";
+    modal.className = "confirm-modal-backdrop";
+    modal.innerHTML = `
+      <div class="confirm-modal">
+        <div class="confirm-title">RETURN TO MAIN MENU</div>
+        <div class="confirm-msg">Current stage flight progress will be lost.<br>Do you wish to continue?</div>
+        <div class="confirm-actions">
+          <button id="btn-confirm-cancel" class="btn btn-sm">CANCEL</button>
+          <button id="btn-confirm-ok" class="btn btn-sm btn-danger">CONFIRM</button>
+        </div>
+      </div>
+    `;
+    this.container.appendChild(modal);
+
+    document.getElementById("btn-confirm-cancel")?.addEventListener("click", () => {
+      modal.remove();
+    });
+    document.getElementById("btn-confirm-ok")?.addEventListener("click", () => {
+      modal.remove();
+      onConfirm();
+    });
   }
 
   public hidePauseMenu(): void {
+    document.getElementById("confirm-modal")?.remove();
     document.getElementById("pause-menu")?.remove();
   }
 
@@ -145,14 +180,63 @@ export class UIManager {
           <div class="stat-row"><span>MISSION SCORE:</span> <strong>${score}</strong></div>
           <div class="stat-row highlight"><span>TOP RECORD:</span> <strong>${highScore}</strong></div>
         </div>
-        <button id="btn-restart" class="btn btn-primary">RETRY BATTLE</button>
+        <div class="menu-actions">
+          <button id="btn-restart" class="btn btn-primary">RETRY BATTLE</button>
+          <button id="btn-gameover-main" class="btn">MAIN MENU</button>
+        </div>
         <div class="platform-links">
-          <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_blank" rel="noopener noreferrer">🎮 GAMEHUB</a>
-          <a href="https://hyangdan2.github.io/" class="btn-hub" target="_blank" rel="noopener noreferrer">🏛 HD²LAB HQ</a>
+          <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_self">🎮 GAMEHUB</a>
+          <a href="https://hyangdan2.github.io/" class="btn-hub" target="_self">🏛 HD²LAB HQ</a>
         </div>
       </div>
     `;
     document.getElementById("btn-restart")?.addEventListener("click", () => this.events.onRestart());
+    document.getElementById("btn-gameover-main")?.addEventListener("click", () => this.events.onReturnToTitle());
+  }
+
+  public showStageClear(
+    _stage: number,
+    score: number,
+    highScore: number,
+    destroyed: number,
+    total: number,
+    noMissBonus: number,
+  ): void {
+    const accuracy = total > 0 ? Math.round((destroyed / total) * 100) : 100;
+    this.container.innerHTML = `
+      <div class="overlay victory-screen">
+        <div class="brand-badge">
+          <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="16" height="16" />
+          <span class="brand-title">HD²LAB ARCADE</span>
+        </div>
+        <h2 class="victory-text">STAGE 01 CLEARED</h2>
+        <div class="stage-name-sub">HALVARD : CELESTIAL SANCTUARY</div>
+        <div class="stats-card">
+          <div class="stat-row"><span>MONSTERS PURGED:</span> <strong>${destroyed}/${total} (${accuracy}%)</strong></div>
+          ${noMissBonus > 0 ? `<div class="stat-row gold-text"><span>NO-MISS BONUS:</span> <strong>+${noMissBonus}</strong></div>` : ""}
+          <div class="stat-row highlight"><span>STAGE SCORE:</span> <strong>${score}</strong></div>
+          <div class="stat-row"><span>TOP RECORD:</span> <strong>${highScore}</strong></div>
+        </div>
+        <div class="next-stage-preview">
+          <div class="next-label">NEXT MISSION</div>
+          <div class="next-title">STAGE 02 — RAGNAROK RIFT</div>
+          <div class="next-desc">Shattered Bifrost & Abyssal Storm Dragon</div>
+        </div>
+        <div class="menu-actions">
+          <button id="btn-next-stage" class="btn btn-primary">ENTER RAGNAROK RIFT</button>
+          <button id="btn-stageclear-main" class="btn">MAIN MENU</button>
+        </div>
+        <div class="platform-links">
+          <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_self">🎮 GAMEHUB</a>
+          <a href="https://hyangdan2.github.io/" class="btn-hub" target="_self">🏛 HD²LAB HQ</a>
+        </div>
+      </div>
+    `;
+    document.getElementById("btn-next-stage")?.addEventListener("click", () => {
+      if (this.events.onNextStage) this.events.onNextStage();
+      else this.events.onRestart();
+    });
+    document.getElementById("btn-stageclear-main")?.addEventListener("click", () => this.events.onReturnToTitle());
   }
 
   public showVictory(
@@ -170,19 +254,24 @@ export class UIManager {
           <span class="brand-title">HD²LAB ARCADE</span>
         </div>
         <h2 class="victory-text">SKYBREAK ACCOMPLISHED</h2>
+        <div class="stage-name-sub">CAMPAIGN COMPLETE : VALKYRIE VICTORY</div>
         <div class="stats-card">
-          <div class="stat-row"><span>MONSTERS PURGED:</span> <strong>${destroyed}/${total} (${accuracy}%)</strong></div>
-          ${noMissBonus > 0 ? `<div class="stat-row gold-text"><span>NO-MISS BONUS:</span> <strong>+${noMissBonus}</strong></div>` : ""}
-          <div class="stat-row highlight"><span>FINAL SCORE:</span> <strong>${score}</strong></div>
+          <div class="stat-row"><span>TOTAL PURGED:</span> <strong>${destroyed}/${total} (${accuracy}%)</strong></div>
+          ${noMissBonus > 0 ? `<div class="stat-row gold-text"><span>CAMPAIGN NO-MISS BONUS:</span> <strong>+${noMissBonus}</strong></div>` : ""}
+          <div class="stat-row highlight"><span>FINAL CAMPAIGN SCORE:</span> <strong>${score}</strong></div>
           <div class="stat-row"><span>TOP RECORD:</span> <strong>${highScore}</strong></div>
         </div>
-        <button id="btn-restart" class="btn btn-primary">CONTINUE JOURNEY</button>
+        <div class="menu-actions">
+          <button id="btn-restart" class="btn btn-primary">NEW CAMPAIGN</button>
+          <button id="btn-victory-main" class="btn">MAIN MENU</button>
+        </div>
         <div class="platform-links">
-          <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_blank" rel="noopener noreferrer">🎮 GAMEHUB</a>
-          <a href="https://hyangdan2.github.io/" class="btn-hub" target="_blank" rel="noopener noreferrer">🏛 HD²LAB HQ</a>
+          <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_self">🎮 GAMEHUB</a>
+          <a href="https://hyangdan2.github.io/" class="btn-hub" target="_self">🏛 HD²LAB HQ</a>
         </div>
       </div>
     `;
     document.getElementById("btn-restart")?.addEventListener("click", () => this.events.onRestart());
+    document.getElementById("btn-victory-main")?.addEventListener("click", () => this.events.onReturnToTitle());
   }
 }
