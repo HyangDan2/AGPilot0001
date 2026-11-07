@@ -6,7 +6,7 @@ import { createWorld } from "../src/sim/world";
 describe("Alternating Left/Right Sword Combat (좌우 교대 검격)", () => {
   it("strictly alternates slash directions (L->R, R->L, L->R, R->L)", () => {
     const world = createWorld({ seed: 20261103, startAt: 1.0 }); // start in play phase
-    const fireInput = { moveX: 0, moveY: 0, fire: true, roll: false, dragDx: 0, dragDy: 0 };
+    const fireInput = { moveX: 0, moveY: 0, fire: true, roll: false, ult: false, dragDx: 0, dragDy: 0 };
 
     const directions: string[] = [];
 
@@ -38,7 +38,7 @@ describe("Alternating Left/Right Sword Combat (좌우 교대 검격)", () => {
     const enemy = spawnEnemy(world, "condor", 360, 720, "straight"); // 80px distance ahead
     const initialHp = enemy.hp;
 
-    const fireInput = { moveX: 0, moveY: 0, fire: true, roll: false, dragDx: 0, dragDy: 0 };
+    const fireInput = { moveX: 0, moveY: 0, fire: true, roll: false, ult: false, dragDx: 0, dragDy: 0 };
     const events = step(world, fireInput);
 
     // Melee hit should be detected
@@ -49,7 +49,7 @@ describe("Alternating Left/Right Sword Combat (좌우 교대 검격)", () => {
     expect(world.hitstopTimer).toBeGreaterThanOrEqual(1); // Hitstop triggered
 
     // Next tick with ongoing swing should NOT hit the same enemy again
-    const nextEvents = step(world, { moveX: 0, moveY: 0, fire: false, roll: false, dragDx: 0, dragDy: 0 });
+    const nextEvents = step(world, { moveX: 0, moveY: 0, fire: false, roll: false, ult: false, dragDx: 0, dragDy: 0 });
     const duplicateHits = nextEvents.filter((e) => e.t === "meleeHit");
     expect(duplicateHits.length).toBe(0);
   });
@@ -64,7 +64,7 @@ describe("Alternating Left/Right Sword Combat (좌우 교대 검격)", () => {
     const enemy = spawnEnemy(world, "condor", 360, 720, "straight");
     const initialHp = enemy.hp;
 
-    const fireInput = { moveX: 0, moveY: 0, fire: true, roll: false, dragDx: 0, dragDy: 0 };
+    const fireInput = { moveX: 0, moveY: 0, fire: true, roll: false, ult: false, dragDx: 0, dragDy: 0 };
     const events = step(world, fireInput);
 
     const hit = events.find((e) => e.t === "meleeHit");
@@ -86,7 +86,7 @@ describe("Alternating Left/Right Sword Combat (좌우 교대 검격)", () => {
     const enemy = spawnEnemy(world, "kestrel", 360, 700, "straight");
     const initialHp = enemy.hp;
 
-    const fireInput = { moveX: 0, moveY: 0, fire: true, roll: false, dragDx: 0, dragDy: 0 };
+    const fireInput = { moveX: 0, moveY: 0, fire: true, roll: false, ult: false, dragDx: 0, dragDy: 0 };
     const events = step(world, fireInput);
 
     const meleeHits = events.filter((e) => e.t === "meleeHit");

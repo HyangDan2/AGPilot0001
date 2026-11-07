@@ -14,6 +14,7 @@ export interface InputFrame {
   dragDy: number;
   fire: boolean;
   roll: boolean;
+  ult: boolean;
 }
 
 export const NO_INPUT: Readonly<InputFrame> = Object.freeze({
@@ -23,6 +24,7 @@ export const NO_INPUT: Readonly<InputFrame> = Object.freeze({
   dragDy: 0,
   fire: false,
   roll: false,
+  ult: false,
 });
 
 export type ExplosionSize = "s" | "m" | "l" | "boss";
@@ -37,11 +39,13 @@ export type GameEvent =
   | { t: "pickup"; kind: PickupKind; x: number; y: number }
   | { t: "bonus"; amount: number; x: number; y: number }
   | { t: "roll" }
+  | { t: "ultimate"; x: number; y: number }
+  | { t: "graze"; x: number; y: number; bulletId: number }
   | { t: "playerDown"; x: number; y: number }
   | { t: "respawn" }
   | { t: "warning" }
   | { t: "bossPhase"; phase: number }
-  | { t: "stageClear" }
+  | { t: "stageClear"; stage: number }
   | { t: "gameOver" };
 
 export type SlashDirection = "l2r" | "r2l";
@@ -61,7 +65,12 @@ export type EnemyKind =
   | "condor"
   | "gunboat"
   | "albatross"
-  | "leviathan";
+  | "leviathan"
+  | "golem"
+  | "siren"
+  | "kraken"
+  | "seraph"
+  | "valkyrieQueen";
 
 export type PathKind =
   | "straight"
@@ -119,6 +128,7 @@ export interface Bullet {
   dmg: number;
   owner: "player" | "enemy";
   alive: boolean;
+  grazed?: boolean;
 }
 
 export interface Pickup {
@@ -147,6 +157,15 @@ export interface Player {
   slashDirection: SlashDirection;
   comboCount: number;
   meleeSwing: MeleeSwing | null;
+  mana: number;
+  maxMana: number;
+  ultimateTimer: number;
+  prevUlt: boolean;
+  grazeCount: number;
+  orbitSwords: {
+    angle: number;
+    active: boolean;
+  };
 }
 
 export interface Formation {
@@ -165,12 +184,15 @@ export interface Stats {
   killed: number;
   shotsFired: number;
   noMissBonus: number;
+  grazes: number;
 }
 
 export interface WorldOptions {
   seed: number;
   invulnerable?: boolean;
   startAt?: number;
+  startStage?: number;
+  difficulty?: "normal" | "nightmare";
 }
 
 export interface World {
@@ -182,6 +204,8 @@ export interface World {
   phase: Phase;
   phaseTimer: number;
   scrollY: number;
+  currentStage: number;
+  difficulty: "normal" | "nightmare";
   player: Player;
   enemies: Enemy[];
   bullets: Bullet[];

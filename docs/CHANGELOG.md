@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.6.0] - 2026-11-07
+### Added
+- **Gungnir's Judgement Ultimate Skill (궁극기: 궁니르의 심판)**:
+  - High-intensity screen-clearing holy lance beam triggered by Key C / L or mobile `[ULT]` touch button when Mana reaches 100%.
+  - Cancels all active enemy projectiles on screen, awards +100 score per cancelled bullet, and pierces through the vertical forward corridor dealing 30 damage to massive enemies and bosses.
+  - Multi-stage visual rendering with central blinding white core lance, cyan/gold outer corona, ascending sacred rune rings, focus magic circle, and 24-frame screen-shake burst.
+- **Bullet Graze Mechanic (스침 판정)**:
+  - Close-miss detection band (12~36px from Eira's center) rewarding aggressive bullet maneuvering.
+  - Awards +250 score, +10 Mana, and increments persistent graze counter.
+  - Emits directional cyan-gold spark particles and real-time audio chime.
+- **Orbiting Aegis Swords Subweapon (이지스 소드 호위체)**:
+  - Two ethereal glowing blades continuously orbit Eira at radius 72px.
+  - Actively parries and disintegrates enemy projectiles that contact the orbit path, awarding defensive points.
+  - Shreds close-contact flying enemies with rhythmic slicing damage.
+- **Atmospheric Weather & Dynamic Creature Animations**:
+  - Continuous drifting sacred white feathers across sky zones with sinusoidal drift physics.
+  - Screen-wide lightning flash ribbons during Twilight Rift and Abyssal Storm phases.
+  - Living wing-flapping oscillation physics applied to all airborne monster sprites (`kestrel`, `kestrelRed`, `harrier`, `albatross`, `leviathan`).
+- **Touch Controls & HUD Refinement**:
+  - Dedicated neon golden `[ULT]` circular button on mobile viewports with debounce protection.
+  - Moved Mana / Ultimate bar to Top Center prominent position (`★ GUNGNIR READY! [C/ULT] ★`), eliminating any visual overlap with mobile touch buttons.
+  - Integrated persistent Graze counter display into top HUD.
+- **Audio Synthesis Expansion**:
+  - Synthesized procedural sound effects for `sfx_graze` (crisp high-pitched crystal chime), `sfx_ultimate` (deep thunder resonance + ascending angelic chords), `sfx_slash` (airy blade whoosh), and `sfx_melee_hit` (metallic blade impact cut).
+- **Test Gate & Determinism**:
+  - Added `tests/expansion.test.ts` verifying Graze detection, Aegis sword parrying, Ultimate activation thresholds, bullet cancellation, and pure 60Hz replay determinism (Vitest 30/30 passed).
+
 ## [0.5.0] - 2026-11-07
 ### Added
 - **Alternating Left/Right Sword Combat (좌우 교대 검격)**:

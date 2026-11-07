@@ -3,6 +3,7 @@ export interface KeyboardState {
   moveY: number;
   fire: boolean;
   roll: boolean;
+  ult: boolean;
   pause: boolean;
 }
 
@@ -47,10 +48,11 @@ export function createKeyboardHandler(): {
 
       const fire = keys.has("KeyZ") || keys.has("Space") || keys.has("KeyJ");
       const roll = keys.has("KeyX") || keys.has("ShiftLeft") || keys.has("ShiftRight") || keys.has("KeyK");
+      const ult = keys.has("KeyC") || keys.has("KeyL") || keys.has("KeyU");
       const pause = pauseTriggered;
       pauseTriggered = false;
 
-      return { moveX: mx, moveY: my, fire, roll, pause };
+      return { moveX: mx, moveY: my, fire, roll, ult, pause };
     },
     cleanup: () => {
       window.removeEventListener("keydown", onKeyDown);

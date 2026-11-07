@@ -20,6 +20,12 @@ describe("Enemy Flight Patterns Continuity", () => {
     slashDirection: "r2l",
     comboCount: 0,
     meleeSwing: null,
+    mana: 0,
+    maxMana: 100,
+    ultimateTimer: 0,
+    prevUlt: false,
+    grazeCount: 0,
+    orbitSwords: { angle: 0, active: true },
   };
 
   const allPaths: PathKind[] = [

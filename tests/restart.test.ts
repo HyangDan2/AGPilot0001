@@ -25,7 +25,7 @@ describe("Game Lifecycle and Determinism", () => {
     const w1 = createWorld({ seed: 100 });
     // Advance into combat
     for (let i = 0; i < 200; i++) {
-      step(w1, { moveX: 0, moveY: 0, dragDx: 0, dragDy: 0, fire: true, roll: false });
+      step(w1, { moveX: 0, moveY: 0, dragDx: 0, dragDy: 0, fire: true, roll: false, ult: false });
     }
     expect(w1.tick).toBe(200);
 

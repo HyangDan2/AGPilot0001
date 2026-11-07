@@ -1,5 +1,26 @@
 # Quality Assurance & Verification Record
 
+## Local Verification Summary (v0.6.0 - 2026-11-07)
+- Date: 2026-11-07
+- Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.6.0
+- Node Version: v22.23.4 (npm 10.9.9)
+- Assets Check: 12 items validated, total 2.58 MB (`scripts/check-assets.mjs`)
+- Audio Check: 30 audio files validated, total 2.71 MB (`scripts/check-audio.mjs`)
+- ESLint: 0 errors, 0 warnings
+- TypeScript Strict Check: 0 errors (`tsc --noEmit`)
+- Vitest Model Tests: 30 passed across 7 test suites (`tests/expansion.test.ts`, `tests/melee.test.ts`, `tests/patterns.test.ts`, `tests/sim.test.ts`, `tests/playthrough.test.ts`, `tests/restart.test.ts`, `tests/scaffold.test.ts`)
+- Playwright E2E Tests: 11 passed across 6 responsive viewports (320x568 to 1440x900)
+- Screenshot Inspection: 10 evidence captures inspected in `docs/evidence/` including:
+  - `ultimate-mobile-390x844.png`: Gungnir Judgement holy spear beam piercing the skies, ascending sacred rune rings, orbiting Aegis Swords, non-overlapping Top Center Mana gauge, and golden circular `[ULT]` touch button.
+  - `combat-mobile-390x844.png` & `combat-desktop-1440x900.png`: Eira engaging enemy formations with Arc Blades and orbiting swords.
+  - `melee-slash-mobile-390x844.png`: Alternating swept Oathblade arc with hitstop crunch.
+  - `movement-eira-390x844.png`: 360-degree aerial roll with divine ward aura.
+  - `boss-mobile-390x844.png`: Abyssal Dragon Leviathan boss encounter with dynamic HP bar.
+  - `pause-mobile-390x844.png`: Tactical pause with HD2Lab & GameHub navigation links.
+  - `title-mobile-390x844.png` & `title-desktop-1440x900.png`: High-definition key visual title screen.
+  - `victory-mobile-390x844.png`: Mission accomplished victory screen.
+- Build Output: dist/index.html (0.82 kB), dist/assets/index-*.css (7.33 kB), dist/assets/index-*.js (60.79 kB)
+
 ## Local Verification Summary (v0.5.0 - 2026-11-07)
 - Date: 2026-11-07
 - Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.5.0

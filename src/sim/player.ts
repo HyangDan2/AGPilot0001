@@ -33,6 +33,15 @@ export function createPlayer(): Player {
     slashDirection: "r2l", // alternates to "l2r" on first swing
     comboCount: 0,
     meleeSwing: null,
+    mana: 0,
+    maxMana: 100,
+    ultimateTimer: 0,
+    prevUlt: false,
+    grazeCount: 0,
+    orbitSwords: {
+      angle: 0,
+      active: true,
+    },
   };
 }
 
@@ -42,6 +51,9 @@ export function updatePlayer(
   events: GameEvent[],
 ): void {
   const p = world.player;
+
+  // Orbiting swords rotation
+  p.orbitSwords.angle = (p.orbitSwords.angle + 0.08) % (Math.PI * 2);
 
   // Handle respawn delay when down
   if (p.downTimer > 0) {
@@ -61,6 +73,46 @@ export function updatePlayer(
       }
     }
     return;
+  }
+
+  // Handle ultimate skill (C key / ULT touch button)
+  const ultTriggered = input.ult && !p.prevUlt;
+  p.prevUlt = input.ult;
+
+  if (p.ultimateTimer > 0) {
+    p.ultimateTimer--;
+  }
+
+  if (ultTriggered && p.mana >= 100 && p.ultimateTimer === 0 && p.downTimer === 0) {
+    p.mana = 0;
+    p.ultimateTimer = 90; // 1.5 seconds beam duration
+    p.invuln = Math.max(p.invuln, 90);
+    events.push({ t: "ultimate", x: p.x, y: p.y });
+
+    // Cancel all active enemy bullets on screen
+    for (const b of world.bullets) {
+      if (b.alive && b.owner === "enemy") {
+        b.alive = false;
+        world.score += 100;
+        events.push({ t: "hit", id: b.id, x: b.x, y: b.y });
+      }
+    }
+
+    // Piercing holy damage to enemies in the corridor
+    const beamHalfWidth = 64;
+    for (const enemy of world.enemies) {
+      if (enemy.alive && Math.abs(enemy.x - p.x) <= beamHalfWidth + enemy.r && enemy.y <= p.y + 20) {
+        enemy.hp -= 30;
+        enemy.flash = 8;
+        events.push({ t: "meleeHit", id: enemy.id, x: enemy.x, y: enemy.y, dmg: 30 });
+        if (enemy.hp <= 0) {
+          enemy.alive = false;
+          world.stats.killed++;
+          world.score += 500;
+          events.push({ t: "explode", size: "l", x: enemy.x, y: enemy.y });
+        }
+      }
+    }
   }
 
   // Handle evasive roll (X / button)

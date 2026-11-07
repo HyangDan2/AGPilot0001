@@ -24,6 +24,11 @@ export const ENEMY_DEFS: Record<EnemyKind, EnemyDef> = {
   gunboat: { kind: "gunboat", hp: 14, r: 42, ground: true, score: 600 },
   albatross: { kind: "albatross", hp: 140, r: 90, ground: false, score: 5000 },
   leviathan: { kind: "leviathan", hp: 260, r: 180, ground: false, score: 20000 },
+  golem: { kind: "golem", hp: 12, r: 44, ground: true, score: 700 },
+  siren: { kind: "siren", hp: 4, r: 26, ground: false, score: 300 },
+  kraken: { kind: "kraken", hp: 320, r: 190, ground: false, score: 30000 },
+  seraph: { kind: "seraph", hp: 6, r: 30, ground: false, score: 500 },
+  valkyrieQueen: { kind: "valkyrieQueen", hp: 450, r: 120, ground: false, score: 50000 },
 };
 
 export function spawnEnemy(

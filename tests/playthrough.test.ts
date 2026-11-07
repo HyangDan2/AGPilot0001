@@ -42,6 +42,7 @@ describe("Stage 1 Headless Playthrough Gate", () => {
         dragDy: 0,
         fire: true, // Auto-fire continuously
         roll: tick % 300 === 0, // Occasional evasive roll
+        ult: false,
       };
 
       const tickEvents = step(world, input);
@@ -90,6 +91,7 @@ describe("Stage 1 Headless Playthrough Gate", () => {
         dragDy: 0,
         fire: true,
         roll: false,
+        ult: false,
       };
 
       step(world, input);

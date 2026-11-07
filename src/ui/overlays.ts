@@ -36,8 +36,8 @@ export class UIManager {
         <button id="btn-start" class="btn btn-primary">START FLIGHT</button>
 
         <div class="instructions">
-          <div><strong>KEYBOARD:</strong> WASD / ARROWS : MOVE | Z / SPACE : ARC BLADE | X / SHIFT : ROLL</div>
-          <div><strong>TOUCH:</strong> DRAG TO FLY & AUTO-ATTACK | [ROLL] EVASION</div>
+          <div><strong>KEYBOARD:</strong> WASD/ARROWS: MOVE | Z/SPACE: ARC BLADE | X/SHIFT: ROLL | C/L: ULTIMATE</div>
+          <div><strong>TOUCH:</strong> DRAG TO FLY & AUTO-ATTACK | [ROLL] EVASION | [ULT] GUNGNIR JUDGEMENT</div>
         </div>
 
         <div class="settings-bar">
@@ -62,6 +62,7 @@ export class UIManager {
       <div class="hud-overlay">
         <button id="btn-pause" class="hud-btn pause-btn" aria-label="Pause">❚❚</button>
         <button id="btn-ingame-mute" class="hud-btn mute-btn" aria-label="Mute">${isMuted ? "🔇" : "🔊"}</button>
+        <button id="btn-touch-ult" class="touch-ult-btn" aria-label="Gungnir Ultimate">ULT</button>
         <button id="btn-touch-roll" class="touch-roll-btn" aria-label="Evasive Roll">ROLL</button>
       </div>
     `;
@@ -82,6 +83,19 @@ export class UIManager {
 
     const rollBtn = document.getElementById("btn-touch-roll");
     rollBtn?.addEventListener("pointerdown", triggerRoll);
+
+    let lastUltTime = 0;
+    const triggerUlt = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const now = performance.now();
+      if (now - lastUltTime < 250) return;
+      lastUltTime = now;
+      window.dispatchEvent(new CustomEvent("iron-wings-ult"));
+    };
+
+    const ultBtn = document.getElementById("btn-touch-ult");
+    ultBtn?.addEventListener("pointerdown", triggerUlt);
   }
 
   public showPauseMenu(): void {

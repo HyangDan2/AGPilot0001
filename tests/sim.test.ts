@@ -23,7 +23,7 @@ describe("Simulation Core", () => {
   it("clamps player inside logical playfield", () => {
     const world = createWorld({ seed: 42, startAt: 1 });
     // Move hard left and up
-    const leftUp: InputFrame = { moveX: -1, moveY: -1, dragDx: 0, dragDy: 0, fire: false, roll: false };
+    const leftUp: InputFrame = { moveX: -1, moveY: -1, dragDx: 0, dragDy: 0, fire: false, roll: false, ult: false };
     for (let i = 0; i < 300; i++) {
       step(world, leftUp);
     }
@@ -31,7 +31,7 @@ describe("Simulation Core", () => {
     expect(world.player.y).toBeGreaterThanOrEqual(28);
 
     // Move hard right and down
-    const rightDown: InputFrame = { moveX: 1, moveY: 1, dragDx: 0, dragDy: 0, fire: false, roll: false };
+    const rightDown: InputFrame = { moveX: 1, moveY: 1, dragDx: 0, dragDy: 0, fire: false, roll: false, ult: false };
     for (let i = 0; i < 500; i++) {
       step(world, rightDown);
     }
@@ -44,7 +44,7 @@ describe("Simulation Core", () => {
     world.player.invuln = 0;
 
     // Power 1: single bullet
-    const fireInput: InputFrame = { moveX: 0, moveY: 0, dragDx: 0, dragDy: 0, fire: true, roll: false };
+    const fireInput: InputFrame = { moveX: 0, moveY: 0, dragDx: 0, dragDy: 0, fire: true, roll: false, ult: false };
     step(world, fireInput);
     expect(world.bullets.length).toBe(1);
     expect(world.player.fireCooldown).toBeGreaterThan(0);
@@ -72,7 +72,7 @@ describe("Simulation Core", () => {
     const world = createWorld({ seed: 42, startAt: 1 });
     expect(world.player.rolls).toBe(3);
 
-    const rollInput: InputFrame = { moveX: 0, moveY: 0, dragDx: 0, dragDy: 0, fire: false, roll: true };
+    const rollInput: InputFrame = { moveX: 0, moveY: 0, dragDx: 0, dragDy: 0, fire: false, roll: true, ult: false };
     const events = step(world, rollInput);
 
     expect(events.some((e) => e.t === "roll")).toBe(true);
@@ -80,7 +80,7 @@ describe("Simulation Core", () => {
     expect(world.player.rollTimer).toBeGreaterThan(0);
 
     // Roll prevents weapon firing
-    const rollAndFire: InputFrame = { moveX: 0, moveY: 0, dragDx: 0, dragDy: 0, fire: true, roll: false };
+    const rollAndFire: InputFrame = { moveX: 0, moveY: 0, dragDx: 0, dragDy: 0, fire: true, roll: false, ult: false };
     step(world, rollAndFire);
     expect(world.bullets.length).toBe(0);
   });
@@ -167,6 +167,7 @@ describe("Simulation Core", () => {
           dragDy: 0,
           fire: i % 10 === 0,
           roll: i === 60,
+          ult: i === 120,
         };
         const events = step(w, input);
         for (const e of events) {

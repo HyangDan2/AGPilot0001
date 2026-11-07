@@ -164,6 +164,7 @@ export class GameApp {
       dragDy: touch.dragDy,
       fire: key.fire || touch.fire,
       roll: key.roll || touch.roll,
+      ult: key.ult || touch.ult,
     };
 
     while (this.accumulator >= DT) {
@@ -173,8 +174,9 @@ export class GameApp {
       this.audio.handleEvents(events);
       this.accumulator -= DT;
 
-      // Reset one-shot roll trigger for subsequent ticks in the same frame
+      // Reset one-shot roll and ult triggers for subsequent ticks in the same frame
       input.roll = false;
+      input.ult = false;
     }
 
     this.renderer.render(this.world);

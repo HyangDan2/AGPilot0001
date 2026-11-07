@@ -135,6 +135,74 @@ export function checkMeleeHits(world: World, events: GameEvent[]): void {
   }
 }
 
+export function checkGraze(world: World, events: GameEvent[]): void {
+  const p = world.player;
+  if (p.downTimer > 0 || p.rollTimer > 0) return;
+
+  const GRAZE_INNER = 12; // hurtbox
+  const GRAZE_OUTER = 36; // graze field
+
+  for (const b of world.bullets) {
+    if (!b.alive || b.owner !== "enemy" || b.grazed) continue;
+
+    const dist = Math.hypot(b.x - p.x, b.y - p.y);
+    if (dist > GRAZE_INNER && dist <= GRAZE_OUTER + b.r) {
+      b.grazed = true;
+      p.grazeCount++;
+      p.mana = Math.min(p.maxMana, p.mana + 10);
+      world.score += 250;
+      world.stats.grazes++;
+      events.push({
+        t: "graze",
+        x: (p.x + b.x) / 2,
+        y: (p.y + b.y) / 2,
+        bulletId: b.id,
+      });
+    }
+  }
+}
+
+export function checkOrbitSwordHits(world: World, events: GameEvent[]): void {
+  const p = world.player;
+  if (p.downTimer > 0 || !p.orbitSwords.active) return;
+
+  const swordRadius = 72;
+  const angles = [p.orbitSwords.angle, p.orbitSwords.angle + Math.PI];
+
+  for (const ang of angles) {
+    const sx = p.x + Math.cos(ang) * swordRadius;
+    const sy = p.y + Math.sin(ang) * swordRadius;
+
+    // Destroy/parry enemy bullets near sword
+    for (const b of world.bullets) {
+      if (b.alive && b.owner === "enemy") {
+        if (Math.hypot(b.x - sx, b.y - sy) <= 22 + b.r) {
+          b.alive = false;
+          world.score += 50;
+          events.push({ t: "hit", id: b.id, x: b.x, y: b.y });
+        }
+      }
+    }
+
+    // Damage enemies contacting the orbiting swords
+    for (const enemy of world.enemies) {
+      if (enemy.alive && Math.hypot(enemy.x - sx, enemy.y - sy) <= 24 + enemy.r) {
+        if (world.tick % 8 === 0) {
+          enemy.hp -= 1;
+          enemy.flash = 4;
+          p.mana = Math.min(p.maxMana, p.mana + 1);
+          events.push({ t: "hit", id: enemy.id, x: sx, y: sy });
+          if (enemy.hp <= 0) {
+            enemy.alive = false;
+            world.stats.killed++;
+            events.push({ t: "explode", size: "s", x: enemy.x, y: enemy.y });
+          }
+        }
+      }
+    }
+  }
+}
+
 export function playerCollectsPickup(player: Player, pickup: Pickup): boolean {
   if (player.downTimer > 0 || !pickup.alive) {
     return false;

@@ -1,5 +1,7 @@
 import {
+  checkGraze,
   checkMeleeHits,
+  checkOrbitSwordHits,
   hitEnemy,
   hitPlayer,
   playerCollectsPickup,
@@ -33,13 +35,15 @@ export function createWorld(options?: WorldOptions): World {
     phase: startAt > 0 ? "play" : "intro",
     phaseTimer: startAt > 0 ? 0 : 120, // 2s intro takeoff
     scrollY: Math.floor(startAt * 80),
+    currentStage: options?.startStage ?? 1,
+    difficulty: options?.difficulty ?? "normal",
     player: createPlayer(),
     enemies: [],
     bullets: [],
     pickups: [],
     formations: new Map(),
     score: 0,
-    stats: { spawned: 0, killed: 0, shotsFired: 0, noMissBonus: 50000 },
+    stats: { spawned: 0, killed: 0, shotsFired: 0, noMissBonus: 50000, grazes: 0 },
     nextId: 1,
     bossId: 0,
     bossPhase: 0,
@@ -108,7 +112,7 @@ export function step(world: World, input: InputFrame): GameEvent[] {
         world.score += world.stats.noMissBonus;
         events.push({ t: "bonus", amount: world.stats.noMissBonus, x: FIELD_W / 2, y: FIELD_H / 2 });
       }
-      events.push({ t: "stageClear" });
+      events.push({ t: "stageClear", stage: world.currentStage });
     }
     updateBulletsAndPickups(world);
     return events;
@@ -129,6 +133,12 @@ export function step(world: World, input: InputFrame): GameEvent[] {
 
   // Melee Swept Arc Collision
   checkMeleeHits(world, events);
+
+  // Orbiting Aegis Swords Collision & Projectile Defense
+  checkOrbitSwordHits(world, events);
+
+  // Bullet Graze Check (Charges Ultimate Gauge)
+  checkGraze(world, events);
 
   // Update Enemies
   for (const enemy of world.enemies) {
@@ -260,6 +270,7 @@ function handlePlayerBulletCollisions(world: World, events: GameEvent[]): void {
       if (hitEnemy(enemy, bullet)) {
         bullet.alive = false;
         enemy.flash = 4;
+        world.player.mana = Math.min(world.player.maxMana, world.player.mana + 2);
         events.push({ t: "hit", id: enemy.id, x: bullet.x, y: bullet.y });
 
         // Boss part damage first
@@ -296,6 +307,7 @@ function handlePlayerBulletCollisions(world: World, events: GameEvent[]): void {
 function killEnemy(world: World, enemy: Enemy, events: GameEvent[]): void {
   enemy.alive = false;
   world.stats.killed++;
+  world.player.mana = Math.min(world.player.maxMana, world.player.mana + 8);
   const def = ENEMY_DEFS[enemy.kind];
   world.score += def.score;
 

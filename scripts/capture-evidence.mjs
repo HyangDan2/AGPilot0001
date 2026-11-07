@@ -152,6 +152,24 @@ async function main() {
       await page.close();
     }
 
+    // 9. Gungnir's Judgement Ultimate Beam & Orbiting Aegis Swords (390x844)
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        hook.startWithSeed(42, 10);
+        const w = hook.getWorld();
+        w.player.ultimateTimer = 45; // mid-blast
+        w.player.mana = 100;
+        w.player.grazeCount = 14;
+      });
+      await page.waitForTimeout(300);
+      await page.screenshot({ path: path.join(outDir, "ultimate-mobile-390x844.png") });
+      await page.close();
+    }
+
     await browser.close();
     console.log("Evidence screenshots captured successfully in docs/evidence/");
   } finally {

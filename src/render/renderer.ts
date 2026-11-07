@@ -110,9 +110,76 @@ export class GameRenderer {
         this.spawnSparks(e.x, e.y);
       } else if (e.t === "pickup") {
         this.spawnPickupSparks(e.x, e.y);
+      } else if (e.t === "graze") {
+        this.spawnGrazeSparks(e.x, e.y);
+      } else if (e.t === "ultimate") {
+        this.spawnUltimateBlast(e.x, e.y);
       } else if (e.t === "warning") {
         this.warningTimer = 180; // 3 seconds of arcade warning banner
       }
+    }
+  }
+
+  private spawnGrazeSparks(x: number, y: number): void {
+    for (let i = 0; i < 8; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 60 + Math.random() * 90;
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0,
+        maxLife: 14,
+        size: 2.5,
+        color: Math.random() > 0.5 ? "#44d7f5" : "#f8c050",
+        kind: "spark",
+      });
+    }
+  }
+
+  private spawnUltimateBlast(x: number, y: number): void {
+    if (!this.reducedMotion) {
+      this.shakeTimer = 24;
+      this.shakeAmount = 14;
+    }
+    // Radiant circular shockwaves expanding outward
+    this.particles.push({
+      x,
+      y,
+      vx: 0,
+      vy: 0,
+      life: 0,
+      maxLife: 32,
+      size: 280,
+      color: "rgba(248, 192, 80, 0.95)",
+      kind: "shockwave",
+    });
+    this.particles.push({
+      x,
+      y,
+      vx: 0,
+      vy: 0,
+      life: 0,
+      maxLife: 28,
+      size: 220,
+      color: "rgba(68, 215, 245, 0.9)",
+      kind: "shockwave",
+    });
+    for (let i = 0; i < 40; i++) {
+      const angle = (Math.PI * 2 * i) / 40;
+      const speed = 180 + Math.random() * 220;
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0,
+        maxLife: 26,
+        size: 3.5,
+        color: i % 2 === 0 ? "#ffffff" : "#44d7f5",
+        kind: "spark",
+      });
     }
   }
 
@@ -332,6 +399,14 @@ export class GameRenderer {
       this.drawMeleeSlash(world.player);
     }
 
+    // 10.5. Orbiting Aegis Swords (Bullet Parrying Subweapons)
+    if (world.player.downTimer === 0) {
+      this.drawOrbitingSwords(world.player, world.tick);
+    }
+
+    // 10.8. Gungnir's Judgement Ultimate Beam
+    this.drawUltimateBeam(world.player, world.tick);
+
     // 11. Valkyrie Eira (Default 160px Scale)
     if (world.player.downTimer === 0) {
       this.drawPlayer(world.player, world.tick);
@@ -342,6 +417,9 @@ export class GameRenderer {
 
     // 13. Layer 4 (1.1x): High-altitude Clouds & Floating Debris
     this.drawHighCloudsAndDebris(world.scrollY, world.stageTick);
+
+    // 13.5. Dynamic Weather & Drifting Feathers
+    this.drawWeatherEffects(world.tick, world.stageTick);
 
     ctx.restore();
 
@@ -925,11 +1003,189 @@ export class GameRenderer {
     ctx.stroke();
   }
 
+  private drawOrbitingSwords(p: Player, tick: number): void {
+    if (p.downTimer > 0 || !p.orbitSwords?.active) return;
+    const ctx = this.ctx;
+    const swordRadius = 72;
+    const angles = [p.orbitSwords.angle, p.orbitSwords.angle + Math.PI];
+
+    ctx.save();
+    for (let i = 0; i < angles.length; i++) {
+      const ang = angles[i];
+      const sx = p.x + Math.cos(ang) * swordRadius;
+      const sy = p.y + Math.sin(ang) * swordRadius;
+
+      ctx.save();
+      ctx.translate(sx, sy);
+      // Sword points outward/tangent
+      ctx.rotate(ang + Math.PI / 2);
+
+      // Trailing cyan glow aura
+      ctx.shadowColor = "#44d7f5";
+      ctx.shadowBlur = 12;
+
+      // Blade gradient
+      const bladeGrad = ctx.createLinearGradient(0, -22, 0, 16);
+      bladeGrad.addColorStop(0, "#ffffff");
+      bladeGrad.addColorStop(0.5, "#44d7f5");
+      bladeGrad.addColorStop(1, "#335dcb");
+      ctx.fillStyle = bladeGrad;
+
+      // Blade polygon
+      ctx.beginPath();
+      ctx.moveTo(0, -24);
+      ctx.lineTo(5, -6);
+      ctx.lineTo(4, 12);
+      ctx.lineTo(0, 15);
+      ctx.lineTo(-4, 12);
+      ctx.lineTo(-5, -6);
+      ctx.closePath();
+      ctx.fill();
+
+      // Golden crossguard & hilt
+      ctx.fillStyle = "#f8c050";
+      ctx.fillRect(-7, 12, 14, 3);
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(-2, 15, 4, 8);
+      ctx.fillStyle = "#f8c050";
+      ctx.beginPath();
+      ctx.arc(0, 24, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sharp white core highlight
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, -22);
+      ctx.lineTo(0, 12);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Orbit trail particles
+      if (tick % 3 === 0) {
+        this.particles.push({
+          x: sx + (Math.random() - 0.5) * 6,
+          y: sy + (Math.random() - 0.5) * 6,
+          vx: -Math.sin(ang) * 40,
+          vy: Math.cos(ang) * 40,
+          life: 0,
+          maxLife: 10,
+          size: 2.2,
+          color: i === 0 ? "#44d7f5" : "#f8c050",
+          kind: "spark",
+        });
+      }
+    }
+    ctx.restore();
+  }
+
+  private drawUltimateBeam(p: Player, tick: number): void {
+    if (p.ultimateTimer <= 0) return;
+    const ctx = this.ctx;
+    const progress = 1 - p.ultimateTimer / 90; // 0..1
+    const intensity = Math.sin(progress * Math.PI); // swells then fades
+    if (intensity <= 0.01) return;
+
+    ctx.save();
+    const bx = p.x;
+    const by = p.y - 30;
+
+    // Outer radiant holy beam corridor
+    const beamW = 128 * intensity;
+    const outerGrad = ctx.createLinearGradient(bx - beamW / 2, 0, bx + beamW / 2, 0);
+    outerGrad.addColorStop(0, "rgba(68, 215, 245, 0)");
+    outerGrad.addColorStop(0.2, "rgba(68, 215, 245, 0.35)");
+    outerGrad.addColorStop(0.5, "rgba(248, 192, 80, 0.45)");
+    outerGrad.addColorStop(0.8, "rgba(68, 215, 245, 0.35)");
+    outerGrad.addColorStop(1, "rgba(68, 215, 245, 0)");
+
+    ctx.fillStyle = outerGrad;
+    ctx.fillRect(bx - beamW / 2, 0, beamW, by);
+
+    // Inner blinding white lance core
+    const coreW = 44 * intensity;
+    const innerGrad = ctx.createLinearGradient(bx - coreW / 2, 0, bx + coreW / 2, 0);
+    innerGrad.addColorStop(0, "rgba(255, 255, 255, 0.1)");
+    innerGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.95)");
+    innerGrad.addColorStop(1, "rgba(255, 255, 255, 0.1)");
+    ctx.fillStyle = innerGrad;
+    ctx.shadowColor = "#ffffff";
+    ctx.shadowBlur = 24;
+    ctx.fillRect(bx - coreW / 2, 0, coreW, by);
+
+    // Sacred rune energy rings ascending rapidly
+    for (let r = 0; r < 4; r++) {
+      const ringY = by - ((tick * 18 + r * 160) % Math.max(1, by));
+      if (ringY > 0 && ringY < by) {
+        ctx.strokeStyle = r % 2 === 0 ? "rgba(248, 192, 80, 0.8)" : "rgba(68, 215, 245, 0.85)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(bx, ringY, 55 * intensity, 14 * intensity, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    // Concentrated launch focus magic circle at Eira's tip
+    ctx.strokeStyle = "#f8c050";
+    ctx.lineWidth = 4;
+    ctx.shadowColor = "#f8c050";
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.ellipse(bx, by, 48 * intensity, 16 * intensity, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  private drawWeatherEffects(tick: number, stageTick: number): void {
+    const ctx = this.ctx;
+    ctx.save();
+    // Drifting holy feathers in sky stages
+    ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+    for (let i = 0; i < 7; i++) {
+      const seed = i * 142.3;
+      const speed = 40 + (i % 3) * 15;
+      const fy = ((tick * speed * 0.05 + seed * 20) % (FIELD_H + 80)) - 40;
+      const fx = (Math.sin(tick * 0.02 + seed) * 90 + (i * 110 + 40)) % FIELD_W;
+      const rot = Math.sin(tick * 0.03 + seed) * 0.5;
+
+      ctx.save();
+      ctx.translate(fx, fy);
+      ctx.rotate(rot);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 9, 3.5, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(200, 230, 255, 0.8)";
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(-9, 0);
+      ctx.lineTo(9, 0);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Occasional thunder lightning flash in stage 1-3 (Twilight Rift: stageTick 3000-4500)
+    if (stageTick >= 3000 && stageTick <= 4500 && !this.reducedMotion) {
+      if (stageTick % 240 >= 236) {
+        ctx.fillStyle = "rgba(180, 210, 255, 0.22)";
+        ctx.fillRect(0, 0, FIELD_W, FIELD_H);
+      }
+    }
+    ctx.restore();
+  }
+
   private drawEnemy(enemy: Enemy): void {
     const ctx = this.ctx;
     ctx.save();
     ctx.translate(enemy.x, enemy.y);
     ctx.rotate(enemy.heading);
+
+    // Living wing flapping oscillation on airborne monsters
+    if (!enemy.ground) {
+      const wingFlap = Math.sin(enemy.age * 0.35 + enemy.id) * 0.08;
+      ctx.scale(1 + wingFlap, 1 - wingFlap * 0.5);
+    }
 
     if (enemy.flash > 0) {
       ctx.filter = "brightness(2.5) contrast(1.4)";
@@ -1194,6 +1450,42 @@ export class GameRenderer {
     for (let i = 1; i <= 3; i++) {
       ctx.fillStyle = i <= world.player.power ? "#44d7f5" : "rgba(68, 215, 245, 0.2)";
       ctx.fillRect(72 + (i - 1) * 16, FIELD_H - 96, 11, 11);
+    }
+
+    // MANA / ULTIMATE GAUGE (Gungnir's Judgement) - Top Center prominent display
+    const manaW = 220;
+    const manaH = 14;
+    const mx = (FIELD_W - manaW) / 2;
+    const my = 54;
+
+    const isReady = world.player.mana >= 100;
+    ctx.fillStyle = isReady ? "#f8c050" : "#8fa5d8";
+    ctx.font = "900 11px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(isReady ? "★ GUNGNIR READY! [C/ULT] ★" : `MANA GAUGE ${Math.floor(world.player.mana)}%`, FIELD_W / 2, my - 6);
+
+    ctx.fillStyle = "rgba(8, 13, 35, 0.85)";
+    ctx.fillRect(mx, my, manaW, manaH);
+    ctx.strokeStyle = isReady ? (Math.floor(world.tick / 6) % 2 === 0 ? "#f8c050" : "#44d7f5") : "#335dcb";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(mx, my, manaW, manaH);
+
+    const manaRatio = Math.min(1, world.player.mana / world.player.maxMana);
+    if (manaRatio > 0) {
+      const manaGrad = ctx.createLinearGradient(mx, 0, mx + manaW, 0);
+      manaGrad.addColorStop(0, "#335dcb");
+      manaGrad.addColorStop(0.7, "#44d7f5");
+      manaGrad.addColorStop(1, isReady ? "#f8c050" : "#44d7f5");
+      ctx.fillStyle = manaGrad;
+      ctx.fillRect(mx + 2, my + 2, (manaW - 4) * manaRatio, manaH - 4);
+    }
+
+    // GRAZE COUNTER (Subtle under score)
+    if (world.player.grazeCount > 0) {
+      ctx.fillStyle = "#44d7f5";
+      ctx.font = "700 11px monospace";
+      ctx.textAlign = "left";
+      ctx.fillText(`GRAZE: ${world.player.grazeCount}`, 32, 88);
     }
 
     // BOSS HEALTH BAR

@@ -5,6 +5,7 @@ export interface TouchState {
   dragDy: number;
   fire: boolean;
   roll: boolean;
+  ult: boolean;
 }
 
 export function createTouchHandler(canvas: HTMLCanvasElement): {
@@ -15,15 +16,20 @@ export function createTouchHandler(canvas: HTMLCanvasElement): {
   let dragDy = 0;
   let isTouching = false;
   let rollTriggered = false;
+  let ultTriggered = false;
   let activePointerId: number | null = null;
   let lastX = 0;
   let lastY = 0;
 
-  // Listen for custom trigger from the UI roll button
+  // Listen for custom trigger from the UI roll and ult buttons
   const onRollTrigger = () => {
     rollTriggered = true;
   };
+  const onUltTrigger = () => {
+    ultTriggered = true;
+  };
   window.addEventListener("iron-wings-roll", onRollTrigger);
+  window.addEventListener("iron-wings-ult", onUltTrigger);
 
   const getCanvasScale = () => {
     const rect = canvas.getBoundingClientRect();
@@ -97,14 +103,17 @@ export function createTouchHandler(canvas: HTMLCanvasElement): {
         dragDy,
         fire: isTouching,
         roll: rollTriggered,
+        ult: ultTriggered,
       };
       dragDx = 0;
       dragDy = 0;
       rollTriggered = false;
+      ultTriggered = false;
       return state;
     },
     cleanup: () => {
       window.removeEventListener("iron-wings-roll", onRollTrigger);
+      window.removeEventListener("iron-wings-ult", onUltTrigger);
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerup", onPointerUp);

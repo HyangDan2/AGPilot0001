@@ -149,6 +149,18 @@ export class AudioRuntime {
         case "roll":
           this.playAudioOrSynth("sfx_roll", () => this.synthRoll());
           break;
+        case "graze":
+          this.playAudioOrSynth("sfx_graze", () => this.synthGraze());
+          break;
+        case "ultimate":
+          this.playAudioOrSynth("sfx_ultimate", () => this.synthUltimate());
+          break;
+        case "meleeSlash":
+          this.playAudioOrSynth("sfx_slash", () => this.synthSlash());
+          break;
+        case "meleeHit":
+          this.playAudioOrSynth("sfx_melee_hit", () => this.synthMeleeHit());
+          break;
         case "playerDown":
           this.playAudioOrSynth("sfx_explode_l", () => this.synthExplosion("l"));
           break;
@@ -292,6 +304,86 @@ export class AudioRuntime {
     gain.connect(this.sfxGain);
     osc.start(t);
     osc.stop(t + 0.65);
+  }
+
+  private synthGraze(): void {
+    if (!this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(1760, t);
+    osc.frequency.exponentialRampToValueAtTime(2640, t + 0.06);
+
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.08);
+  }
+
+  private synthUltimate(): void {
+    if (!this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+
+    // Deep thunder resonance + ascending angelic chords
+    const chord = [130.81, 261.63, 392.0, 523.25, 1046.5];
+    chord.forEach((freq, idx) => {
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+      osc.type = idx === 0 ? "sawtooth" : "triangle";
+      osc.frequency.setValueAtTime(freq, t);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.8);
+
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain!);
+      osc.start(t);
+      osc.stop(t + 1.25);
+    });
+  }
+
+  private synthSlash(): void {
+    if (!this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(580, t);
+    osc.frequency.exponentialRampToValueAtTime(180, t + 0.08);
+
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.09);
+  }
+
+  private synthMeleeHit(): void {
+    if (!this.ctx || !this.sfxGain) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(420, t);
+    osc.frequency.linearRampToValueAtTime(90, t + 0.07);
+
+    gain.gain.setValueAtTime(0.28, t);
+    gain.gain.linearRampToValueAtTime(0.001, t + 0.07);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.08);
   }
 
   private synthWarning(): void {
