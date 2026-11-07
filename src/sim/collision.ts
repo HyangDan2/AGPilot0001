@@ -1,4 +1,5 @@
 import { damageEnemy } from "./enemies";
+import { addManaUnits } from "./player";
 import { Bullet, Enemy, GameEvent, Pickup, Player, World } from "./types";
 
 export function circlesIntersect(
@@ -92,6 +93,7 @@ export function checkMeleeHits(world: World, events: GameEvent[]): void {
         dmg: meleeDamage,
       });
 
+      addManaUnits(p, 15);
       damageEnemy(world, enemy, meleeDamage, events, (p.x + enemy.x) / 2, (p.y + enemy.y) / 2);
     }
   }
@@ -111,7 +113,7 @@ export function checkGraze(world: World, events: GameEvent[]): void {
     if (dist > GRAZE_INNER && dist <= GRAZE_OUTER + b.r) {
       b.grazed = true;
       p.grazeCount++;
-      p.mana = Math.min(p.maxMana, p.mana + 10);
+      addManaUnits(p, 10);
       world.score += 250;
       world.stats.grazes++;
       events.push({
@@ -142,7 +144,7 @@ export function checkOrbitSwordHits(world: World, events: GameEvent[]): void {
       if (Math.hypot(b.x - ox, b.y - oy) <= 18 + b.r) {
         b.alive = false;
         orb.alive = false; // Destructible: this specific orb is broken!
-        p.mana = Math.min(p.maxMana, p.mana + 15);
+        addManaUnits(p, 15);
         world.score += 250;
         events.push({ t: "orbDestroyed", id: orb.id, x: ox, y: oy });
         events.push({ t: "explode", size: "s", x: ox, y: oy });
@@ -161,7 +163,7 @@ export function checkOrbitSwordHits(world: World, events: GameEvent[]): void {
     for (const enemy of world.enemies) {
       if (enemy.alive && Math.hypot(enemy.x - ox, enemy.y - oy) <= 22 + enemy.r) {
         if (world.tick % 8 === 0) {
-          p.mana = Math.min(p.maxMana, p.mana + 1);
+          addManaUnits(p, 1);
           damageEnemy(world, enemy, 1, events, ox, oy);
         }
       }

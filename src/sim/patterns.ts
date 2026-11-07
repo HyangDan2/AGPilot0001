@@ -69,7 +69,14 @@ export function updateEnemyPath(enemy: Enemy, player: Player): void {
         // HOLD / SWEEP: horizontal drifting
         enemy.sx += DT;
         const holdTime = enemy.sx;
-        if (enemy.kind === "leviathan" || enemy.kind === "albatross") {
+        const isBoss =
+          enemy.kind === "celestialGuardian" ||
+          enemy.kind === "leviathan" ||
+          enemy.kind === "albatross" ||
+          enemy.kind === "kraken" ||
+          enemy.kind === "hollowStag" ||
+          enemy.kind === "fateWeaver";
+        if (isBoss) {
           // Bosses stay engaged on screen until defeated
           enemy.x = enemy.x0 + Math.sin(holdTime * 1.1) * 120;
           enemy.heading = Math.PI - Math.cos(holdTime * 1.1) * 0.15;
@@ -158,7 +165,7 @@ export function fireEnemyBullet(
   angleOffset = 0,
 ): void {
   const p = world.player;
-  const stageSpeedMultiplier = world.currentStage === 2 ? 1.2 : 1.0;
+  const stageSpeedMultiplier = world.currentStage === 3 ? 1.44 : world.currentStage === 2 ? 1.2 : 1.0;
   const actualSpeed = speed * stageSpeedMultiplier;
   let vx = 0;
   let vy = actualSpeed;

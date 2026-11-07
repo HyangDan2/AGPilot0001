@@ -190,7 +190,7 @@ async function main() {
       await page.close();
     }
 
-    // 9. Victory Screen (Ragnarok Transcended)
+    // 8.6 Stage 3 Combat (Yggdrasil Heart Emerald Canopy, Living Bark & Spore Wisps)
     {
       const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
       await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
@@ -198,10 +198,45 @@ async function main() {
       await page.evaluate(() => {
         const hook = window.__testHook;
         const w = hook.getWorld();
-        w.currentStage = 2;
-        w.score = 158500;
-        w.stats.killed = 68;
-        w.stats.spawned = 70;
+        w.currentStage = 3;
+        w.stageTick = 800;
+        w.player.orbitSwords = { active: true, angle: 1.2 };
+        w.player.mana = 90;
+      });
+      await page.waitForTimeout(600);
+      await page.screenshot({ path: path.join(outDir, "stage3-combat-mobile-390x844.png") });
+      await page.close();
+    }
+
+    // 8.7 Stage 3 Final Boss (Fate Weaver Cosmic Rune Loom)
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        const w = hook.getWorld();
+        w.currentStage = 3;
+        w.stageTick = 4200; // 70s in, Fate Weaver engaged
+        w.phase = "boss";
+      });
+      await page.waitForTimeout(600);
+      await page.screenshot({ path: path.join(outDir, "boss-fate-weaver-mobile-390x844.png") });
+      await page.close();
+    }
+
+    // 9. Victory Screen (Stage 3 Campaign Complete)
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+      await page.goto("http://127.0.0.1:4173/AGPilot0001/?test=1");
+      await page.click("#btn-start");
+      await page.evaluate(() => {
+        const hook = window.__testHook;
+        const w = hook.getWorld();
+        w.currentStage = 3;
+        w.score = 248500;
+        w.stats.killed = 90;
+        w.stats.spawned = 94;
         w.phase = "clearing";
         w.phaseTimer = 2;
       });

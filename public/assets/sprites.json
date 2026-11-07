@@ -16,13 +16,157 @@
     "meta": "assets/enemies/enemies-atlas.json"
   },
   "sprites": {
-    "player": { "w": 160, "h": 160, "drawW": 160, "drawH": 160, "facing": "up", "src": "assets/characters/eira/eira-flight.png" },
-    "kestrel": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down", "src": "assets/enemies/shadow_gargoyle.png" },
-    "kestrelRed": { "w": 76, "h": 76, "drawW": 76, "drawH": 76, "facing": "down", "src": "assets/enemies/crimson_drake.png" },
-    "harrier": { "w": 84, "h": 84, "drawW": 84, "drawH": 84, "facing": "down", "src": "assets/enemies/skyfang_phantom.png" },
-    "condor": { "w": 170, "h": 170, "drawW": 170, "drawH": 170, "facing": "down", "src": "assets/enemies/armored_behemoth.png" },
-    "gunboat": { "w": 110, "h": 110, "drawW": 110, "drawH": 110, "facing": "down", "src": "assets/enemies/floating_bastion.png" },
-    "albatross": { "w": 300, "h": 120, "drawW": 300, "drawH": 120, "facing": "down", "src": "assets/enemies/ancient_guardian.png" },
-    "leviathan": { "w": 600, "h": 220, "drawW": 600, "drawH": 220, "facing": "down", "src": "assets/enemies/abyssal_dragon.png" }
+    "player": {
+      "w": 160,
+      "h": 160,
+      "drawW": 160,
+      "drawH": 160,
+      "facing": "up",
+      "src": "assets/characters/eira/eira-flight.png"
+    },
+    "kestrel": {
+      "w": 76,
+      "h": 76,
+      "drawW": 76,
+      "drawH": 76,
+      "facing": "down",
+      "src": "assets/enemies/shadow_gargoyle.png"
+    },
+    "kestrelRed": {
+      "w": 76,
+      "h": 76,
+      "drawW": 76,
+      "drawH": 76,
+      "facing": "down",
+      "src": "assets/enemies/crimson_drake.png"
+    },
+    "harrier": {
+      "w": 84,
+      "h": 84,
+      "drawW": 84,
+      "drawH": 84,
+      "facing": "down",
+      "src": "assets/enemies/skyfang_phantom.png"
+    },
+    "condor": {
+      "w": 170,
+      "h": 170,
+      "drawW": 170,
+      "drawH": 170,
+      "facing": "down",
+      "src": "assets/enemies/armored_behemoth.png"
+    },
+    "gunboat": {
+      "w": 110,
+      "h": 110,
+      "drawW": 110,
+      "drawH": 110,
+      "facing": "down",
+      "src": "assets/enemies/floating_bastion.png"
+    },
+    "albatross": {
+      "w": 300,
+      "h": 120,
+      "drawW": 300,
+      "drawH": 120,
+      "facing": "down",
+      "src": "assets/enemies/ancient_guardian.png"
+    },
+    "leviathan": {
+      "w": 600,
+      "h": 220,
+      "drawW": 600,
+      "drawH": 220,
+      "facing": "down",
+      "src": "assets/enemies/abyssal_dragon.png"
+    },
+    "celestialGuardian": {
+      "w": 520,
+      "h": 280,
+      "drawW": 520,
+      "drawH": 280,
+      "facing": "down",
+      "src": "assets/enemies/celestial_guardian.png"
+    },
+    "siren": {
+      "w": 160,
+      "h": 140,
+      "drawW": 88,
+      "drawH": 78,
+      "facing": "down",
+      "src": "assets/enemies/siren.png"
+    },
+    "seraph": {
+      "w": 180,
+      "h": 160,
+      "drawW": 96,
+      "drawH": 86,
+      "facing": "down",
+      "src": "assets/enemies/seraph.png"
+    },
+    "golem": {
+      "w": 180,
+      "h": 200,
+      "drawW": 110,
+      "drawH": 122,
+      "facing": "down",
+      "src": "assets/enemies/golem.png"
+    },
+    "kraken": {
+      "w": 420,
+      "h": 260,
+      "drawW": 340,
+      "drawH": 210,
+      "facing": "down",
+      "src": "assets/enemies/kraken.png"
+    },
+    "seedWisp": {
+      "w": 150,
+      "h": 140,
+      "drawW": 80,
+      "drawH": 75,
+      "facing": "down",
+      "src": "assets/enemies/seed_wisp.png"
+    },
+    "thornMantis": {
+      "w": 170,
+      "h": 160,
+      "drawW": 94,
+      "drawH": 88,
+      "facing": "down",
+      "src": "assets/enemies/thorn_mantis.png"
+    },
+    "amberMoth": {
+      "w": 220,
+      "h": 180,
+      "drawW": 120,
+      "drawH": 98,
+      "facing": "down",
+      "src": "assets/enemies/amber_moth.png"
+    },
+    "rootGuardian": {
+      "w": 240,
+      "h": 220,
+      "drawW": 140,
+      "drawH": 128,
+      "facing": "down",
+      "src": "assets/enemies/root_guardian.png"
+    },
+    "hollowStag": {
+      "w": 420,
+      "h": 280,
+      "drawW": 320,
+      "drawH": 212,
+      "facing": "down",
+      "src": "assets/enemies/hollow_stag.png"
+    },
+    "fateWeaver": {
+      "w": 560,
+      "h": 320,
+      "drawW": 520,
+      "drawH": 298,
+      "facing": "down",
+      "src": "assets/enemies/fate_weaver.png"
+    }
   }
 }

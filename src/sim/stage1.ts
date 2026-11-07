@@ -51,6 +51,6 @@ export const STAGE1_WAVES: WaveDef[] = [
   { at: 53.0, kind: "kestrelRed", formation: "line", count: 6, spacing: 32, path: "sCurve", x: 360, y: -40, reward: "pow" },
   { at: 57.0, kind: "harrier", count: 4, spacing: 110, path: "dive", x: 360, y: -50 },
 
-  // 1:04 FINAL BOSS: Abyssal Sky Dragon (Leviathan)
-  { at: 64.0, kind: "leviathan", path: "hover", x: 360, y: -200 },
+  // 1:04 FINAL BOSS: Sun-Winged Sovereign (Celestial Guardian)
+  { at: 64.0, kind: "celestialGuardian", path: "hover", x: 360, y: -200 },
 ];

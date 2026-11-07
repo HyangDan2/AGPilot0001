@@ -1,5 +1,43 @@
 # Quality Assurance & Verification Record
 
+## Local Verification Summary (v0.9.0 - 2026-11-08)
+- Date: 2026-11-08
+- Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.9.0
+- Scope: Stage 3 Expansion, Art Duplication Audit, 1/40 Ultimate Mana Rebalance, Razor-Sharp Crescent Sword Slash VFX
+- Verification Results:
+  - `scripts/audit-art.mjs`: PASSED with 0 duplications found.
+  - `docs/art/DESIGN_DUPLICATION_AUDIT.md`: Created and verified.
+  - `npm run assets:check`: PASSED — 12 items validated, total 2.54 MB.
+  - `npm run audio:check`: PASSED — 36 files validated (including `bgm_stage3` OGG + M4A), total 3.66 MB ($< 4.5\text{ MB}$ budget).
+  - `npm run lint`: PASSED — 0 errors, 0 warnings.
+  - `npm run typecheck`: PASSED — 0 errors (`tsc --noEmit`).
+  - `npm test`: PASSED — 43 tests passed across 8 test suites.
+  - `npm run build`: PASSED — built production client in 279ms.
+  - `npm run test:e2e`: PASSED — 11 browser Playwright tests passed across 6 viewports (320x568 to 1440x900).
+- Evidence Screenshots Captured & Inspected (`docs/evidence/`):
+  - `stage3-combat-mobile-390x844.png`: Yggdrasil Heart environment featuring deep emerald canopy, golden root auroras, mossy root archways, glowing amber resin nodes, floating life spore motes, and `STAGE 03 : YGGDRASIL HEART` HUD badge.
+  - `boss-fate-weaver-mobile-390x844.png`: Final Boss Fate Weaver (Cosmic Rune Loom) encounter with cosmic loom matrix auroras, 4 destructible Weave Cores, and Boss Health Bar.
+  - `melee-slash-mobile-390x844.png`: Razor-sharp tapered crescent sword slash featuring 1.5px pure white Cutting Core, high-alpha cyan/gold Energy Edge, and soft Motion Trail.
+  - `victory-mobile-390x844.png`: Stage 3 Final Campaign Victory screen.
+
+## Local Verification Summary (v0.8.1 - 2026-11-07)
+- Date: 2026-11-07
+- Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.8.1
+- Scope: HD2Lab Standard Favicon & Touch Icon Suite Integration
+- Favicon Assets Synchronized in `public/`:
+  - `favicon.ico` (2,078 bytes, 16x16 and 32x32 multi-res icon)
+  - `favicon.svg` (222 bytes, `#101110` bg, `rx="12"`, `#ff824f` Skew Mark)
+  - `favicon-32x32.png` (1,328 bytes, 32x32)
+  - `apple-touch-icon.png` (9,812 bytes, 180x180)
+  - `favicon.png` (2,115 bytes, 64x64)
+  - `icon-192.png` (3,325 bytes, 192x192)
+  - `icon-512.png` (10,546 bytes, 512x512)
+- HTML Declaration: `index.html` updated with canonical favicon links (`favicon.ico` `sizes="any"`, SVG with `?v=20261107`, 32x32 PNG, and 180x180 Apple touch icon).
+- Build Output: dist includes `favicon.ico`, `favicon.svg`, `favicon-32x32.png`, `apple-touch-icon.png`, `icon-192.png`, `icon-512.png`.
+- Verification Suite:
+  - `npm run verify` passed (assets check, audio check, lint, typecheck, vitest 41 tests, vite build).
+  - `npm run test:e2e` passed (11 Playwright browser tests passed across 6 viewports).
+
 ## Local Verification Summary (v0.8.0 - 2026-11-07)
 - Date: 2026-11-07
 - Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.8.0

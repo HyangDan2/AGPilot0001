@@ -16,6 +16,14 @@ export const ROLL_DURATION_TICKS = 72; // ~1.2s at 60Hz
 export const RESPAWN_INVULN_TICKS = 180; // 3s
 export const DOWN_DURATION_TICKS = 60; // 1s before respawn
 
+export function addManaUnits(player: Player, amount: number): void {
+  if (player.manaUnits === undefined || (player.mana > 0 && player.manaUnits === 0)) {
+    player.manaUnits = player.mana * 40;
+  }
+  player.manaUnits = Math.min(4000, player.manaUnits + amount);
+  player.mana = player.manaUnits / 40;
+}
+
 export function createPlayer(): Player {
   return {
     x: FIELD_W / 2,
@@ -34,6 +42,7 @@ export function createPlayer(): Player {
     slashDirection: "r2l", // alternates to "l2r" on first swing
     comboCount: 0,
     meleeSwing: null,
+    manaUnits: 0,
     mana: 0,
     maxMana: 100,
     ultimateTimer: 0,
@@ -139,7 +148,8 @@ export function updatePlayer(
     }
   }
 
-  if (ultTriggered && p.mana >= 100 && p.ultimateTimer === 0 && p.downTimer === 0) {
+  if (ultTriggered && (p.manaUnits >= 4000 || p.mana >= 100) && p.ultimateTimer === 0 && p.downTimer === 0) {
+    p.manaUnits = 0;
     p.mana = 0;
     p.ultimateTimer = 90; // Multi-phase Gungnir Ultimate duration: 15 Awakening + 15 Summoning + 42 Active + 18 Recovery
     p.invuln = Math.max(p.invuln, 90);

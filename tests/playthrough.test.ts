@@ -3,8 +3,8 @@ import { GameEvent, InputFrame } from "../src/sim/types";
 import { createWorld, step } from "../src/sim/world";
 
 describe("Stage 1 Headless Playthrough Gate", () => {
-  it("plays through stage 1 and clears Leviathan boss", () => {
-    // Start at sec 55 right before midboss and final boss Leviathan
+  it("plays through stage 1 and clears Celestial Guardian boss", () => {
+    // Start at sec 55 right before final boss Celestial Guardian
     const world = createWorld({ seed: 20261103, startAt: 55, invulnerable: true });
     expect(world.phase).toBe("play");
 
@@ -21,7 +21,7 @@ describe("Stage 1 Headless Playthrough Gate", () => {
 
       for (const enemy of world.enemies) {
         if (!enemy.alive) continue;
-        if (enemy.kind === "leviathan") sawBoss = true;
+        if (enemy.kind === "celestialGuardian" || enemy.kind === "leviathan") sawBoss = true;
         const d = Math.hypot(enemy.x - world.player.x, enemy.y - world.player.y);
         if (d < minDist) {
           minDist = d;

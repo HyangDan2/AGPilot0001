@@ -2,16 +2,18 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createWorld, step } from "../src/sim/world";
 import { STAGE1_WAVES } from "../src/sim/stage1";
 import { STAGE2_WAVES } from "../src/sim/stage2";
+import { STAGE3_WAVES } from "../src/sim/stage3";
 import { fireEnemyBullet } from "../src/sim/patterns";
 import { GameApp } from "../src/core/loop";
 import { GameEvent, NO_INPUT } from "../src/sim/types";
 import { damageEnemy } from "../src/sim/enemies";
+import { addManaUnits } from "../src/sim/player";
 
-describe("Two-Stage Premium Campaign (v0.7.1)", () => {
+describe("Three-Stage Premium Campaign (v0.9.0)", () => {
   it("Stage 1 has exactly 53 normal enemies", () => {
     let count = 0;
     for (const w of STAGE1_WAVES) {
-      if (w.kind !== "albatross" && w.kind !== "leviathan") {
+      if (w.kind !== "albatross" && w.kind !== "celestialGuardian") {
         count += w.count ?? 1;
       }
     }
@@ -21,47 +23,108 @@ describe("Two-Stage Premium Campaign (v0.7.1)", () => {
   it("Stage 2 has exactly 70 normal enemies (33% increase over 53)", () => {
     let count = 0;
     for (const w of STAGE2_WAVES) {
-      if (w.kind !== "albatross" && w.kind !== "leviathan" && w.kind !== "kraken") {
+      if (w.kind !== "kraken" && w.kind !== "leviathan") {
         count += w.count ?? 1;
       }
     }
     expect(count).toBe(70);
   });
 
-  it("Stage 2 applies 1.2x bullet speed multiplier", () => {
+  it("Stage 3 has exactly 94 normal enemies (33% increase over 70, 53 * 1.33^2)", () => {
+    let count = 0;
+    for (const w of STAGE3_WAVES) {
+      if (w.kind !== "hollowStag" && w.kind !== "fateWeaver") {
+        count += w.count ?? 1;
+      }
+    }
+    expect(count).toBe(94);
+  });
+
+  it("Bullet speed multipliers: Stage 1 = 1.0x, Stage 2 = 1.2x, Stage 3 = 1.44x", () => {
     const w1 = createWorld({ seed: 42, startStage: 1 });
     const w2 = createWorld({ seed: 42, startStage: 2 });
+    const w3 = createWorld({ seed: 42, startStage: 3 });
 
     fireEnemyBullet(w1, 360, 200, 100, false);
     fireEnemyBullet(w2, 360, 200, 100, false);
+    fireEnemyBullet(w3, 360, 200, 100, false);
 
     const b1 = w1.bullets[0];
     const b2 = w2.bullets[0];
+    const b3 = w3.bullets[0];
 
     expect(b1.vy).toBeCloseTo(100);
     expect(b2.vy).toBeCloseTo(120); // 100 * 1.2
+    expect(b3.vy).toBeCloseTo(144); // 100 * 1.44
   });
 
-  it("Transfers player progression when advancing from Stage 1 to Stage 2", () => {
-    const w = createWorld({ seed: 1234, startStage: 1 });
-    w.score = 45000;
-    w.player.lives = 4;
-    w.player.power = 3;
-    w.player.mana = 85;
+  it("Transfers player progression across Stage 1 -> Stage 2 -> Stage 3", () => {
+    const w1 = createWorld({ seed: 1234, startStage: 1 });
+    w1.score = 45000;
+    w1.player.lives = 4;
+    w1.player.power = 3;
+    w1.player.mana = 50;
+    w1.player.manaUnits = 2000;
 
-    // Simulate startNextStage() mechanics from loop.ts
     const w2 = createWorld({ seed: 5678, startStage: 2 });
-    w2.score = w.score;
-    w2.player.lives = w.player.lives;
-    w2.player.power = w.player.power;
-    w2.player.mana = w.player.mana;
+    w2.score = w1.score;
+    w2.player.lives = w1.player.lives;
+    w2.player.power = w1.player.power;
+    w2.player.mana = w1.player.mana;
+    w2.player.manaUnits = w1.player.manaUnits;
 
     expect(w2.currentStage).toBe(2);
     expect(w2.score).toBe(45000);
-    expect(w2.player.lives).toBe(4);
-    expect(w2.player.power).toBe(3);
-    expect(w2.player.mana).toBe(85);
-    expect(w2.stageTick).toBe(0);
+    expect(w2.player.manaUnits).toBe(2000);
+
+    const w3 = createWorld({ seed: 9999, startStage: 3 });
+    w3.score = w2.score + 35000;
+    w3.player.lives = w2.player.lives;
+    w3.player.power = w2.player.power;
+    w3.player.mana = w2.player.mana;
+    w3.player.manaUnits = w2.player.manaUnits;
+
+    expect(w3.currentStage).toBe(3);
+    expect(w3.score).toBe(80000);
+    expect(w3.player.manaUnits).toBe(2000);
+  });
+
+  it("Rebalanced 1/40 mana system maintains 4000 units = 100% full charge", () => {
+    const world = createWorld({ seed: 42, startAt: 10 });
+    const p = world.player;
+    expect(p.manaUnits).toBe(0);
+    expect(p.mana).toBe(0);
+
+    // Graze +10 units
+    addManaUnits(p, 10);
+    expect(p.manaUnits).toBe(10);
+    expect(p.mana).toBe(0.25); // 10 / 40 = 0.25%
+
+    // Bullet hit +2 units
+    addManaUnits(p, 2);
+    expect(p.manaUnits).toBe(12);
+    expect(p.mana).toBe(0.3); // 12 / 40 = 0.3%
+
+    // Kill +8 units
+    addManaUnits(p, 8);
+    expect(p.manaUnits).toBe(20);
+    expect(p.mana).toBe(0.5); // 20 / 40 = 0.5%
+
+    // Max POW +25 units
+    addManaUnits(p, 25);
+    expect(p.manaUnits).toBe(45);
+    expect(p.mana).toBe(1.125);
+
+    // Charge to 4000 units (100%)
+    addManaUnits(p, 4000);
+    expect(p.manaUnits).toBe(4000);
+    expect(p.mana).toBe(100);
+
+    // Ultimate trigger resets both manaUnits and mana to 0
+    step(world, { ...NO_INPUT, ult: true });
+    expect(p.manaUnits).toBe(0);
+    expect(p.mana).toBe(0);
+    expect(p.ultimateTimer).toBe(90);
   });
 });
 

@@ -2,6 +2,7 @@ import { AudioRuntime } from "../audio/runtime";
 import { createKeyboardHandler } from "../input/keyboard";
 import { createTouchHandler } from "../input/touch";
 import { GameRenderer } from "../render/renderer";
+import { getStageDef } from "../sim/stages";
 import { DT, GameEvent, InputFrame, World } from "../sim/types";
 import { createWorld, step } from "../sim/world";
 import { loadHighScore, loadSettings, saveHighScore, saveSettings } from "../storage";
@@ -98,9 +99,11 @@ export class GameApp {
   }
 
   private restartGame(): void {
-    this.audio.currentStage = this.world.currentStage === 2 ? 2 : 1;
-    this.audio.playBGM(this.world.currentStage === 2 ? "bgm_stage2" : "bgm_stage");
-    this.world = createWorld({ seed: Date.now(), startStage: this.world.currentStage });
+    const stage = (this.world.currentStage || 1) as 1 | 2 | 3;
+    const stageDef = getStageDef(stage);
+    this.audio.currentStage = stage;
+    this.audio.playBGM(stageDef.bgm);
+    this.world = createWorld({ seed: Date.now(), startStage: stage });
     this.ui.showInGameHUD(this.settings.muted);
     this.startLoop();
   }
@@ -121,28 +124,33 @@ export class GameApp {
   }
 
   private startNextStage(): void {
+    const current = (this.world.currentStage || 1) as 1 | 2 | 3;
+    const nextStage = Math.min(3, current + 1) as 2 | 3;
     const prevScore = this.world.score;
     const prevLives = this.world.player.lives;
     const prevPower = this.world.player.power;
     const prevMana = this.world.player.mana;
+    const prevManaUnits = this.world.player.manaUnits ?? (prevMana * 40);
     const prevDeaths = this.world.player.deaths;
     const prevGraze = this.world.player.grazeCount;
     const prevLanePower = { ...this.world.player.lanePower };
 
     this.world = createWorld({
       seed: Date.now(),
-      startStage: 2,
+      startStage: nextStage,
     });
     this.world.score = prevScore;
     this.world.player.lives = prevLives;
     this.world.player.power = prevPower;
     this.world.player.mana = prevMana;
+    this.world.player.manaUnits = prevManaUnits;
     this.world.player.deaths = prevDeaths;
     this.world.player.grazeCount = prevGraze;
     this.world.player.lanePower = prevLanePower;
 
-    this.audio.currentStage = 2;
-    this.audio.playBGM("bgm_stage2");
+    const stageDef = getStageDef(nextStage);
+    this.audio.currentStage = nextStage;
+    this.audio.playBGM(stageDef.bgm);
     this.ui.showInGameHUD(this.settings.muted);
     this.startLoop();
   }
@@ -242,9 +250,9 @@ export class GameApp {
         this.stopLoop();
         saveHighScore(this.world.score);
         this.highScore = loadHighScore();
-        if (e.stage === 1) {
+        if (e.stage < 3) {
           this.ui.showStageClear(
-            1,
+            e.stage,
             this.world.score,
             this.highScore,
             this.world.stats.killed,

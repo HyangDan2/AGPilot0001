@@ -20,6 +20,7 @@ describe("Enemy Flight Patterns Continuity", () => {
     slashDirection: "r2l",
     comboCount: 0,
     meleeSwing: null,
+    manaUnits: 0,
     mana: 0,
     maxMana: 100,
     ultimateTimer: 0,

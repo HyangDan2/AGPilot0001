@@ -216,6 +216,69 @@ function generateStage2BGM(duration = 24.0) {
   });
 }
 
+// 2.5. bgm_stage3: Mystical, fast Celtic/Nordic battle theme (152 BPM, Yggdrasil Heart)
+function generateStage3BGM(duration = 24.0) {
+  return synthesizeTrack(duration, (t) => {
+    let mixL = 0;
+    let mixR = 0;
+
+    // Tempo: 152 BPM
+    const beat = t * (152 / 60);
+
+    // Deep tribal war drums & taiko kick
+    const kickBeat = beat % 2;
+    if (kickBeat < 0.35) {
+      const kickFreq = 115 * Math.exp(-kickBeat * 16);
+      const kick = Math.sin(t * Math.PI * 2 * kickFreq) * Math.exp(-kickBeat * 9) * 0.48;
+      mixL += kick;
+      mixR += kick;
+    }
+
+    // Syncopated tom / rim percussion
+    const tomBeat = (beat + 0.5) % 1;
+    if (tomBeat < 0.25) {
+      const tomFreq = 180 * Math.exp(-tomBeat * 14);
+      const tom = Math.sin(t * Math.PI * 2 * tomFreq) * Math.exp(-tomBeat * 12) * 0.25;
+      mixL += tom * 0.7;
+      mixR += tom * 1.3;
+    }
+
+    // Shimmering 16th woodblock / forest foliage shaker
+    const step16 = (beat * 4) % 1;
+    const shaker = ((Math.sin(t * 14567) * 43758) % 1) * Math.exp(-step16 * 18) * 0.08;
+    mixL += shaker;
+    mixR += shaker;
+
+    // Driving Nordic bassline in E minor (40, 40, 43, 40, 45, 43, 42, 38)
+    const bassNotes = [40, 40, 43, 40, 45, 43, 42, 38];
+    const bNote = bassNotes[Math.floor(beat * 4) % bassNotes.length];
+    const bFreq = noteToFreq(bNote);
+    const bPhase = (beat * 4) % 1;
+    const bSaw = (((t * bFreq) % 1) * 2 - 1) * Math.exp(-bPhase * 7) * 0.26;
+    mixL += bSaw * 1.05;
+    mixR += bSaw * 0.95;
+
+    // Mystical Celtic harp / flute arpeggios (Em, G, C, D)
+    const arpSets = [
+      [64, 67, 71, 76, 79, 76, 71, 67], // Em
+      [67, 71, 74, 79, 83, 79, 74, 71], // G
+      [60, 64, 67, 72, 76, 72, 67, 64], // C
+      [62, 66, 69, 74, 78, 74, 69, 66], // D
+    ];
+    const bar = Math.floor(beat / 4);
+    const arp = arpSets[bar % arpSets.length];
+    const aNote = arp[Math.floor(beat * 4) % arp.length];
+    const aFreq = noteToFreq(aNote);
+    const aPhase = (beat * 4) % 1;
+    // Pure bell-like chime
+    const chime = Math.sin(t * Math.PI * 2 * aFreq) * Math.exp(-aPhase * 6) * 0.18;
+    mixL += chime * 1.25;
+    mixR += chime * 0.75;
+
+    return [mixL, mixR];
+  });
+}
+
 // 2.8. bgm_midboss: Urgent syncopated war cadence with dramatic brass pulses (16s loop)
 function generateMidbossBGM(duration = 16.0) {
   return synthesizeTrack(duration, (t) => {
@@ -399,6 +462,7 @@ async function main() {
     { id: "bgm_title", kind: "bgm", loop: true, loopStart: 0, loopEnd: 24.0, gain: 0.75, data: generateTitleBGM(24.0) },
     { id: "bgm_stage", kind: "bgm", loop: true, loopStart: 0, loopEnd: 28.0, gain: 0.75, data: generateStageBGM(28.0) },
     { id: "bgm_stage2", kind: "bgm", loop: true, loopStart: 0, loopEnd: 24.0, gain: 0.75, data: generateStage2BGM(24.0) },
+    { id: "bgm_stage3", kind: "bgm", loop: true, loopStart: 0, loopEnd: 24.0, gain: 0.75, data: generateStage3BGM(24.0) },
     { id: "bgm_midboss", kind: "bgm", loop: true, loopStart: 0, loopEnd: 16.0, gain: 0.8, data: generateMidbossBGM(16.0) },
     { id: "bgm_boss", kind: "bgm", loop: true, loopStart: 0, loopEnd: 20.0, gain: 0.8, data: generateBossBGM(20.0) },
     { id: "jingle_clear", kind: "jingle", loop: false, gain: 0.85, data: generateJingleClear() },
@@ -424,11 +488,11 @@ async function main() {
 
     fs.writeFileSync(wavPath, track.data);
 
-    // Encode to .ogg (Vorbis)
-    execSync(`ffmpeg -y -v error -i "${wavPath}" -c:a libvorbis -q:a 4 "${oggPath}"`);
+    // Encode to .ogg (Vorbis) with optimal quality for web arcade
+    execSync(`ffmpeg -y -v error -i "${wavPath}" -c:a libvorbis -q:a 2 "${oggPath}"`);
 
     // Encode to .m4a (AAC)
-    execSync(`ffmpeg -y -v error -i "${wavPath}" -c:a aac -b:a 128k "${m4aPath}"`);
+    execSync(`ffmpeg -y -v error -i "${wavPath}" -c:a aac -b:a 96k "${m4aPath}"`);
 
     manifestSounds[track.id] = {
       base: `assets/audio/${track.id}`,

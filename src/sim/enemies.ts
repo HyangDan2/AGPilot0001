@@ -7,9 +7,9 @@ import {
   World,
 } from "./types";
 import { fireEnemyBullet, updateEnemyPath } from "./patterns";
+import { addManaUnits } from "./player";
 import { rand } from "./rng";
-import { STAGE1_WAVES } from "./stage1";
-import { STAGE2_WAVES } from "./stage2";
+import { getStageDef } from "./stages";
 
 export interface EnemyDef {
   kind: EnemyKind;
@@ -26,12 +26,19 @@ export const ENEMY_DEFS: Record<EnemyKind, EnemyDef> = {
   condor: { kind: "condor", hp: 18, r: 52, ground: false, score: 800 },
   gunboat: { kind: "gunboat", hp: 14, r: 42, ground: true, score: 600 },
   albatross: { kind: "albatross", hp: 140, r: 90, ground: false, score: 5000 },
+  celestialGuardian: { kind: "celestialGuardian", hp: 380, r: 170, ground: false, score: 25000 },
   leviathan: { kind: "leviathan", hp: 260, r: 180, ground: false, score: 20000 },
   golem: { kind: "golem", hp: 12, r: 44, ground: true, score: 700 },
   siren: { kind: "siren", hp: 4, r: 26, ground: false, score: 300 },
   kraken: { kind: "kraken", hp: 320, r: 190, ground: false, score: 30000 },
   seraph: { kind: "seraph", hp: 6, r: 30, ground: false, score: 500 },
   valkyrieQueen: { kind: "valkyrieQueen", hp: 450, r: 120, ground: false, score: 50000 },
+  seedWisp: { kind: "seedWisp", hp: 2, r: 24, ground: false, score: 180 },
+  thornMantis: { kind: "thornMantis", hp: 8, r: 32, ground: false, score: 400 },
+  amberMoth: { kind: "amberMoth", hp: 22, r: 54, ground: false, score: 950 },
+  rootGuardian: { kind: "rootGuardian", hp: 16, r: 46, ground: true, score: 800 },
+  hollowStag: { kind: "hollowStag", hp: 240, r: 140, ground: false, score: 18000 },
+  fateWeaver: { kind: "fateWeaver", hp: 500, r: 190, ground: false, score: 50000 },
 };
 
 export function spawnEnemy(
@@ -73,6 +80,11 @@ export function spawnEnemy(
       { name: "engineL", dx: -70, dy: 10, r: 30, hp: 40, maxHp: 40, alive: true, flash: 0 },
       { name: "engineR", dx: 70, dy: 10, r: 30, hp: 40, maxHp: 40, alive: true, flash: 0 },
     ];
+  } else if (kind === "celestialGuardian") {
+    enemy.parts = [
+      { name: "wingL", dx: -150, dy: 10, r: 34, hp: 50, maxHp: 50, alive: true, flash: 0 },
+      { name: "wingR", dx: 150, dy: 10, r: 34, hp: 50, maxHp: 50, alive: true, flash: 0 },
+    ];
   } else if (kind === "kraken") {
     enemy.parts = [
       { name: "tentacleL2", dx: -120, dy: 30, r: 30, hp: 50, maxHp: 50, alive: true, flash: 0 },
@@ -86,6 +98,18 @@ export function spawnEnemy(
       { name: "engineL1", dx: -90, dy: 10, r: 36, hp: 60, maxHp: 60, alive: true, flash: 0 },
       { name: "engineR1", dx: 90, dy: 10, r: 36, hp: 60, maxHp: 60, alive: true, flash: 0 },
       { name: "engineR2", dx: 180, dy: -20, r: 36, hp: 60, maxHp: 60, alive: true, flash: 0 },
+    ];
+  } else if (kind === "hollowStag") {
+    enemy.parts = [
+      { name: "antlerL", dx: -90, dy: -30, r: 28, hp: 45, maxHp: 45, alive: true, flash: 0 },
+      { name: "antlerR", dx: 90, dy: -30, r: 28, hp: 45, maxHp: 45, alive: true, flash: 0 },
+    ];
+  } else if (kind === "fateWeaver") {
+    enemy.parts = [
+      { name: "coreTL", dx: -140, dy: -30, r: 32, hp: 65, maxHp: 65, alive: true, flash: 0 },
+      { name: "coreTR", dx: 140, dy: -30, r: 32, hp: 65, maxHp: 65, alive: true, flash: 0 },
+      { name: "coreBL", dx: -100, dy: 40, r: 32, hp: 65, maxHp: 65, alive: true, flash: 0 },
+      { name: "coreBR", dx: 100, dy: 40, r: 32, hp: 65, maxHp: 65, alive: true, flash: 0 },
     ];
   }
 
@@ -179,6 +203,11 @@ export function updateEnemyAI(
       break;
     }
 
+    case "celestialGuardian": {
+      updateCelestialGuardianAI(enemy, world, events);
+      break;
+    }
+
     case "kraken": {
       updateKrakenAI(enemy, world, events);
       break;
@@ -186,6 +215,49 @@ export function updateEnemyAI(
 
     case "leviathan": {
       updateLeviathanAI(enemy, world, events);
+      break;
+    }
+
+    case "seedWisp": {
+      if (enemy.age === 30 && rand(world) < 0.6) {
+        fireEnemyBullet(world, enemy.x, enemy.y + 14, 290, true);
+      }
+      break;
+    }
+
+    case "thornMantis": {
+      if (enemy.age === 35 && rand(world) < 0.75) {
+        fireEnemyBullet(world, enemy.x - 12, enemy.y + 16, 260, true, -0.1);
+        fireEnemyBullet(world, enemy.x + 12, enemy.y + 16, 260, true, 0.1);
+      }
+      break;
+    }
+
+    case "amberMoth": {
+      if (enemy.age % 75 === 0) {
+        for (let i = -1; i <= 1; i++) {
+          fireEnemyBullet(world, enemy.x, enemy.y + 24, 210, true, i * 0.22);
+        }
+      }
+      break;
+    }
+
+    case "rootGuardian": {
+      if (enemy.age % 85 === 0) {
+        for (let i = -2; i <= 2; i++) {
+          fireEnemyBullet(world, enemy.x, enemy.y + 20, 230, true, i * 0.18);
+        }
+      }
+      break;
+    }
+
+    case "hollowStag": {
+      updateHollowStagAI(enemy, world, events);
+      break;
+    }
+
+    case "fateWeaver": {
+      updateFateWeaverAI(enemy, world, events);
       break;
     }
   }
@@ -316,25 +388,171 @@ function updateLeviathanAI(
   }
 }
 
+function updateCelestialGuardianAI(
+  enemy: Enemy,
+  world: World,
+  events: GameEvent[],
+): void {
+  const t = enemy.age;
+  const aliveWings = enemy.parts.filter((p) => p.alive).length;
+
+  let phase = 1;
+  if (aliveWings === 1) phase = 2;
+  if (aliveWings === 0) phase = 3;
+
+  if (phase !== world.bossPhase) {
+    world.bossPhase = phase;
+    events.push({ t: "bossPhase", phase });
+  }
+
+  if (phase === 1) {
+    if (t % 85 === 0) {
+      for (const part of enemy.parts) {
+        if (part.alive) {
+          fireEnemyBullet(world, enemy.x + part.dx, enemy.y + part.dy, 250, true);
+        }
+      }
+    }
+    if (t % 130 === 0) {
+      for (let i = -2; i <= 2; i++) {
+        fireEnemyBullet(world, enemy.x, enemy.y + 70, 210, false, i * 0.2);
+      }
+    }
+  } else if (phase === 2) {
+    if (t % 65 === 0) {
+      fireEnemyBullet(world, enemy.x, enemy.y + 70, 280, true);
+    }
+    if (t % 30 === 0) {
+      const ringAngle = (t * 0.18) % (Math.PI * 2);
+      fireEnemyBullet(world, enemy.x, enemy.y + 40, 220, false, ringAngle - Math.PI / 2);
+    }
+  } else {
+    if (t % 50 === 0) {
+      for (let i = -3; i <= 3; i++) {
+        fireEnemyBullet(world, enemy.x, enemy.y + 60, 260, true, i * 0.16);
+      }
+    }
+    if (t % 18 === 0) {
+      const spiral = (-t * 0.22) % (Math.PI * 2);
+      fireEnemyBullet(world, enemy.x - 30, enemy.y + 50, 240, false, spiral - Math.PI / 2);
+      fireEnemyBullet(world, enemy.x + 30, enemy.y + 50, 240, false, -spiral - Math.PI / 2);
+    }
+  }
+
+  if (enemy.hp <= 0 && enemy.alive) {
+    killEnemy(world, enemy, events);
+  }
+}
+
+function updateHollowStagAI(
+  enemy: Enemy,
+  world: World,
+  _events: GameEvent[],
+): void {
+  const t = enemy.age;
+
+  if (t % 75 === 0) {
+    for (const part of enemy.parts) {
+      if (part.alive) {
+        fireEnemyBullet(world, enemy.x + part.dx, enemy.y + part.dy, 250, true, -0.15);
+        fireEnemyBullet(world, enemy.x + part.dx, enemy.y + part.dy, 250, true, 0.15);
+      }
+    }
+  }
+
+  if (t % 100 === 0) {
+    for (let i = -1; i <= 1; i++) {
+      fireEnemyBullet(world, enemy.x, enemy.y + 60, 270, true, i * 0.2);
+    }
+  }
+
+  if (enemy.hp <= 0 && enemy.alive) {
+    enemy.alive = false;
+    world.score += ENEMY_DEFS.hollowStag.score;
+    _events.push({ t: "explode", size: "l", x: enemy.x, y: enemy.y });
+  }
+}
+
+function updateFateWeaverAI(
+  enemy: Enemy,
+  world: World,
+  events: GameEvent[],
+): void {
+  const t = enemy.age;
+  const aliveCores = enemy.parts.filter((p) => p.alive).length;
+
+  let phase = 1;
+  if (aliveCores <= 2 && aliveCores > 0) phase = 2;
+  if (aliveCores === 0) phase = 3;
+
+  if (phase !== world.bossPhase) {
+    world.bossPhase = phase;
+    events.push({ t: "bossPhase", phase });
+  }
+
+  if (phase === 1) {
+    if (t % 70 === 0) {
+      for (const part of enemy.parts) {
+        if (part.alive) {
+          fireEnemyBullet(world, enemy.x + part.dx, enemy.y + part.dy, 260, true);
+        }
+      }
+    }
+    if (t % 120 === 0) {
+      for (let i = -3; i <= 3; i++) {
+        fireEnemyBullet(world, enemy.x, enemy.y + 70, 220, false, i * 0.2);
+      }
+    }
+  } else if (phase === 2) {
+    if (t % 55 === 0) {
+      fireEnemyBullet(world, enemy.x - 40, enemy.y + 60, 310, true);
+      fireEnemyBullet(world, enemy.x + 40, enemy.y + 60, 310, true);
+    }
+    if (t % 16 === 0) {
+      const angle = (t * 0.2) % (Math.PI * 2);
+      fireEnemyBullet(world, enemy.x, enemy.y + 50, 230, false, angle - Math.PI / 2);
+    }
+  } else {
+    if (t % 40 === 0) {
+      for (let i = -4; i <= 4; i++) {
+        fireEnemyBullet(world, enemy.x, enemy.y + 70, 270, true, i * 0.16);
+      }
+    }
+    if (t % 12 === 0) {
+      const spiral1 = (t * 0.25) % (Math.PI * 2);
+      fireEnemyBullet(world, enemy.x - 50, enemy.y + 50, 250, false, spiral1 - Math.PI / 2);
+      fireEnemyBullet(world, enemy.x + 50, enemy.y + 50, 250, false, -spiral1 - Math.PI / 2);
+    }
+  }
+
+  if (enemy.hp <= 0 && enemy.alive) {
+    killEnemy(world, enemy, events);
+  }
+}
+
 export function killEnemy(world: World, enemy: Enemy, events: GameEvent[]): void {
   if (!enemy.alive) return;
   enemy.alive = false;
   world.stats.killed++;
-  world.player.mana = Math.min(world.player.maxMana, world.player.mana + 8);
+  addManaUnits(world.player, 8);
   const def = ENEMY_DEFS[enemy.kind];
   world.score += def?.score ?? 100;
 
-  if (enemy.kind === "leviathan") {
+  if (
+    enemy.kind === "celestialGuardian" ||
+    enemy.kind === "leviathan" ||
+    enemy.kind === "fateWeaver"
+  ) {
     world.phase = "clearing";
     world.phaseTimer = 180;
   }
 
-  // Midboss defeat handling (Albatross or Kraken)
-  if (enemy.kind === "albatross" || enemy.kind === "kraken") {
+  // Midboss defeat handling (Albatross, Kraken, or Hollow Stag)
+  if (enemy.kind === "albatross" || enemy.kind === "kraken" || enemy.kind === "hollowStag") {
     events.push({ t: "midbossDefeated", kind: enemy.kind });
     world.phase = "play";
     // Advance stageTick so next wave begins in ~2.0 seconds
-    const waves = world.currentStage === 2 ? STAGE2_WAVES : STAGE1_WAVES;
+    const waves = getStageDef(world.currentStage).waves;
     if (world.waveCursor < waves.length) {
       const nextWave = waves[world.waveCursor];
       const targetSec = Math.max(0, nextWave.at - 2.0);
@@ -343,11 +561,19 @@ export function killEnemy(world: World, enemy: Enemy, events: GameEvent[]): void
   }
 
   const explSize =
-    enemy.kind === "leviathan"
+    enemy.kind === "celestialGuardian" ||
+    enemy.kind === "leviathan" ||
+    enemy.kind === "fateWeaver"
       ? "boss"
-      : enemy.kind === "albatross" || enemy.kind === "condor" || enemy.kind === "kraken"
+      : enemy.kind === "albatross" ||
+          enemy.kind === "condor" ||
+          enemy.kind === "kraken" ||
+          enemy.kind === "hollowStag"
         ? "l"
-        : enemy.kind === "gunboat" || enemy.kind === "harrier"
+        : enemy.kind === "gunboat" ||
+            enemy.kind === "harrier" ||
+            enemy.kind === "amberMoth" ||
+            enemy.kind === "rootGuardian"
           ? "m"
           : "s";
   events.push({ t: "explode", size: explSize, x: enemy.x, y: enemy.y });

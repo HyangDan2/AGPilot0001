@@ -1,6 +1,6 @@
 import { GameEvent } from "../sim/types";
 
-export type BGMId = "bgm_title" | "bgm_stage" | "bgm_stage1" | "bgm_stage2" | "bgm_midboss" | "bgm_boss";
+export type BGMId = "bgm_title" | "bgm_stage" | "bgm_stage1" | "bgm_stage2" | "bgm_stage3" | "bgm_midboss" | "bgm_boss";
 
 export class AudioRuntime {
   private ctx: AudioContext | null = null;
@@ -14,7 +14,7 @@ export class AudioRuntime {
   private activeBgmSource: AudioBufferSourceNode | null = null;
   private activeBgmGain: GainNode | null = null;
   private currentBgmId: BGMId | null = null;
-  public currentStage: 1 | 2 = 1;
+  public currentStage: 1 | 2 | 3 = 1;
   private manifestLoaded = false;
   private preferredExt = "ogg";
 
@@ -241,9 +241,11 @@ export class AudioRuntime {
           this.playBGM(e.isMidboss ? "bgm_midboss" : "bgm_boss");
           this.playAudioOrSynth("sfx_warning", () => this.synthWarning());
           break;
-        case "midbossDefeated":
-          this.playBGM(this.currentStage === 2 ? "bgm_stage2" : "bgm_stage");
+        case "midbossDefeated": {
+          const stageBgm: BGMId = this.currentStage === 3 ? "bgm_stage3" : this.currentStage === 2 ? "bgm_stage2" : "bgm_stage";
+          this.playBGM(stageBgm);
           break;
+        }
         case "stageClear":
           this.stopBGM();
           this.playAudioOrSynth("jingle_clear", () => this.synthVictoryFanfare());

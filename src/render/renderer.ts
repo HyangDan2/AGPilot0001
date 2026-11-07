@@ -38,28 +38,55 @@ const EIRA_FRAMES: Record<string, { sx: number; sy: number }> = {
   idle_1: { sx: 128, sy: 0 },
   idle_2: { sx: 256, sy: 0 },
   idle_3: { sx: 384, sy: 0 },
+  idle_4: { sx: 512, sy: 0 },
+  idle_5: { sx: 640, sy: 0 },
+  idle_6: { sx: 768, sy: 0 },
+  idle_7: { sx: 896, sy: 0 },
   bank_left: { sx: 0, sy: 128 },
   hover: { sx: 128, sy: 128 },
   bank_right: { sx: 256, sy: 128 },
   thrust: { sx: 384, sy: 128 },
-  slash_0: { sx: 0, sy: 256 },
-  slash_1: { sx: 128, sy: 256 },
-  charge: { sx: 256, sy: 256 },
-  power_up: { sx: 384, sy: 256 },
-  roll_0: { sx: 0, sy: 384 },
-  roll_1: { sx: 128, sy: 384 },
-  roll_2: { sx: 256, sy: 384 },
-  roll_3: { sx: 384, sy: 384 },
+  dive: { sx: 512, sy: 128 },
+  ascend: { sx: 640, sy: 128 },
+  slash_0: { sx: 768, sy: 128 },
+  slash_1: { sx: 896, sy: 128 },
+  roll_0: { sx: 0, sy: 256 },
+  roll_1: { sx: 128, sy: 256 },
+  roll_2: { sx: 256, sy: 256 },
+  roll_3: { sx: 384, sy: 256 },
+  roll_4: { sx: 512, sy: 256 },
+  roll_5: { sx: 640, sy: 256 },
+  roll_6: { sx: 768, sy: 256 },
+  roll_7: { sx: 896, sy: 256 },
+  roll_8: { sx: 0, sy: 384 },
+  roll_9: { sx: 128, sy: 384 },
+  roll_10: { sx: 256, sy: 384 },
+  roll_11: { sx: 384, sy: 384 },
+  charge: { sx: 512, sy: 384 },
+  power_up: { sx: 640, sy: 384 },
+  beam_charge: { sx: 768, sy: 384 },
+  beam_fire: { sx: 896, sy: 384 },
 };
 
 const ENEMY_FRAMES: Record<string, SpriteRect> = {
-  kestrel: { sx: 10, sy: 10, sw: 160, sh: 140, dw: 88, dh: 78 }, // Shadow Gargoyle
-  kestrelRed: { sx: 180, sy: 10, sw: 160, sh: 160, dw: 88, dh: 88 }, // Crimson Drake
-  harrier: { sx: 350, sy: 10, sw: 160, sh: 160, dw: 92, dh: 92 }, // Skyfang Phantom
-  gunboat: { sx: 520, sy: 10, sw: 180, sh: 220, dw: 120, dh: 146 }, // Floating Arcane Bastion
-  condor: { sx: 710, sy: 10, sw: 240, sh: 250, dw: 180, dh: 188 }, // Armored Behemoth
-  albatross: { sx: 20, sy: 280, sw: 460, sh: 260, dw: 340, dh: 192 }, // Ancient Sky Guardian
-  leviathan: { sx: 20, sy: 560, sw: 580, sh: 300, dw: 540, dh: 280 }, // Abyssal Sky Dragon
+  kestrel: { sx: 20, sy: 20, sw: 160, sh: 140, dw: 88, dh: 78 }, // Shadow Gargoyle
+  kestrelRed: { sx: 200, sy: 20, sw: 160, sh: 160, dw: 88, dh: 88 }, // Crimson Drake
+  harrier: { sx: 380, sy: 20, sw: 160, sh: 160, dw: 92, dh: 92 }, // Skyfang Phantom
+  gunboat: { sx: 560, sy: 20, sw: 180, sh: 220, dw: 120, dh: 146 }, // Floating Arcane Bastion
+  condor: { sx: 760, sy: 20, sw: 240, sh: 250, dw: 180, dh: 188 }, // Armored Behemoth
+  albatross: { sx: 20, sy: 290, sw: 460, sh: 260, dw: 340, dh: 192 }, // Ancient Sky Guardian
+  celestialGuardian: { sx: 500, sy: 290, sw: 520, sh: 280, dw: 380, dh: 204 }, // Sun-Winged Sovereign
+  siren: { sx: 1040, sy: 20, sw: 160, sh: 140, dw: 88, dh: 78 }, // Abyssal Phantom
+  seraph: { sx: 1220, sy: 20, sw: 180, sh: 160, dw: 96, dh: 86 }, // Shadow Drake
+  golem: { sx: 1420, sy: 20, sw: 180, sh: 200, dw: 110, dh: 122 }, // Obsidian Golem
+  kraken: { sx: 20, sy: 590, sw: 420, sh: 260, dw: 360, dh: 220 }, // Abyssal Sentinel
+  leviathan: { sx: 460, sy: 590, sw: 580, sh: 300, dw: 540, dh: 280 }, // Abyssal Sky Dragon
+  seedWisp: { sx: 1060, sy: 240, sw: 150, sh: 140, dw: 84, dh: 78 }, // Spore Wisp
+  thornMantis: { sx: 1230, sy: 240, sw: 170, sh: 160, dw: 94, dh: 88 }, // Thorn Mantis
+  amberMoth: { sx: 1420, sy: 240, sw: 220, sh: 180, dw: 140, dh: 114 }, // Amber Moth
+  rootGuardian: { sx: 1060, sy: 440, sw: 240, sh: 220, dw: 130, dh: 120 }, // Root Guardian
+  hollowStag: { sx: 20, sy: 910, sw: 420, sh: 280, dw: 340, dh: 226 }, // Hollow Stag (Midboss)
+  fateWeaver: { sx: 460, sy: 910, sw: 560, sh: 320, dw: 480, dh: 274 }, // Fate Weaver (Final Boss)
 };
 
 export class GameRenderer {
@@ -456,7 +483,7 @@ export class GameRenderer {
         grad.addColorStop(0.8, "#2d1656");
         grad.addColorStop(1, "#441a6b");
       }
-    } else {
+    } else if (currentStage === 2) {
       // Stage 2 (Ragnarok Rift): Shattered Bifrost Void & Crimson Storm
       if (stageTick < 1800) {
         grad.addColorStop(0, "#060714");
@@ -474,6 +501,25 @@ export class GameRenderer {
         grad.addColorStop(0.35, "#120516");
         grad.addColorStop(0.7, "#22081e");
         grad.addColorStop(1, "#3c0b1e");
+      }
+    } else {
+      // Stage 3 (Yggdrasil Heart): Emerald Canopy, Golden Root Veins & Cosmic Mana Glow
+      if (stageTick < 1800) {
+        grad.addColorStop(0, "#04140c");
+        grad.addColorStop(0.35, "#0a2a19");
+        grad.addColorStop(0.7, "#12472b");
+        grad.addColorStop(1, "#1c663d");
+      } else if (stageTick < 3400) {
+        grad.addColorStop(0, "#030f08");
+        grad.addColorStop(0.35, "#082214");
+        grad.addColorStop(0.7, "#103c23");
+        grad.addColorStop(1, "#205432");
+      } else {
+        // World Tree Core Boss: Cosmic Loom Vortex
+        grad.addColorStop(0, "#020a06");
+        grad.addColorStop(0.35, "#061810");
+        grad.addColorStop(0.7, "#0d2e1f");
+        grad.addColorStop(1, "#18442e");
       }
     }
 
@@ -511,7 +557,7 @@ export class GameRenderer {
         ctx.ellipse(360, 220, 320, 180, vortexAngle, 0, Math.PI * 2);
         ctx.stroke();
       }
-    } else {
+    } else if (currentStage === 2) {
       // Stage 2: Shattered Bifrost Aurora Ribbons & Crimson Mana Lightning
       ctx.lineWidth = 3.5;
       for (let band = 0; band < 3; band++) {
@@ -537,6 +583,43 @@ export class GameRenderer {
         ctx.strokeStyle = "rgba(168, 85, 247, 0.25)";
         ctx.beginPath();
         ctx.ellipse(360, 240, 220, 95, -vortexAngle * 1.4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else {
+      // Stage 3: Golden Root Aurora Veins & Luminous Emerald Spore Streams
+      ctx.lineWidth = 3.0;
+      for (let branch = 0; branch < 4; branch++) {
+        const colors = [
+          "rgba(248, 192, 80, 0.25)",
+          "rgba(56, 239, 125, 0.22)",
+          "rgba(68, 215, 245, 0.2)",
+          "rgba(16, 185, 129, 0.22)",
+        ];
+        ctx.strokeStyle = colors[branch];
+        ctx.beginPath();
+        for (let x = 0; x <= FIELD_W; x += 30) {
+          const y =
+            140 +
+            branch * 80 +
+            Math.sin((x + scrollY * 0.5 + branch * 90) * 0.015) * 50 +
+            Math.cos((x * 0.02) + branch) * 20;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      // Fate Weaver Loom Matrix in boss phase
+      if (phase === "boss" || stageTick >= 3400) {
+        const loomAngle = (stageTick * 0.012) % (Math.PI * 2);
+        ctx.strokeStyle = "rgba(248, 192, 80, 0.3)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(360, 240, 320, 160, loomAngle, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.strokeStyle = "rgba(56, 239, 125, 0.32)";
+        ctx.beginPath();
+        ctx.ellipse(360, 240, 200, 200, -loomAngle * 1.5, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
@@ -609,7 +692,7 @@ export class GameRenderer {
         ctx.moveTo(40, 15);
         ctx.lineTo(40, 190);
         ctx.stroke();
-      } else {
+      } else if (currentStage === 2) {
         // Stage 2: Dark Jagged Obsidian Citadel with Molten Crimson Core Windows
         ctx.fillStyle = "rgba(18, 12, 30, 0.75)";
         ctx.beginPath();
@@ -655,6 +738,41 @@ export class GameRenderer {
         ctx.fillRect(-8, -75, 16, 32);
         ctx.fillRect(-75, -50, 10, 20);
         ctx.fillRect(65, -50, 10, 20);
+        ctx.shadowBlur = 0;
+      } else {
+        // Stage 3: Colossal Ancient World Tree Trunk & Glowing Amber Resins
+        ctx.fillStyle = "rgba(16, 32, 22, 0.85)";
+        ctx.beginPath();
+        ctx.moveTo(-180, 0);
+        ctx.quadraticCurveTo(-140, 70, -80, 150);
+        ctx.quadraticCurveTo(0, 200, 80, 150);
+        ctx.quadraticCurveTo(150, 60, 170, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Giant Living Bark Columns
+        ctx.fillStyle = "rgba(25, 52, 34, 0.9)";
+        ctx.beginPath();
+        ctx.moveTo(-60, 0);
+        ctx.lineTo(-45, -160);
+        ctx.lineTo(45, -160);
+        ctx.lineTo(60, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Glowing Golden Amber Nodes
+        ctx.fillStyle = "#f8c050";
+        ctx.shadowColor = "#f8c050";
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.ellipse(0, -90, 18, 30, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(-30, -40, 10, 18, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(32, -50, 12, 20, 0.2, 0, Math.PI * 2);
+        ctx.fill();
         ctx.shadowBlur = 0;
       }
 
@@ -723,7 +841,7 @@ export class GameRenderer {
           ctx.strokeRect(cx - 6, -colH, 12, colH);
           ctx.fillRect(cx - 8, -colH - 4, 16, 5);
         }
-      } else {
+      } else if (currentStage === 2) {
         // Stage 2: Shattered Obsidian Platforms with Molten Veins & Void Spikes
         ctx.fillStyle = "#1e1428";
         ctx.beginPath();
@@ -769,6 +887,51 @@ export class GameRenderer {
           ctx.lineTo(ox, -obH);
           ctx.lineTo(ox + 8, 0);
           ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+        }
+      } else {
+        // Stage 3: Mossy World Tree Roots, Emerald Bark Arches & Ancient Runestones
+        ctx.fillStyle = "#122a1c";
+        ctx.beginPath();
+        ctx.moveTo(-r.r, 0);
+        ctx.quadraticCurveTo(-r.r * 0.7, r.r * 0.9, -r.r * 0.2, r.r * 1.2);
+        ctx.quadraticCurveTo(0, r.r * 1.35, r.r * 0.3, r.r * 1.0);
+        ctx.quadraticCurveTo(r.r * 0.8, r.r * 0.7, r.r, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = "#1e4d30";
+        ctx.strokeStyle = "#38ef7d";
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, r.r, r.r * 0.42, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing Emerald Root Veins
+        ctx.strokeStyle = "rgba(56, 239, 125, 0.85)";
+        ctx.shadowColor = "#38ef7d";
+        ctx.shadowBlur = 8;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-r.r * 0.65, 0);
+        ctx.lineTo(-r.r * 0.25, 4);
+        ctx.lineTo(0, -5);
+        ctx.lineTo(r.r * 0.35, 6);
+        ctx.lineTo(r.r * 0.7, 0);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Ancient Root Shrines / Moss Pillars
+        ctx.fillStyle = "#2d5a3e";
+        ctx.strokeStyle = "#f8c050";
+        ctx.lineWidth = 1.5;
+        const shrines = [-r.r * 0.4, r.r * 0.4];
+        for (const sx of shrines) {
+          const shH = 32 + (Math.abs(sx) % 14);
+          ctx.beginPath();
+          ctx.roundRect(sx - 7, -shH, 14, shH, 4);
           ctx.fill();
           ctx.stroke();
         }
@@ -830,52 +993,80 @@ export class GameRenderer {
     const isL2R = swing.direction === "l2r";
 
     ctx.save();
-    ctx.translate(p.x, p.y);
+    ctx.translate(p.x, p.y - 12);
 
-    // Frontal arc spans 140 degrees (from -160 to -20 deg, where -90 is straight up)
-    // L->R: sweeps from left (-155 deg) towards right (-25 deg)
-    // R->L: sweeps from right (-25 deg) towards left (-155 deg)
-    const arcSpan = (130 * Math.PI) / 180;
+    const arcSpan = (135 * Math.PI) / 180;
     const startAngle = isL2R
-      ? (-155 * Math.PI) / 180 + progress * 0.25
-      : (-25 * Math.PI) / 180 - progress * 0.25;
-    const currentAngle = isL2R
+      ? (-155 * Math.PI) / 180 + progress * 0.15
+      : (-25 * Math.PI) / 180 - progress * 0.15;
+    const tipAngle = isL2R
       ? startAngle + progress * arcSpan
       : startAngle - progress * arcSpan;
 
-    const reach = 130;
-    const arcGrad = ctx.createRadialGradient(0, 0, reach * 0.35, 0, 0, reach);
+    // Razor-sharp crescent span: narrow tail that tapers sharply
+    const trailSpan = (32 + progress * 40) * (Math.PI / 180);
+    const tailAngle = isL2R ? tipAngle - trailSpan : tipAngle + trailSpan;
 
-    if (isL2R) {
-      // Radiant Cyan for L->R
-      arcGrad.addColorStop(0, "rgba(68, 215, 245, 0.0)");
-      arcGrad.addColorStop(0.65, "rgba(68, 215, 245, 0.45)");
-      arcGrad.addColorStop(0.9, "rgba(255, 255, 255, 0.95)");
-      arcGrad.addColorStop(1, "rgba(68, 215, 245, 0.85)");
-    } else {
-      // Radiant Cyan-Gold for R->L
-      arcGrad.addColorStop(0, "rgba(248, 192, 80, 0.0)");
-      arcGrad.addColorStop(0.55, "rgba(68, 215, 245, 0.45)");
-      arcGrad.addColorStop(0.85, "rgba(255, 255, 255, 0.95)");
-      arcGrad.addColorStop(1, "rgba(248, 192, 80, 0.9)");
-    }
+    const reach = 132;
+    const bellySpan = trailSpan * 0.45;
+    const bellyAngle = isL2R ? tipAngle - bellySpan : tipAngle + bellySpan;
+    const bellyR = reach - 13; // Max width at blade belly is 13px
 
-    ctx.fillStyle = arcGrad;
-    ctx.shadowColor = isL2R ? "#44d7f5" : "#f8c050";
-    ctx.shadowBlur = 18;
+    const primaryColor = isL2R ? "#44d7f5" : "#f8c050";
+    const trailColor = isL2R ? "rgba(68, 215, 245, 0.28)" : "rgba(248, 192, 80, 0.28)";
 
+    // Layer 3: Motion Trail (soft faint mist trailing the swing)
+    ctx.save();
+    ctx.fillStyle = trailColor;
     ctx.beginPath();
-    ctx.arc(0, 0, reach, startAngle, currentAngle, !isL2R);
-    ctx.arc(0, 0, reach - 34 * (1 - progress * 0.4), currentAngle, startAngle, isL2R);
+    ctx.arc(0, 0, reach + 2, tailAngle, tipAngle, !isL2R);
+    ctx.arc(0, 0, reach - 18, tipAngle, tailAngle, isL2R);
     ctx.closePath();
     ctx.fill();
+    ctx.restore();
 
-    // Sharp cutting blade line
-    ctx.lineWidth = 3.5;
-    ctx.strokeStyle = "#ffffff";
+    // Layer 2: Energy Edge (tapered crescent blade)
+    ctx.save();
+    ctx.shadowColor = primaryColor;
+    ctx.shadowBlur = 10;
+    const bladeGrad = ctx.createRadialGradient(0, 0, reach - 14, 0, 0, reach + 1);
+    bladeGrad.addColorStop(0, "rgba(255, 255, 255, 0.1)");
+    bladeGrad.addColorStop(0.5, primaryColor);
+    bladeGrad.addColorStop(1, "#ffffff");
+    ctx.fillStyle = bladeGrad;
+
+    const tipX = Math.cos(tipAngle) * reach;
+    const tipY = Math.sin(tipAngle) * reach;
+    const bellyX = Math.cos(bellyAngle) * bellyR;
+    const bellyY = Math.sin(bellyAngle) * bellyR;
+    const tailX = Math.cos(tailAngle) * (reach - 1.5);
+    const tailY = Math.sin(tailAngle) * (reach - 1.5);
+
     ctx.beginPath();
-    ctx.arc(0, 0, reach, startAngle, currentAngle, !isL2R);
+    ctx.arc(0, 0, reach, tailAngle, tipAngle, !isL2R);
+    ctx.lineTo(tipX, tipY);
+    ctx.quadraticCurveTo(bellyX, bellyY, tailX, tailY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Layer 1: Cutting Core (1.5px pure white knife edge on outer arc)
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "#ffffff";
+    ctx.shadowColor = "#ffffff";
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, reach, tailAngle, tipAngle, !isL2R);
     ctx.stroke();
+
+    // Fine colored energy hairline
+    ctx.lineWidth = 1.0;
+    ctx.strokeStyle = primaryColor;
+    ctx.beginPath();
+    ctx.arc(0, 0, reach - 1.5, tailAngle, tipAngle, !isL2R);
+    ctx.stroke();
+    ctx.restore();
 
     ctx.restore();
   }
@@ -1169,9 +1360,18 @@ export class GameRenderer {
       // Phase 5: 12-step axial rotation across 72 ticks
       const rollStep12 = Math.min(11, Math.floor(rollProgress * 12));
       const rollFrames = [
-        "roll_0", "roll_1", "roll_2", "roll_3",
-        "roll_0", "roll_1", "roll_2", "roll_3",
-        "roll_0", "roll_1", "roll_2", "roll_3",
+        "roll_0",
+        "roll_1",
+        "roll_2",
+        "roll_3",
+        "roll_4",
+        "roll_5",
+        "roll_6",
+        "roll_7",
+        "roll_8",
+        "roll_9",
+        "roll_10",
+        "roll_11",
       ];
       rollFrameKey = rollFrames[rollStep12];
 
@@ -1240,8 +1440,14 @@ export class GameRenderer {
       } else {
         // Phase 3: 8-step Idle Cycle
         const idleCycle = [
-          "idle_0", "idle_1", "idle_2", "idle_3",
-          "hover", "idle_2", "idle_1", "idle_0",
+          "idle_0",
+          "idle_1",
+          "idle_2",
+          "idle_3",
+          "idle_4",
+          "idle_5",
+          "idle_6",
+          "idle_7",
         ];
         const animStep8 = Math.floor((tick % 48) / 6);
         frameKey = idleCycle[animStep8];
@@ -1550,7 +1756,7 @@ export class GameRenderer {
         ctx.stroke();
         ctx.restore();
       }
-    } else {
+    } else if (currentStage === 2) {
       // Stage 2 (Ragnarok Rift): Shattered Bifrost rainbow crystal shards & crimson rift embers
       const colors = ["#ff5468", "#f8c050", "#44d7f5", "#a855f7"];
       for (let i = 0; i < 9; i++) {
@@ -1579,6 +1785,32 @@ export class GameRenderer {
       // Crimson storm lightning flash
       if (!this.reducedMotion && stageTick % 200 >= 196) {
         ctx.fillStyle = "rgba(255, 84, 104, 0.18)";
+        ctx.fillRect(0, 0, FIELD_W, FIELD_H);
+      }
+    } else {
+      // Stage 3 (Yggdrasil Heart): Floating emerald spore motes and golden life pollen
+      const sporeColors = ["#38ef7d", "#f8c050", "#44d7f5", "#a7f3d0"];
+      for (let i = 0; i < 11; i++) {
+        const seed = i * 113.7;
+        const speed = 35 + (i % 3) * 16;
+        const sy = ((tick * speed * 0.05 + seed * 25) % (FIELD_H + 80)) - 40;
+        const sx = (Math.sin(tick * 0.02 + seed) * 120 + (i * 70 + 20)) % FIELD_W;
+        const pulse = 1 + Math.sin(tick * 0.05 + seed) * 0.35;
+
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.fillStyle = sporeColors[i % sporeColors.length];
+        ctx.shadowColor = sporeColors[i % sporeColors.length];
+        ctx.shadowBlur = 9;
+        ctx.beginPath();
+        ctx.arc(0, 0, 3.5 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Emerald canopy shimmer
+      if (!this.reducedMotion && stageTick % 240 >= 236) {
+        ctx.fillStyle = "rgba(56, 239, 125, 0.12)";
         ctx.fillRect(0, 0, FIELD_W, FIELD_H);
       }
     }
@@ -1751,6 +1983,65 @@ export class GameRenderer {
         ctx.beginPath();
         ctx.roundRect(-220, -60, 440, 120, 25);
         ctx.fill();
+        break;
+      }
+      case "celestialGuardian": {
+        ctx.fillStyle = "#cca862";
+        ctx.beginPath();
+        ctx.roundRect(-190, -50, 380, 100, 22);
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        break;
+      }
+      case "seedWisp": {
+        ctx.fillStyle = "#38ef7d";
+        ctx.beginPath();
+        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "thornMantis": {
+        ctx.fillStyle = "#16a34a";
+        ctx.beginPath();
+        ctx.moveTo(0, 24);
+        ctx.lineTo(-24, -12);
+        ctx.lineTo(0, -20);
+        ctx.lineTo(24, -12);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case "amberMoth": {
+        ctx.fillStyle = "#d97706";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 42, 26, 0, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case "rootGuardian": {
+        ctx.fillStyle = "#1e3a2b";
+        ctx.beginPath();
+        ctx.roundRect(-36, -30, 72, 60, 10);
+        ctx.fill();
+        break;
+      }
+      case "hollowStag": {
+        ctx.fillStyle = "#047857";
+        ctx.beginPath();
+        ctx.roundRect(-110, -45, 220, 90, 20);
+        ctx.fill();
+        break;
+      }
+      case "fateWeaver": {
+        ctx.fillStyle = "#064e3b";
+        ctx.beginPath();
+        ctx.roundRect(-220, -60, 440, 120, 25);
+        ctx.fill();
+        ctx.strokeStyle = "#f8c050";
+        ctx.lineWidth = 3;
+        ctx.stroke();
         break;
       }
     }
@@ -1946,7 +2237,11 @@ export class GameRenderer {
     ctx.font = "700 13px monospace";
     ctx.letterSpacing = "2px";
     const subtext =
-      stage === 2 ? "HOSTILE ABYSSAL ENTITY DETECTED" : "HOSTILE CELESTIAL BEAST DETECTED";
+      stage === 3
+        ? "HOSTILE COSMIC WEAVER DETECTED"
+        : stage === 2
+          ? "HOSTILE ABYSSAL ENTITY DETECTED"
+          : "HOSTILE CELESTIAL BEAST DETECTED";
     ctx.fillText(subtext, FIELD_W / 2, FIELD_H * 0.42 + 46);
     ctx.restore();
   }
@@ -1956,22 +2251,33 @@ export class GameRenderer {
     ctx.save();
 
     // 0. TOP STAGE BADGE
-    ctx.fillStyle = world.currentStage === 2 ? "rgba(255, 84, 104, 0.22)" : "rgba(68, 215, 245, 0.22)";
-    ctx.strokeStyle = world.currentStage === 2 ? "#ff5468" : "#44d7f5";
+    const badgeColor =
+      world.currentStage === 3
+        ? "rgba(56, 239, 125, 0.22)"
+        : world.currentStage === 2
+          ? "rgba(255, 84, 104, 0.22)"
+          : "rgba(68, 215, 245, 0.22)";
+    const badgeBorder =
+      world.currentStage === 3 ? "#38ef7d" : world.currentStage === 2 ? "#ff5468" : "#44d7f5";
+    ctx.fillStyle = badgeColor;
+    ctx.strokeStyle = badgeBorder;
     ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.roundRect(FIELD_W / 2 - 100, 14, 200, 22, 6);
+    ctx.roundRect(FIELD_W / 2 - 110, 14, 220, 22, 6);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = world.currentStage === 2 ? "#ff8da1" : "#d9e5ff";
+    ctx.fillStyle =
+      world.currentStage === 3 ? "#a7f3d0" : world.currentStage === 2 ? "#ff8da1" : "#d9e5ff";
     ctx.font = "900 11px monospace";
     ctx.textAlign = "center";
-    ctx.fillText(
-      world.currentStage === 2 ? "STAGE 02 : RAGNAROK RIFT" : "STAGE 01 : HALVARD",
-      FIELD_W / 2,
-      29,
-    );
+    const stageTitle =
+      world.currentStage === 3
+        ? "STAGE 03 : YGGDRASIL HEART"
+        : world.currentStage === 2
+          ? "STAGE 02 : RAGNAROK RIFT"
+          : "STAGE 01 : HALVARD";
+    ctx.fillText(stageTitle, FIELD_W / 2, 29);
 
     // 1P SCORE
     ctx.fillStyle = "#8fa5d8";
@@ -2085,7 +2391,14 @@ export class GameRenderer {
 
     // BOSS HEALTH BAR
     const boss = world.enemies.find(
-      (e) => (e.kind === "leviathan" || e.kind === "albatross" || e.kind === "kraken") && e.alive,
+      (e) =>
+        (e.kind === "celestialGuardian" ||
+          e.kind === "leviathan" ||
+          e.kind === "albatross" ||
+          e.kind === "kraken" ||
+          e.kind === "hollowStag" ||
+          e.kind === "fateWeaver") &&
+        e.alive,
     );
     if (boss) {
       const barW = 460;
@@ -2096,24 +2409,44 @@ export class GameRenderer {
       ctx.fillStyle = "rgba(8, 13, 35, 0.85)";
       ctx.fillRect(bx, by, barW, barH);
       ctx.strokeStyle =
-        boss.kind === "kraken" ? "#a855f7" : boss.kind === "leviathan" ? "#ff5468" : "#44d7f5";
+        boss.kind === "fateWeaver" || boss.kind === "hollowStag"
+          ? "#38ef7d"
+          : boss.kind === "kraken"
+            ? "#a855f7"
+            : boss.kind === "leviathan"
+              ? "#ff5468"
+              : "#44d7f5";
       ctx.lineWidth = 1.5;
       ctx.strokeRect(bx, by, barW, barH);
 
       const ratio = Math.max(0, boss.hp / boss.maxHp);
       const isCritical = ratio < 0.25;
-      ctx.fillStyle = isCritical ? "#ff5468" : boss.kind === "kraken" ? "#a855f7" : "#44d7f5";
+      ctx.fillStyle = isCritical
+        ? "#ff5468"
+        : boss.kind === "fateWeaver" || boss.kind === "hollowStag"
+          ? "#38ef7d"
+          : boss.kind === "kraken"
+            ? "#a855f7"
+            : boss.kind === "celestialGuardian"
+              ? "#f8c050"
+              : "#44d7f5";
       ctx.fillRect(bx + 2, by + 2, (barW - 4) * ratio, barH - 4);
 
       ctx.fillStyle = "#ffffff";
       ctx.font = "900 13px monospace";
       ctx.textAlign = "center";
       const bossName =
-        boss.kind === "kraken"
-          ? "MIDBOSS : ABYSSAL SENTINEL KRAKEN"
-          : boss.kind === "albatross"
-            ? "MIDBOSS : RUNIC GRYPHON ALBATROSS"
-            : "FINAL BOSS : ABYSSAL SKY DRAGON LEVIATHAN";
+        boss.kind === "fateWeaver"
+          ? "FINAL BOSS : COSMIC RUNE LOOM FATE WEAVER"
+          : boss.kind === "hollowStag"
+            ? "MIDBOSS : RUNIC ANTLER STAG"
+            : boss.kind === "kraken"
+              ? "MIDBOSS : ABYSSAL SENTINEL KRAKEN"
+              : boss.kind === "albatross"
+                ? "MIDBOSS : RUNIC GRYPHON ALBATROSS"
+                : boss.kind === "celestialGuardian"
+                  ? "FINAL BOSS : SUN-WINGED SOVEREIGN"
+                  : "FINAL BOSS : ABYSSAL SKY DRAGON LEVIATHAN";
       ctx.fillText(bossName, FIELD_W / 2, by - 6);
     }
 

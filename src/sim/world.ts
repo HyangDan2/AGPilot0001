@@ -7,10 +7,10 @@ import {
   playerCollectsPickup,
 } from "./collision";
 import { spawnEnemy, updateEnemyAI, damageEnemy } from "./enemies";
-import { createPlayer, killPlayer, updatePlayer } from "./player";
+import { addManaUnits, createPlayer, killPlayer, updatePlayer } from "./player";
 import { rand } from "./rng";
-import { STAGE1_WAVES, WaveDef } from "./stage1";
-import { STAGE2_WAVES } from "./stage2";
+import { WaveDef } from "./stage1";
+import { getStageDef } from "./stages";
 import {
   DT,
   FIELD_H,
@@ -118,9 +118,16 @@ export function step(world: World, input: InputFrame): GameEvent[] {
   }
 
   // Active Play / Boss Phase:
-  // Advance stage tick only if no blocking boss (albatross, leviathan, kraken) is alive
+  // Advance stage tick only if no blocking boss (midboss or final boss) is alive
   const bossAlive = world.enemies.some(
-    (e) => (e.kind === "albatross" || e.kind === "leviathan" || e.kind === "kraken") && e.alive,
+    (e) =>
+      (e.kind === "albatross" ||
+        e.kind === "celestialGuardian" ||
+        e.kind === "leviathan" ||
+        e.kind === "kraken" ||
+        e.kind === "hollowStag" ||
+        e.kind === "fateWeaver") &&
+      e.alive,
   );
   if (!bossAlive) {
     world.stageTick++;
@@ -173,7 +180,7 @@ export function step(world: World, input: InputFrame): GameEvent[] {
 
 function triggerStageWaves(world: World, events: GameEvent[]): void {
   const currentSec = world.stageTick / TICK_HZ;
-  const waves = world.currentStage === 2 ? STAGE2_WAVES : STAGE1_WAVES;
+  const waves = getStageDef(world.currentStage).waves;
 
   while (world.waveCursor < waves.length) {
     const wave = waves[world.waveCursor];
@@ -181,7 +188,13 @@ function triggerStageWaves(world: World, events: GameEvent[]): void {
 
     // Cap active on-screen enemies to prevent mobile frame drop and uncluttered combat
     const activeEnemies = world.enemies.filter((e) => e.alive).length;
-    const isBoss = wave.kind === "albatross" || wave.kind === "leviathan" || wave.kind === "kraken";
+    const isBoss =
+      wave.kind === "albatross" ||
+      wave.kind === "celestialGuardian" ||
+      wave.kind === "leviathan" ||
+      wave.kind === "kraken" ||
+      wave.kind === "hollowStag" ||
+      wave.kind === "fateWeaver";
     if (activeEnemies >= 16 && !isBoss) {
       // Delay wave spawn until screen cleared slightly
       break;
@@ -207,10 +220,14 @@ function spawnWave(world: World, wave: WaveDef, events: GameEvent[]): void {
     });
   }
 
-  if (wave.kind === "albatross" || wave.kind === "kraken") {
+  if (wave.kind === "albatross" || wave.kind === "kraken" || wave.kind === "hollowStag") {
     world.phase = "boss";
     events.push({ t: "warning", isMidboss: true });
-  } else if (wave.kind === "leviathan") {
+  } else if (
+    wave.kind === "celestialGuardian" ||
+    wave.kind === "leviathan" ||
+    wave.kind === "fateWeaver"
+  ) {
     world.phase = "boss";
     events.push({ t: "warning", isMidboss: false });
   }
@@ -284,7 +301,7 @@ function handlePlayerBulletCollisions(world: World, events: GameEvent[]): void {
 
       if (hitEnemy(enemy, bullet)) {
         bullet.alive = false;
-        world.player.mana = Math.min(world.player.maxMana, world.player.mana + 2);
+        addManaUnits(world.player, 2);
 
         // Boss part damage first
         let partDamaged = false;
@@ -358,7 +375,7 @@ function handlePickupCollisions(world: World, events: GameEvent[]): void {
             else if (p.lanePower.right < MAX_LANE_MULT) p.lanePower.nextLane = "right";
             else {
               world.score += 1000;
-              p.mana = Math.min(p.maxMana, p.mana + 25);
+              addManaUnits(p, 25);
             }
           }
         }
@@ -371,7 +388,7 @@ function handlePickupCollisions(world: World, events: GameEvent[]): void {
           deadOrb.alive = true;
           deadOrb.hp = 1;
         } else {
-          p.mana = Math.min(p.maxMana, p.mana + 20);
+          addManaUnits(p, 20);
           world.score += 2000;
         }
       } else if (item.kind === "medal") {

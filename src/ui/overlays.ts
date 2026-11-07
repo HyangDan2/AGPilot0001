@@ -195,7 +195,7 @@ export class UIManager {
   }
 
   public showStageClear(
-    _stage: number,
+    stage: number,
     score: number,
     highScore: number,
     destroyed: number,
@@ -203,14 +203,21 @@ export class UIManager {
     noMissBonus: number,
   ): void {
     const accuracy = total > 0 ? Math.round((destroyed / total) * 100) : 100;
+    const isStage1 = stage === 1;
+    const currentTitle = isStage1 ? "STAGE 01 CLEARED" : "STAGE 02 CLEARED";
+    const currentSub = isStage1 ? "HALVARD : CELESTIAL SANCTUARY" : "RAGNAROK RIFT : SHATTERED BIFROST";
+    const nextTitle = isStage1 ? "STAGE 02 — RAGNAROK RIFT" : "STAGE 03 — YGGDRASIL HEART";
+    const nextDesc = isStage1 ? "Shattered Bifrost & Abyssal Storm Dragon" : "Living Bark, Golden Roots & Cosmic Rune Loom";
+    const btnLabel = isStage1 ? "ENTER RAGNAROK RIFT" : "ENTER YGGDRASIL HEART";
+
     this.container.innerHTML = `
       <div class="overlay victory-screen">
         <div class="brand-badge">
           <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="16" height="16" />
           <span class="brand-title">HD²LAB ARCADE</span>
         </div>
-        <h2 class="victory-text">STAGE 01 CLEARED</h2>
-        <div class="stage-name-sub">HALVARD : CELESTIAL SANCTUARY</div>
+        <h2 class="victory-text">${currentTitle}</h2>
+        <div class="stage-name-sub">${currentSub}</div>
         <div class="stats-card">
           <div class="stat-row"><span>MONSTERS PURGED:</span> <strong>${destroyed}/${total} (${accuracy}%)</strong></div>
           ${noMissBonus > 0 ? `<div class="stat-row gold-text"><span>NO-MISS BONUS:</span> <strong>+${noMissBonus}</strong></div>` : ""}
@@ -219,11 +226,11 @@ export class UIManager {
         </div>
         <div class="next-stage-preview">
           <div class="next-label">NEXT MISSION</div>
-          <div class="next-title">STAGE 02 — RAGNAROK RIFT</div>
-          <div class="next-desc">Shattered Bifrost & Abyssal Storm Dragon</div>
+          <div class="next-title">${nextTitle}</div>
+          <div class="next-desc">${nextDesc}</div>
         </div>
         <div class="menu-actions">
-          <button id="btn-next-stage" class="btn btn-primary">ENTER RAGNAROK RIFT</button>
+          <button id="btn-next-stage" class="btn btn-primary">${btnLabel}</button>
           <button id="btn-stageclear-main" class="btn">MAIN MENU</button>
         </div>
         <div class="platform-links">

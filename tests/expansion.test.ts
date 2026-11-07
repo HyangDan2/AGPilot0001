@@ -9,6 +9,7 @@ describe("Expansion Combat Mechanics", () => {
     const world = createWorld({ seed: 42, startAt: 10 });
     world.player.x = 360;
     world.player.y = 800;
+    world.player.manaUnits = 800;
     world.player.mana = 20;
 
     // Bullet flying near Eira (distance 25px: x=385, y=800)
@@ -29,7 +30,8 @@ describe("Expansion Combat Mechanics", () => {
 
     expect(grazeEvents.length).toBe(1);
     expect(world.player.grazeCount).toBe(1);
-    expect(world.player.mana).toBe(30); // 20 + 10
+    expect(world.player.manaUnits).toBe(810); // 800 + 10 units (1/40 rebalance)
+    expect(world.player.mana).toBe(20.25);
     expect(world.stats.grazes).toBe(1);
     expect(world.bullets.find((b) => b.id === 999)?.grazed).toBe(true);
 
@@ -71,6 +73,7 @@ describe("Expansion Combat Mechanics", () => {
     const world = createWorld({ seed: 42, startAt: 10 });
     world.player.x = 360;
     world.player.y = 800;
+    world.player.manaUnits = 4000;
     world.player.mana = 100;
 
     // Spawn 3 enemy bullets on screen

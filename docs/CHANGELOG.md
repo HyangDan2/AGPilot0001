@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.9.0] - 2026-11-08
+### Added
+- **Phase 0 — Asset & Design Duplication Audit**:
+  - Implemented `scripts/audit-art.mjs` checking perceptual dHash (hamming distance $\le 4$), SHA-256 collision, atlas rect overlap, and boss duplication.
+  - Published comprehensive audit report in `docs/art/DESIGN_DUPLICATION_AUDIT.md`.
+  - Disentangled Stage 1 final boss from `leviathan` to dedicated `celestialGuardian` (Sun-Winged Sovereign) with independent art (`celestial_guardian.png`), stats, multi-part wings, and radiant attack patterns.
+  - Added dedicated sprites and atlas entries for Stage 2 monsters (`siren`, `seraph`, `golem`, `kraken`).
+  - Expanded Eira flight spritesheet to 8 distinct idle frames (`idle_0` through `idle_7`) and 12 distinct roll frames (`roll_0` through `roll_11`).
+- **Phase 1 — Three-Stage Campaign Refactoring**:
+  - Unified stage configuration with `StageDefinition` in `src/sim/stages.ts` (`STAGE_DEFS`).
+  - Stage 1: Halvard ($53\text{ normal enemies}, 1.0\times\text{ bullet speed}$, Midboss Albatross, Boss Celestial Guardian, `bgm_stage`).
+  - Stage 2: Ragnarok Rift ($70\text{ normal enemies}, 1.20\times\text{ bullet speed}$, Midboss Kraken, Boss Leviathan, `bgm_stage2`).
+  - Stage 3: Yggdrasil Heart ($94\text{ normal enemies}, 1.44\times\text{ bullet speed}$, Midboss Hollow Stag, Boss Fate Weaver, `bgm_stage3`).
+  - Seamless player progression transfer across Stage 1 $\to$ Stage 2 $\to$ Stage 3 $\to$ Victory.
+- **Phase 2 — Stage 3: Yggdrasil Heart**:
+  - Environment: Deep emerald canopy, ancient living bark, golden root auroras, and floating life spores.
+  - 4 new regular enemies: `seedWisp` (spore vanguard), `thornMantis` (predatory dive hunter), `amberMoth` (heavy spore caster), and `rootGuardian` (ancient ground node).
+  - Midboss `hollowStag` (Runic Antler Stag, HP 240, 2 destructible Antlers).
+  - Final Boss `fateWeaver` (Cosmic Rune Loom, HP 500, 3 phases: Thread Weave, Rune Spiral, Severed Fate).
+- **Phase 3 — Fixed-Point Ultimate Mana Charge Rebalance (1/40 Rate)**:
+  - Rebalanced all mana gains to exactly $1/40$ ($2.5\%$) via fixed-point `manaUnits` ($0 \dots 4000$, where 40 units = 1% display, 4000 units = 100% full charge).
+  - Graze: +10 units (+0.25%).
+  - Normal bullet hit: +2 units (+0.05%).
+  - Melee slash hit: +15 units (+0.375%).
+  - Enemy kill: +8 units (+0.2%).
+  - Aegis Orb parry: +15 units (+0.375%).
+  - Max POW pickup: +25 units (+0.625%).
+  - Max Aegis pickup: +20 units (+0.5%).
+  - Orb enemy contact: +1 unit (+0.025%).
+- **Phase 4 — Razor-Sharp Sword Slash VFX**:
+  - Replaced radial gradient fan in `drawMeleeSlash` with a 3-layer tapered crescent blade:
+    - Layer 1: Cutting Core (1.5px `#ffffff` knife edge along the outer arc).
+    - Layer 2: Energy Edge (tapered crescent fill in `#44d7f5` or `#f8c050` with high alpha).
+    - Layer 3: Motion Trail (translucent trailing mist).
+- **Phase 5 & 6 — Audio Synthesis & Full QA Gate**:
+  - Synthesized `bgm_stage3` (152 BPM mystical fast Celtic/Nordic battle theme).
+  - Optimized Vorbis and AAC encoding bitrates, fitting all 36 audio tracks into 3.66 MB ($< 4.5\text{ MB}$ budget).
+  - Verified 43 unit tests and 11 browser Playwright E2E tests across 6 viewports.
+
+## [0.8.1] - 2026-11-07
+### Added
+- **HD2Lab Standard Favicon & Touch Icon Suite**:
+  - Integrated official HD2Lab Skew Mark assets into `public/`:
+    - `favicon.ico`: Dual-resolution (16x16, 32x32) multi-icon resource.
+    - `favicon.svg`: Official vector icon with pure `#101110` background, `rx="12"`, and `#ff824f` Skew Mark.
+    - `favicon-32x32.png` & `favicon.png`: High-fidelity raster favicons.
+    - `apple-touch-icon.png` (180x180): iOS/macOS touch icon.
+    - `icon-192.png` & `icon-512.png`: Standard web app/PWA icons.
+  - Updated `index.html` with canonical `<link>` tags and cache busting query strings (`?v=20261107`).
+
 ## [0.8.0] - 2026-11-07
 ### Added
 - **Halvard Departure Artwork Replacement (Phase 1)**:

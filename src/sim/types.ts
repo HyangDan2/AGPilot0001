@@ -67,12 +67,19 @@ export type EnemyKind =
   | "condor"
   | "gunboat"
   | "albatross"
+  | "celestialGuardian"
   | "leviathan"
   | "golem"
   | "siren"
   | "kraken"
   | "seraph"
-  | "valkyrieQueen";
+  | "valkyrieQueen"
+  | "seedWisp"
+  | "thornMantis"
+  | "amberMoth"
+  | "rootGuardian"
+  | "hollowStag"
+  | "fateWeaver";
 
 export type PathKind =
   | "straight"
@@ -175,6 +182,7 @@ export interface Player {
   slashDirection: SlashDirection;
   comboCount: number;
   meleeSwing: MeleeSwing | null;
+  manaUnits: number;
   mana: number;
   maxMana: number;
   ultimateTimer: number;
