@@ -18,6 +18,7 @@ export class GameApp {
 
   private isRunning = false;
   private isPaused = false;
+  private landscapeLocked = false;
   private rafId: number | null = null;
   private settings = loadSettings();
   private highScore = loadHighScore();
@@ -56,9 +57,13 @@ export class GameApp {
     // Initial render of title backdrop
     this.renderer.render(this.world);
 
-    // Pause on tab visibility change or blur
+    // Mobile/tablet landscape blocks simulation without overwriting a manual pause.
+    window.addEventListener("resize", () => this.updateOrientationLock());
+    window.addEventListener("orientationchange", () => this.updateOrientationLock());
+    this.updateOrientationLock();
+
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden && this.isRunning && !this.isPaused) {
+      if (document.hidden && this.isRunning && !this.isPaused && !this.landscapeLocked) {
         this.togglePause();
       }
     });
@@ -76,6 +81,8 @@ export class GameApp {
     }
     this.isRunning = true;
     this.isPaused = false;
+    this.updateOrientationLock();
+    this.audio.setGameplayPaused(this.landscapeLocked);
     this.lastTime = performance.now();
     this.accumulator = 0;
     this.rafId = requestAnimationFrame((t) => this.loop(t));
@@ -120,6 +127,7 @@ export class GameApp {
     }
     this.world = createWorld();
     this.ui.showTitle(this.highScore, this.settings.muted, this.settings.reducedMotion);
+    this.audio.setGameplayPaused(this.landscapeLocked);
     this.renderer.render(this.world);
   }
 
@@ -156,8 +164,9 @@ export class GameApp {
   }
 
   private togglePause(): void {
-    if (!this.isRunning) return;
+    if (!this.isRunning || this.landscapeLocked) return;
     this.isPaused = !this.isPaused;
+    this.audio.setGameplayPaused(this.isPaused);
     if (this.isPaused) {
       this.ui.showPauseMenu();
     } else {
@@ -189,11 +198,26 @@ export class GameApp {
     this.ui.showTitle(this.highScore, this.settings.muted, this.settings.reducedMotion);
   }
 
+  private updateOrientationLock(): void {
+    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+    const shouldLock = isTouchDevice && window.innerWidth > window.innerHeight;
+    if (this.landscapeLocked === shouldLock) return;
+
+    this.landscapeLocked = shouldLock;
+    if (shouldLock) this.ui.showRotateNotice();
+    else this.ui.hideRotateNotice();
+
+    // Never fast-forward simulation by the elapsed time spent in landscape.
+    this.accumulator = 0;
+    this.lastTime = performance.now();
+    this.audio.setGameplayPaused(this.isPaused || this.landscapeLocked);
+  }
+
   private loop(now: number): void {
     this.rafId = null;
     if (!this.isRunning) return;
 
-    if (this.isPaused) {
+    if (this.isPaused || this.landscapeLocked) {
       this.rafId = requestAnimationFrame((t) => this.loop(t));
       return;
     }
@@ -275,6 +299,7 @@ export class GameApp {
   private setupTestHooks(): void {
     (window as unknown as { __testHook: unknown }).__testHook = {
       getWorld: () => this.world,
+      getPauseState: () => ({ manuallyPaused: this.isPaused, landscapeLocked: this.landscapeLocked }),
       stepOnce: (input: InputFrame) => step(this.world, input),
       startWithSeed: (seed: number, startAt?: number) => {
         this.world = createWorld({ seed, startAt });

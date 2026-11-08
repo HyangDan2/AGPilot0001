@@ -38,6 +38,65 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
     expect(errors).toEqual([]);
   });
 
+  test("mobile rotation pauses gameplay until portrait is restored", async ({ browser }) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto("./?test=1");
+      await page.locator("#btn-start").click();
+      await page.waitForTimeout(130);
+      await page.setViewportSize({ width: 844, height: 390 });
+      await expect(page.locator("#rotate-to-portrait")).toBeVisible();
+      await expect(page.getByText("세로 화면으로 돌려주세요")).toBeVisible();
+      await page.waitForTimeout(100);
+      const pausedTick = await page.evaluate(() => (window as unknown as {
+        __testHook: { getWorld: () => { tick: number } }
+      }).__testHook.getWorld().tick);
+      await page.waitForTimeout(170);
+      const tickAfterWait = await page.evaluate(() => (window as unknown as {
+        __testHook: { getWorld: () => { tick: number } }
+      }).__testHook.getWorld().tick);
+      expect(tickAfterWait).toBe(pausedTick);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.locator("#rotate-to-portrait")).toHaveCount(0);
+      await expect.poll(async () => page.evaluate(() => (window as unknown as {
+        __testHook: { getWorld: () => { tick: number } }
+      }).__testHook.getWorld().tick)).toBeGreaterThan(pausedTick);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("rotating back to portrait preserves manual pause", async ({ browser }) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto("./?test=1");
+      await page.locator("#btn-start").click();
+      await page.locator("#btn-pause").click();
+      await expect(page.locator("#pause-menu")).toBeVisible();
+      await page.setViewportSize({ width: 844, height: 390 });
+      await expect(page.locator("#rotate-to-portrait")).toBeVisible();
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.locator("#rotate-to-portrait")).toHaveCount(0);
+      await expect(page.locator("#pause-menu")).toBeVisible();
+      const state = await page.evaluate(() => (window as unknown as {
+        __testHook: { getPauseState: () => { manuallyPaused: boolean; landscapeLocked: boolean } }
+      }).__testHook.getPauseState());
+      expect(state).toEqual({ manuallyPaused: true, landscapeLocked: false });
+    } finally {
+      await context.close();
+    }
+  });
+
   test("starts game on clicking START FLIGHT and accepts keyboard input", async ({ page }) => {
     await page.goto("./?test=1");
     await page.click("#btn-start");

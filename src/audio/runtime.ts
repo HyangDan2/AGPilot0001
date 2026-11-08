@@ -101,6 +101,13 @@ export class AudioRuntime {
     }
   }
 
+  public setGameplayPaused(paused: boolean): void {
+    // Stop music during landscape pause, preserving the user's mute setting.
+    if (this.ctx && this.bgmGain) {
+      this.bgmGain.gain.setTargetAtTime(paused ? 0 : 1, this.ctx.currentTime, 0.045);
+    }
+  }
+
   public playBGM(id: BGMId, crossfadeDuration = 0.35): void {
     const resolvedId = id === "bgm_stage1" ? "bgm_stage" : id;
     if (this.currentBgmId === resolvedId && this.activeBgmSource) return;
