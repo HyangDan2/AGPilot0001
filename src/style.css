@@ -93,9 +93,10 @@ body {
 }
 
 .title-screen {
+  /* Approved Eira cover artwork. Keep the original image uncropped on disk. */
   background:
-    radial-gradient(circle at 50% 25%, rgba(8, 13, 35, 0.2) 0%, rgba(8, 13, 35, 0.85) 75%, rgba(8, 13, 35, 0.96) 100%),
-    url("./title/eira-title-bg.webp") center/cover no-repeat;
+    linear-gradient(180deg, rgba(8, 13, 35, 0.07) 0%, rgba(8, 13, 35, 0.18) 40%, rgba(8, 13, 35, 0.55) 75%, rgba(8, 13, 35, 0.88) 100%),
+    url("./title/eira-title-cover-v2.jpg") center / cover no-repeat;
   backdrop-filter: none;
 }
 
