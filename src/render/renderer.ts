@@ -38,34 +38,30 @@ const EIRA_FRAMES: Record<string, { sx: number; sy: number }> = {
   idle_1: { sx: 128, sy: 0 },
   idle_2: { sx: 256, sy: 0 },
   idle_3: { sx: 384, sy: 0 },
-  idle_4: { sx: 512, sy: 0 },
-  idle_5: { sx: 640, sy: 0 },
-  idle_6: { sx: 768, sy: 0 },
-  idle_7: { sx: 896, sy: 0 },
+  idle_4: { sx: 384, sy: 0 },
+  idle_5: { sx: 256, sy: 0 },
+  idle_6: { sx: 128, sy: 0 },
+  idle_7: { sx: 0, sy: 0 },
   bank_left: { sx: 0, sy: 128 },
   hover: { sx: 128, sy: 128 },
   bank_right: { sx: 256, sy: 128 },
   thrust: { sx: 384, sy: 128 },
-  dive: { sx: 512, sy: 128 },
-  ascend: { sx: 640, sy: 128 },
-  slash_0: { sx: 768, sy: 128 },
-  slash_1: { sx: 896, sy: 128 },
-  roll_0: { sx: 0, sy: 256 },
-  roll_1: { sx: 128, sy: 256 },
-  roll_2: { sx: 256, sy: 256 },
-  roll_3: { sx: 384, sy: 256 },
-  roll_4: { sx: 512, sy: 256 },
-  roll_5: { sx: 640, sy: 256 },
-  roll_6: { sx: 768, sy: 256 },
-  roll_7: { sx: 896, sy: 256 },
-  roll_8: { sx: 0, sy: 384 },
-  roll_9: { sx: 128, sy: 384 },
-  roll_10: { sx: 256, sy: 384 },
-  roll_11: { sx: 384, sy: 384 },
-  charge: { sx: 512, sy: 384 },
-  power_up: { sx: 640, sy: 384 },
-  beam_charge: { sx: 768, sy: 384 },
-  beam_fire: { sx: 896, sy: 384 },
+  slash_0: { sx: 0, sy: 256 },
+  slash_1: { sx: 128, sy: 256 },
+  charge: { sx: 256, sy: 256 },
+  power_up: { sx: 384, sy: 256 },
+  roll_0: { sx: 0, sy: 384 },
+  roll_1: { sx: 128, sy: 384 },
+  roll_2: { sx: 128, sy: 384 },
+  roll_3: { sx: 128, sy: 384 },
+  roll_4: { sx: 256, sy: 384 },
+  roll_5: { sx: 256, sy: 384 },
+  roll_6: { sx: 256, sy: 384 },
+  roll_7: { sx: 384, sy: 384 },
+  roll_8: { sx: 384, sy: 384 },
+  roll_9: { sx: 384, sy: 384 },
+  roll_10: { sx: 0, sy: 384 },
+  roll_11: { sx: 0, sy: 384 },
 };
 
 const ENEMY_FRAMES: Record<string, SpriteRect> = {
@@ -1357,7 +1353,7 @@ export class GameRenderer {
     if (p.rollTimer > 0) {
       isRolling = true;
       rollProgress = 1 - p.rollTimer / 72;
-      // Phase 5: 12-step axial rotation across 72 ticks
+      // Original Eira: 12 playback beats grounded in the approved v0.7.1 key poses
       const rollStep12 = Math.min(11, Math.floor(rollProgress * 12));
       const rollFrames = [
         "roll_0",
