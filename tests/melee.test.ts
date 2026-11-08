@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { spawnEnemy } from "../src/sim/enemies";
+import { checkMeleeHits } from "../src/sim/collision";
 import { step } from "../src/sim/world";
 import { createWorld } from "../src/sim/world";
 
@@ -92,5 +93,32 @@ describe("Alternating Left/Right Sword Combat (좌우 교대 검격)", () => {
     const meleeHits = events.filter((e) => e.t === "meleeHit");
     expect(meleeHits.length).toBe(0);
     expect(enemy.hp).toBe(initialHp);
+  });
+});
+
+describe("Short-range melee collision contract", () => {
+  it("hits a close target but rejects distant and lateral targets", () => {
+    const w = createWorld({ seed: 11, startAt: 1 });
+    w.player.x = 360;
+    w.player.y = 800;
+    const near = spawnEnemy(w, "kestrel", 360, 720, "straight");
+    const distant = spawnEnemy(w, "kestrelRed", 360, 652, "straight");
+    const lateral = spawnEnemy(w, "harrier", 465, 745, "straight");
+    w.player.meleeSwing = { id: 999, direction: "l2r", tick: 0, duration: 8, hitEnemyIds: [] };
+    checkMeleeHits(w, []);
+    expect(near.hp).toBeLessThan(1);
+    expect(distant.hp).toBe(1);
+    expect(lateral.hp).toBe(3);
+  });
+
+  it("does not hit distant boss just because its collision radius is huge", () => {
+    const w = createWorld({ seed: 12, startAt: 1 });
+    w.player.x = 360;
+    w.player.y = 800;
+    const boss = spawnEnemy(w, "leviathan", 360, 570, "hover");
+    const hp = boss.hp;
+    w.player.meleeSwing = { id: 1000, direction: "l2r", tick: 0, duration: 8, hitEnemyIds: [] };
+    checkMeleeHits(w, []);
+    expect(boss.hp).toBe(hp);
   });
 });

@@ -63,8 +63,8 @@ export function checkMeleeHits(world: World, events: GameEvent[]): void {
   }
 
   const swing = p.meleeSwing;
-  const MELEE_REACH = 130;
-  const MELEE_ARC_COS = 0.342; // cos(70 deg) -> 140 deg frontal arc
+  const MELEE_REACH = 90;
+  const MELEE_ARC_COS = Math.cos((50 * Math.PI) / 180); // 100 deg frontal arc
   const meleeDamage = p.power >= 2 ? 3 : 2;
 
   for (const enemy of world.enemies) {
@@ -72,16 +72,25 @@ export function checkMeleeHits(world: World, events: GameEvent[]): void {
       continue;
     }
 
-    const dx = enemy.x - p.x;
-    const dy = enemy.y - p.y;
-    const dist = Math.hypot(dx, dy);
+    // Clamp the enemy radius to avoid long-range hits on enormous boss hitboxes.
+    // Living boss parts are checked independently to keep blade/body contact precise.
+    const targets = [
+      { x: enemy.x, y: enemy.y, r: Math.min(enemy.r, enemy.parts.length ? 42 : 28) },
+      ...enemy.parts.filter((part) => part.alive).map((part) => ({
+        x: enemy.x + part.dx,
+        y: enemy.y + part.dy,
+        r: Math.min(part.r, 28),
+      })),
+    ];
+    const inBladeRange = targets.some(({ x, y, r }) => {
+      const dx = x - p.x;
+      const dy = y - p.y;
+      const dist = Math.hypot(dx, dy);
+      const frontal = dist === 0 || -dy / dist >= MELEE_ARC_COS;
+      return dist <= MELEE_REACH + r && (frontal || dist <= 22 + r);
+    });
 
-    // Frontal arc check (dy < 0 in screen space is ahead of player)
-    const isCloseEnough = dist <= MELEE_REACH + enemy.r;
-    const isFrontal = dist > 0 ? (-dy / dist) >= MELEE_ARC_COS : true;
-    const isPointBlank = dist <= 36 + enemy.r;
-
-    if (isCloseEnough && (isFrontal || isPointBlank)) {
+    if (inBladeRange) {
       swing.hitEnemyIds.push(enemy.id);
       world.hitstopTimer = 2; // Tactile 2-tick hitstop
 

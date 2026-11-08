@@ -1023,7 +1023,7 @@ export class GameRenderer {
     ctx.save();
     ctx.translate(p.x, p.y - 12);
 
-    const arcSpan = (135 * Math.PI) / 180;
+    const arcSpan = (100 * Math.PI) / 180;
     const startAngle = isL2R
       ? (-155 * Math.PI) / 180 + progress * 0.15
       : (-25 * Math.PI) / 180 - progress * 0.15;
@@ -1035,7 +1035,7 @@ export class GameRenderer {
     const trailSpan = (32 + progress * 40) * (Math.PI / 180);
     const tailAngle = isL2R ? tipAngle - trailSpan : tipAngle + trailSpan;
 
-    const reach = 132;
+    const reach = 96;
     const bellySpan = trailSpan * 0.45;
     const bellyAngle = isL2R ? tipAngle - bellySpan : tipAngle + bellySpan;
     const bellyR = reach - 13; // Max width at blade belly is 13px
