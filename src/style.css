@@ -94,9 +94,12 @@ body {
 
 .title-screen {
   /* Approved Eira cover artwork. Keep the original image uncropped on disk. */
+  /* Preserve Eira's face and sword: dim only the lower interface region. */
   background:
-    linear-gradient(180deg, rgba(8, 13, 35, 0.07) 0%, rgba(8, 13, 35, 0.18) 40%, rgba(8, 13, 35, 0.55) 75%, rgba(8, 13, 35, 0.88) 100%),
-    url("./title/eira-title-cover-v2.jpg") center / cover no-repeat;
+    linear-gradient(180deg, rgba(7, 12, 32, 0.12), transparent 24%, transparent 58%, rgba(7, 12, 32, 0.38) 78%, rgba(7, 12, 32, 0.88)),
+    url("./title/eira-title-cover-v2.jpg") center center / cover no-repeat;
+  padding: 0;
+  border: 0;
   backdrop-filter: none;
 }
 
@@ -531,3 +534,38 @@ body {
   gap: 14px;
   margin-top: 24px;
 }
+
+/* Minimal hero title: UI stays at the edges, leaving the key visual visible. */
+.title-masthead{position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;right:14px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left}
+.title-screen .brand-badge{margin:0;padding:5px 11px;gap:7px;background:rgba(7,12,32,.42);border:1px solid rgba(255,255,255,.25);box-shadow:none}
+.title-screen .brand-icon{width:17px;height:17px}
+.title-screen .brand-title{font-size:10px;letter-spacing:2px;color:#e5f2ff}
+.title-screen .brand-slogan{margin:0 0 0 7px;font-size:8px;letter-spacing:1.6px;color:#ecf2ff;text-shadow:0 1px 5px #000}
+.title-bottom-panel{position:absolute;inset-inline:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:35px 14px max(15px,env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,rgba(7,12,32,.24) 20%,rgba(7,12,32,.60) 64%,rgba(7,12,32,.84))}
+.title-screen .logo-box{margin:0}
+.title-screen .game-title{font-size:clamp(24px,6.6vw,38px);letter-spacing:2.3px;line-height:1.08;text-shadow:0 2px 10px rgba(0,0,0,.65)}
+.title-screen .subtitle{font-size:10px;letter-spacing:5px;margin-top:4px}
+.title-screen .high-score-display{margin:0;padding:0;font-size:11px;letter-spacing:2px;border:0;background:none;color:#e3ecff;text-shadow:0 2px 7px #000}
+.title-screen .title-start{width:min(85%,310px);padding:12px 18px;margin-top:4px;font-size:15px;letter-spacing:2px;border:1px solid #aeeeff;background:linear-gradient(110deg,rgba(39,87,188,.91),rgba(91,65,187,.91))}
+.title-utility-row{position:relative;display:flex;justify-content:center;align-items:center;gap:12px;width:100%;margin-top:4px}
+.title-screen .title-settings-bar{display:flex;gap:6px}
+.title-screen .title-settings-bar .btn,.title-help summary{min-height:30px;padding:6px 9px;font-size:10px;font-weight:700;letter-spacing:.3px;background:rgba(8,15,38,.5);border:1px solid rgba(190,216,255,.28);border-radius:6px;box-shadow:none;color:#e9f3ff}
+.title-help summary{cursor:pointer;list-style:none;display:flex;align-items:center}
+.title-help summary::-webkit-details-marker{display:none}
+.title-help summary::before{content:"ⓘ";margin-right:5px;font-size:12px}
+.title-help[open] summary{background:rgba(35,71,138,.9)}
+.title-help-panel{position:absolute;bottom:calc(100% + 12px);left:0;right:0;max-height:min(56vh,350px);overflow-y:auto;background:rgba(7,14,38,.95);border:1px solid rgba(118,197,245,.55);border-radius:12px;padding:15px 12px;box-shadow:0 10px 36px rgba(0,0,0,.65);text-align:left}
+.title-help-heading{color:#fff;font-size:12px;letter-spacing:1px;font-weight:800}
+.title-screen .title-help-panel .instructions{padding:8px 0;margin:5px 0;background:none;border:none;font-size:10px;line-height:1.8}
+.title-screen .title-help-panel .platform-links{margin-top:8px}
+.title-screen .title-help-panel .btn-hub{font-size:10px}
+
+/* Full-window portrait prompt on touch devices rotated sideways. */
+.rotate-to-portrait{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));color:white;background:radial-gradient(circle at 50% 40%,#203f77,#080d23 75%);text-align:center;pointer-events:auto}
+.rotate-notice-content{display:grid;justify-items:center;gap:10px;max-width:530px}
+.rotate-phone{display:block;position:relative;width:38px;height:66px;border:3px solid #a9eaff;border-radius:8px;box-shadow:0 0 18px rgba(68,215,245,.38);transform:rotate(-22deg)}
+.rotate-phone::after{content:"";position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:9px;height:3px;border-radius:2px;background:#a9eaff}
+.rotate-notice-content h2{margin:8px 0 0;font-size:clamp(18px,3.7vw,26px);line-height:1.3}
+.rotate-notice-content p{margin:0;color:#d4e8ff;font-size:13px;line-height:1.8}
+@media(max-height:480px){.rotate-notice-content{gap:6px}.rotate-phone{transform:rotate(-22deg) scale(.75)}.rotate-notice-content p{font-size:11px}}
+@media(max-width:350px){.title-bottom-panel{gap:6px;padding-inline:10px}.title-screen .title-utility-row{gap:5px}.title-screen .title-settings-bar .btn,.title-help summary{padding-inline:7px}}

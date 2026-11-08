@@ -31,7 +31,10 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
     await expect(page.locator("#btn-start")).toHaveText("START FLIGHT");
     await expect(page.locator("#btn-mute")).toBeVisible();
     await expect(page.locator("#btn-motion")).toBeVisible();
-
+    await expect(page.locator(".title-help-panel")).toBeHidden();
+    await page.locator(".title-help summary").click();
+    await expect(page.locator(".title-screen .instructions")).toBeVisible();
+    await expect(page.locator(".title-help-panel .platform-links")).toBeVisible();
     expect(errors).toEqual([]);
   });
 

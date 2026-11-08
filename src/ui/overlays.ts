@@ -22,41 +22,71 @@ export class UIManager {
   public showTitle(highScore: number, isMuted: boolean, reducedMotion: boolean): void {
     this.container.innerHTML = `
       <div class="overlay title-screen">
-        <div class="brand-badge">
-          <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="20" height="20" />
-          <span class="brand-title">HD²LAB ARCADE</span>
-        </div>
-        <div class="brand-slogan">HYPER DIMENSIONAL DESIGN</div>
-
-        <div class="logo-box">
-          <h1 class="game-title">VALKYRIE EIRA</h1>
-          <div class="subtitle">SKYBREAK</div>
-        </div>
-
-        <div class="high-score-display">TOP RECORD : ${highScore.toString().padStart(6, "0")}</div>
-
-        <button id="btn-start" class="btn btn-primary">START FLIGHT</button>
-
-        <div class="instructions">
-          <div><strong>KEYBOARD:</strong> WASD/ARROWS: MOVE | Z/SPACE: ARC BLADE | X/SHIFT: ROLL | C/L: ULTIMATE</div>
-          <div><strong>TOUCH:</strong> DRAG TO FLY & AUTO-ATTACK | [ROLL] EVASION | [ULT] GUNGNIR JUDGEMENT</div>
-        </div>
-
-        <div class="settings-bar">
-          <button id="btn-mute" class="btn btn-sm">${isMuted ? "UNMUTE" : "MUTE"}</button>
-          <button id="btn-motion" class="btn btn-sm">${reducedMotion ? "MOTION: REDUCED" : "MOTION: NORMAL"}</button>
-        </div>
-
-        <div class="platform-links">
-          <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_blank" rel="noopener noreferrer">🎮 GAMEHUB</a>
-          <a href="https://hyangdan2.github.io/" class="btn-hub" target="_blank" rel="noopener noreferrer">🏛 HD²LAB HQ</a>
+        <header class="title-masthead">
+          <div class="brand-badge">
+            <img src="./assets/branding/hd2lab.svg" class="brand-icon" alt="HD²LAB" width="20" height="20" />
+            <span class="brand-title">HD²LAB ARCADE</span>
+          </div>
+          <div class="brand-slogan">HYPER DIMENSIONAL DESIGN</div>
+        </header>
+        <div class="title-bottom-panel">
+          <div class="logo-box">
+            <h1 class="game-title">VALKYRIE EIRA</h1>
+            <div class="subtitle">SKYBREAK</div>
+          </div>
+          <div class="high-score-display">TOP RECORD · ${highScore.toString().padStart(6, "0")}</div>
+          <button id="btn-start" class="btn btn-primary title-start">START FLIGHT</button>
+          <div class="title-utility-row">
+            <div class="settings-bar title-settings-bar">
+              <button id="btn-mute" class="btn btn-sm" type="button" aria-label="Toggle sound">${isMuted ? "SOUND OFF" : "SOUND ON"}</button>
+              <button id="btn-motion" class="btn btn-sm" type="button" aria-label="Toggle motion effects">${reducedMotion ? "FX LOW" : "FX ON"}</button>
+            </div>
+            <details class="title-help">
+              <summary>CONTROLS</summary>
+              <div class="title-help-panel">
+                <div class="title-help-heading">HOW TO PLAY</div>
+                <div class="instructions">
+                  <div><strong>KEYBOARD:</strong> WASD/ARROWS · MOVE</div>
+                  <div>Z/SPACE · ARC BLADE | X/SHIFT · ROLL | C/L · ULTIMATE</div>
+                  <div><strong>TOUCH:</strong> DRAG TO FLY & AUTO-ATTACK</div>
+                  <div>ROLL · EVASION | ULT · GUNGNIR JUDGEMENT</div>
+                </div>
+                <div class="platform-links">
+                  <a href="https://hyangdan2.github.io/GameHub/" class="btn-hub" target="_blank" rel="noopener noreferrer">GAMEHUB</a>
+                  <a href="https://hyangdan2.github.io/" class="btn-hub" target="_blank" rel="noopener noreferrer">HD²LAB HQ</a>
+                </div>
+              </div>
+            </details>
+          </div>
         </div>
       </div>
     `;
-
     document.getElementById("btn-start")?.addEventListener("click", () => this.events.onStart());
     document.getElementById("btn-mute")?.addEventListener("click", () => this.events.onToggleMute());
     document.getElementById("btn-motion")?.addEventListener("click", () => this.events.onToggleReducedMotion());
+  }
+
+  /** Independent of the regular HUD: rotating cannot accidentally remove this notice. */
+  public showRotateNotice(): void {
+    if (document.getElementById("rotate-to-portrait")) return;
+    const notice = document.createElement("div");
+    notice.id = "rotate-to-portrait";
+    notice.className = "rotate-to-portrait";
+    notice.setAttribute("role", "dialog");
+    notice.setAttribute("aria-modal", "true");
+    notice.setAttribute("aria-label", "세로 화면 안내");
+    notice.innerHTML = `
+      <div class="rotate-notice-content">
+        <span class="rotate-phone" aria-hidden="true"></span>
+        <h2>세로 화면으로 돌려주세요</h2>
+        <p>게임이 자동으로 일시정지되었어요.<br />세로 화면으로 돌아오면 이어서 플레이할 수 있어요.</p>
+      </div>
+    `;
+    document.body.appendChild(notice);
+  }
+
+  public hideRotateNotice(): void {
+    document.getElementById("rotate-to-portrait")?.remove();
   }
 
   public showInGameHUD(isMuted: boolean): void {
