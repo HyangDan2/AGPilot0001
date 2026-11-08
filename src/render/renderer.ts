@@ -162,6 +162,8 @@ export class GameRenderer {
   public reducedMotion = false;
 
   private eiraImg: HTMLImageElement | null = null;
+  private eiraMotionV6Img: HTMLImageElement | null = null;
+  private eiraMotionV6Loaded = false;
   private eiraMotionV5Img: HTMLImageElement | null = null;
   private eiraMotionV5Loaded = false;
   private eiraMotionV2Img: HTMLImageElement | null = null;
@@ -206,6 +208,17 @@ export class GameRenderer {
       }
     };
     motionV5.src = "./assets/characters/eira/eira-motion-v5-atlas-256.png";
+
+    // v6 has the approved 24-pose roll without flashes or exposed rear red ornaments.
+    // Load it without replacing v5, v2, or original Eira artwork; v5 is the fallback.
+    const motionV6 = new Image();
+    motionV6.onload = () => {
+      if (motionV6.naturalWidth === 2048 && motionV6.naturalHeight === 1280) {
+        this.eiraMotionV6Img = motionV6;
+        this.eiraMotionV6Loaded = true;
+      }
+    };
+    motionV6.src = "./assets/characters/eira/eira-motion-v6-atlas-256.png";
 
     const enemies = new Image();
     enemies.src = "./assets/enemies/enemies-atlas.png";
@@ -521,6 +534,7 @@ export class GameRenderer {
     if (
       world.player.downTimer === 0 &&
       world.player.meleeSwing &&
+      !this.eiraMotionV6Loaded &&
       !this.eiraMotionV5Loaded &&
       !this.eiraMotionV2Loaded
     ) {
@@ -1438,8 +1452,10 @@ export class GameRenderer {
   private drawPlayer(p: Player, tick: number): void {
     const ctx = this.ctx;
     const atlasFrames = this.eiraImg?.naturalWidth === 512 ? EIRA_FRAMES_LEGACY : EIRA_FRAMES;
-    const useMotionV5 = this.eiraMotionV5Loaded && this.eiraMotionV5Img !== null;
-    const useMotionV2 = !useMotionV5 && this.eiraMotionV2Loaded && this.eiraMotionV2Img !== null;
+    const useMotionV6 = this.eiraMotionV6Loaded && this.eiraMotionV6Img !== null;
+    const useMotionV5 = !useMotionV6 && this.eiraMotionV5Loaded && this.eiraMotionV5Img !== null;
+    const useMotionV2 = !useMotionV6 && !useMotionV5 &&
+      this.eiraMotionV2Loaded && this.eiraMotionV2Img !== null;
     ctx.save();
     ctx.translate(p.x, p.y);
 
@@ -1479,7 +1495,7 @@ export class GameRenderer {
       ];
       rollFrameKey = rollFrames[rollStep12];
 
-      if (useMotionV5) {
+      if (useMotionV6 || useMotionV5) {
         // Roll 24 frames already illustrate the full rear -> side -> front -> side -> rear
         // rotation. No additional whole-canvas rotation or frame interpolation is allowed.
         scale = 1;
@@ -1506,6 +1522,8 @@ export class GameRenderer {
     ctx.ellipse(0, 56, 48 * scale, 24 * scale, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // In v6 a dodge is indicated by actual body rotation, not a flashing aura.
+    if (!(useMotionV6 && isRolling)) {
     // Divine Flight Particle Aura (cyan and golden specks trailing downward)
     ctx.fillStyle = "rgba(68, 215, 245, 0.45)";
     for (const ox of [-20, 20]) {
@@ -1518,8 +1536,11 @@ export class GameRenderer {
     ctx.arc(0, 60 + (tick % 7) * 3, 3, 0, Math.PI * 2);
     ctx.fill();
 
+    }
+
     // Three transparent afterimages. v2 samples previous approved roll frames.
-    if (isRolling && (useMotionV5 || useMotionV2 || (this.eiraLoaded && this.eiraImg))) {
+    if (isRolling && !useMotionV6 &&
+      (useMotionV5 || useMotionV2 || (this.eiraLoaded && this.eiraImg))) {
       for (const lag of [0.06, 0.12, 0.18]) {
         const pastProgress = Math.max(0, rollProgress - lag);
         ctx.save();
@@ -1557,8 +1578,10 @@ export class GameRenderer {
     }
 
 
-    if (useMotionV5 && this.eiraMotionV5Img) {
-      // Dedicated 40-frame v5: 8 idle + 4 slash L + 4 slash R + 24 roll.
+    if ((useMotionV6 && this.eiraMotionV6Img) || (useMotionV5 && this.eiraMotionV5Img)) {
+      // The same 40-frame positions cover v6 (preferred) and the unchanged v5 fallback.
+      const active40Img = useMotionV6 ? this.eiraMotionV6Img! : this.eiraMotionV5Img!;
+      // Dedicated 40-frame motion: 8 idle + 4 slash L + 4 slash R + 24 roll.
       let v5Key: string;
       if (isRolling) {
         const index = Math.min(23, Math.floor(rollProgress * 24));
@@ -1575,7 +1598,7 @@ export class GameRenderer {
       }
       const frame = EIRA_MOTION_V5_FRAMES[v5Key] ?? EIRA_MOTION_V5_FRAMES.idle_00;
       ctx.drawImage(
-        this.eiraMotionV5Img, frame.sx, frame.sy,
+        active40Img, frame.sx, frame.sy,
         EIRA_MOTION_V5_CELL, EIRA_MOTION_V5_CELL,
         -80, -80, 160, 160,
       );
@@ -1650,7 +1673,7 @@ export class GameRenderer {
     }
 
     // Invulnerability Protective Ward Barrier with Chromatic Refraction Ring
-    if (p.rollTimer > 0 || p.invuln > 0) {
+    if (!(useMotionV6 && isRolling) && (p.rollTimer > 0 || p.invuln > 0)) {
       ctx.save();
       ctx.strokeStyle = "rgba(68, 215, 245, 0.85)";
       ctx.shadowColor = "#44d7f5";

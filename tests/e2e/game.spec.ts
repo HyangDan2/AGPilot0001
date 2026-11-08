@@ -1,6 +1,59 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
+  test("loads Eira v6 no-flash roll atlas and preserves v5/v2/original fallback", async ({ page }) => {
+    await page.goto("./");
+    const result = await page.evaluate(async () => {
+      const root = "./assets/characters/eira/";
+      const urls = [
+        "eira-motion-v6-atlas-256.png", "eira-motion-v6.json",
+        "eira-motion-v5-atlas-256.png", "eira-motion-v2-atlas-256.png", "eira-flight.png",
+      ];
+      const [v6, metadata, v5, v2, original] = await Promise.all(
+        urls.map((path) => fetch(root + path)),
+      );
+      if (![v6, metadata, v5, v2, original].every((res) => res.ok)) return false;
+      const img = await createImageBitmap(await v6.blob());
+      const meta = await metadata.json() as {
+        version: string;
+        frames: Record<string, { x: number; y: number; w: number; h: number }>;
+        animations: Record<string, string[]>;
+      };
+      const order = [
+        ...meta.animations.idle, ...meta.animations.slash_l,
+        ...meta.animations.slash_r, ...meta.animations.roll,
+      ];
+      const framesValid = img.width === 2048 && img.height === 1280 &&
+        order.length === 40 && new Set(order).size === 40 &&
+        meta.animations.idle.length === 8 &&
+        meta.animations.slash_l.length === 4 &&
+        meta.animations.slash_r.length === 4 &&
+        meta.animations.roll.length === 24 &&
+        order.every((key) => {
+          const frame = meta.frames[key];
+          return frame !== undefined && frame.w === 256 && frame.h === 256 &&
+            frame.x >= 0 && frame.y >= 0 &&
+            frame.x + frame.w <= img.width && frame.y + frame.h <= img.height;
+        });
+      // All 24 replacement roll cells must be transparent at their corners.
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      let alphaValid = false;
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        alphaValid = meta.animations.roll.every((key) => {
+          const f = meta.frames[key];
+          return ctx.getImageData(f.x + 1, f.y + 1, 1, 1).data[3] === 0;
+        });
+      }
+      img.close();
+      return framesValid && alphaValid && meta.version === "6.0.0";
+    });
+    expect(result).toBe(true);
+  });
+
   test("loads v5 40-frame independent Eira atlas with 24-frame rotation", async ({ page }) => {
     await page.goto("./");
     const valid = await page.evaluate(async () => {

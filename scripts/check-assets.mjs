@@ -154,10 +154,38 @@ function main() {
     report.checked++;
   }
 
-  // The v2 atlas and original art are preserved in this 9 MB release image budget.
-  const maxImageBudget = 9.0 * 1024 * 1024;
+  // Eira v6 modifies only the roll art. Keep prior artwork in the repository for rollback.
+  const v6Img = path.resolve("public/assets/characters/eira/eira-motion-v6-atlas-256.png");
+  const v6Json = path.resolve("public/assets/characters/eira/eira-motion-v6.json");
+  if (!fs.existsSync(v6Img) || !fs.existsSync(v6Json)) {
+    console.error("FAIL: Missing approved Eira roll v6 atlas or metadata");
+    hasError = true;
+  } else {
+    const png = fs.readFileSync(v6Img);
+    const m = JSON.parse(fs.readFileSync(v6Json, "utf-8"));
+    const expected = { idle: 8, slash_l: 4, slash_r: 4, roll: 24 };
+    const countValid = Object.entries(expected).every(
+      ([k, count]) => m.animations?.[k]?.length === count,
+    );
+    const frames = Object.values(m.frames ?? {});
+    const rectValid = frames.length === 40 && frames.every(
+      (f) => f.x >= 0 && f.y >= 0 && f.w === 256 && f.h === 256 &&
+        f.x + f.w <= 2048 && f.y + f.h <= 1280,
+    );
+    const sizeValid = png.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" &&
+      png.readUInt32BE(16) === 2048 && png.readUInt32BE(20) === 1280;
+    if (!countValid || !rectValid || !sizeValid) {
+      console.error("FAIL: Invalid Eira roll v6 40-frame atlas");
+      hasError = true;
+    }
+    report.totalBytes += png.length;
+    report.checked++;
+  }
+
+  // Includes all versioned Eira artwork retained for rollback (not only active v6).
+  const maxImageBudget = 12.0 * 1024 * 1024;
   if (report.totalBytes > maxImageBudget) {
-    console.error(`FAIL: Asset budget exceeded: ${(report.totalBytes / 1024 / 1024).toFixed(2)} MB > 6.0 MB`);
+    console.error(`FAIL: Asset budget exceeded: ${(report.totalBytes / 1024 / 1024).toFixed(2)} MB > ${(maxImageBudget / 1024 / 1024).toFixed(1)} MB`);
     hasError = true;
   }
 

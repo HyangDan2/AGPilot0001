@@ -1,0 +1,418 @@
+{
+  "version": "6.0.0",
+  "source": "Updated approved 24-pose Eira roll: rear red head accents hidden by wings, no magical flash. v5 idle+slash unchanged.",
+  "meta": {
+    "image": "assets/characters/eira/eira-motion-v6-atlas-256.png",
+    "image128": "assets/characters/eira/eira-motion-v6-atlas-128.png",
+    "size": {
+      "w": 2048,
+      "h": 1280
+    },
+    "cell": 256,
+    "columns": 8,
+    "rows": 5,
+    "anchor": {
+      "x": 128,
+      "y": 128
+    },
+    "rollbackAtlas": "assets/characters/eira/eira-motion-v5-atlas-256.png",
+    "originalAtlas": "assets/characters/eira/eira-flight.png"
+  },
+  "animations": {
+    "idle": [
+      "idle_00",
+      "idle_01",
+      "idle_02",
+      "idle_03",
+      "idle_04",
+      "idle_05",
+      "idle_06",
+      "idle_07"
+    ],
+    "slash_l": [
+      "slash_l_00",
+      "slash_l_01",
+      "slash_l_02",
+      "slash_l_03"
+    ],
+    "slash_r": [
+      "slash_r_00",
+      "slash_r_01",
+      "slash_r_02",
+      "slash_r_03"
+    ],
+    "roll": [
+      "roll_00",
+      "roll_01",
+      "roll_02",
+      "roll_03",
+      "roll_04",
+      "roll_05",
+      "roll_06",
+      "roll_07",
+      "roll_08",
+      "roll_09",
+      "roll_10",
+      "roll_11",
+      "roll_12",
+      "roll_13",
+      "roll_14",
+      "roll_15",
+      "roll_16",
+      "roll_17",
+      "roll_18",
+      "roll_19",
+      "roll_20",
+      "roll_21",
+      "roll_22",
+      "roll_23"
+    ]
+  },
+  "timing": {
+    "simulationFps": 60,
+    "idleFramesPerPose": 5,
+    "slashFramesPerPose": 2,
+    "rollFramesPerPose": 3,
+    "idleFps": 12,
+    "slashFps": 30,
+    "rollFps": 20,
+    "rollDurationTicks": 72,
+    "meleeFirstToSecondTicks": 8,
+    "meleeRecoveryTicks": 18
+  },
+  "frames": {
+    "idle_00": {
+      "x": 0,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_01": {
+      "x": 256,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_02": {
+      "x": 512,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_03": {
+      "x": 768,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_04": {
+      "x": 1024,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_05": {
+      "x": 1280,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_06": {
+      "x": 1536,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_07": {
+      "x": 1792,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_l_00": {
+      "x": 0,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_l_01": {
+      "x": 256,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_l_02": {
+      "x": 512,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_l_03": {
+      "x": 768,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_r_00": {
+      "x": 1024,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_r_01": {
+      "x": 1280,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_r_02": {
+      "x": 1536,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_r_03": {
+      "x": 1792,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_00": {
+      "x": 0,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_01": {
+      "x": 256,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_02": {
+      "x": 512,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_03": {
+      "x": 768,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_04": {
+      "x": 1024,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_05": {
+      "x": 1280,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_06": {
+      "x": 1536,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_07": {
+      "x": 1792,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_08": {
+      "x": 0,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_09": {
+      "x": 256,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_10": {
+      "x": 512,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_11": {
+      "x": 768,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_12": {
+      "x": 1024,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_13": {
+      "x": 1280,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_14": {
+      "x": 1536,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_15": {
+      "x": 1792,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_16": {
+      "x": 0,
+      "y": 1024,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_17": {
+      "x": 256,
+      "y": 1024,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_18": {
+      "x": 512,
+      "y": 1024,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_19": {
+      "x": 768,
+      "y": 1024,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_20": {
+      "x": 1024,
+      "y": 1024,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_21": {
+      "x": 1280,
+      "y": 1024,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_22": {
+      "x": 1536,
+      "y": 1024,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_23": {
+      "x": 1792,
+      "y": 1024,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    }
+  },
+  "notes": [
+    "Frame poses were independently illustrated; uniform resampling is for atlas packing only",
+    "Roll source is the approved 24-frame rear-to-front-to-rear sequence with lengthened blue sword",
+    "Both older v2 and canonical v0.7 atlases remain intact",
+    "v5 roll must not receive an additional procedural 360-degree canvas rotation"
+  ],
+  "artNotes": [
+    "Roll frames re-authored from the approved light-background 24-frame original.",
+    "Rear hair ornaments are occluded by wing feathers; side and front ornaments remain visible.",
+    "Surrounding flash/aura art removed; v6 renderer also disables roll afterimages and flash ring.",
+    "Idle and Slash frames are byte-for-byte pixel identical to v5 (checked in artwork build).",
+    "Historical v5, v2 and original Eira atlases stay unmodified for rollback."
+  ]
+}
