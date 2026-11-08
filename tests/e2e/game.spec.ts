@@ -38,8 +38,9 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
     expect(errors).toEqual([]);
   });
 
-  test("mobile rotation pauses gameplay until portrait is restored", async ({ browser }) => {
+  test("mobile rotation pauses gameplay until portrait is restored", async ({ browser, baseURL }) => {
     const context = await browser.newContext({
+      baseURL,
       viewport: { width: 390, height: 844 },
       isMobile: true,
       hasTouch: true,
@@ -71,8 +72,9 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
     }
   });
 
-  test("rotating back to portrait preserves manual pause", async ({ browser }) => {
+  test("rotating back to portrait preserves manual pause", async ({ browser, baseURL }) => {
     const context = await browser.newContext({
+      baseURL,
       viewport: { width: 390, height: 844 },
       isMobile: true,
       hasTouch: true,
