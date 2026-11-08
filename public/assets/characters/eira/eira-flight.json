@@ -2,17 +2,36 @@
   "meta": {
     "image": "assets/characters/eira/eira-flight.png",
     "size": {
-      "w": 512,
+      "w": 1024,
       "h": 512
     },
-    "cell": 128
+    "cell": 128,
+    "artPolicy": "original-v0.7.1-only"
   },
   "animations": {
     "idle": [
       "idle_0",
       "idle_1",
       "idle_2",
-      "idle_3"
+      "idle_3",
+      "idle_4",
+      "idle_5",
+      "idle_6",
+      "idle_7"
+    ],
+    "roll": [
+      "roll_0",
+      "roll_1",
+      "roll_2",
+      "roll_3",
+      "roll_4",
+      "roll_5",
+      "roll_6",
+      "roll_7",
+      "roll_8",
+      "roll_9",
+      "roll_10",
+      "roll_11"
     ],
     "bankLeft": [
       "bank_left"
@@ -20,11 +39,16 @@
     "bankRight": [
       "bank_right"
     ],
+    "hover": [
+      "hover"
+    ],
     "thrust": [
       "thrust"
     ],
-    "attack": [
-      "slash_0",
+    "slashLeft": [
+      "slash_0"
+    ],
+    "slashRight": [
       "slash_1"
     ],
     "charge": [
@@ -32,12 +56,6 @@
     ],
     "powerUp": [
       "power_up"
-    ],
-    "roll": [
-      "roll_0",
-      "roll_1",
-      "roll_2",
-      "roll_3"
     ]
   },
   "frames": {
@@ -73,65 +91,33 @@
       "anchorX": 64,
       "anchorY": 64
     },
-    "bank_left": {
-      "x": 0,
-      "y": 128,
+    "idle_4": {
+      "x": 512,
+      "y": 0,
       "w": 128,
       "h": 128,
       "anchorX": 64,
       "anchorY": 64
     },
-    "hover": {
-      "x": 128,
-      "y": 128,
+    "idle_5": {
+      "x": 640,
+      "y": 0,
       "w": 128,
       "h": 128,
       "anchorX": 64,
       "anchorY": 64
     },
-    "bank_right": {
-      "x": 256,
-      "y": 128,
+    "idle_6": {
+      "x": 768,
+      "y": 0,
       "w": 128,
       "h": 128,
       "anchorX": 64,
       "anchorY": 64
     },
-    "thrust": {
-      "x": 384,
-      "y": 128,
-      "w": 128,
-      "h": 128,
-      "anchorX": 64,
-      "anchorY": 64
-    },
-    "slash_0": {
-      "x": 0,
-      "y": 256,
-      "w": 128,
-      "h": 128,
-      "anchorX": 64,
-      "anchorY": 64
-    },
-    "slash_1": {
-      "x": 128,
-      "y": 256,
-      "w": 128,
-      "h": 128,
-      "anchorX": 64,
-      "anchorY": 64
-    },
-    "charge": {
-      "x": 256,
-      "y": 256,
-      "w": 128,
-      "h": 128,
-      "anchorX": 64,
-      "anchorY": 64
-    },
-    "power_up": {
-      "x": 384,
-      "y": 256,
+    "idle_7": {
+      "x": 896,
+      "y": 0,
       "w": 128,
       "h": 128,
       "anchorX": 64,
@@ -139,7 +125,7 @@
     },
     "roll_0": {
       "x": 0,
-      "y": 384,
+      "y": 128,
       "w": 128,
       "h": 128,
       "anchorX": 64,
@@ -147,7 +133,7 @@
     },
     "roll_1": {
       "x": 128,
-      "y": 384,
+      "y": 128,
       "w": 128,
       "h": 128,
       "anchorX": 64,
@@ -155,13 +141,141 @@
     },
     "roll_2": {
       "x": 256,
-      "y": 384,
+      "y": 128,
       "w": 128,
       "h": 128,
       "anchorX": 64,
       "anchorY": 64
     },
     "roll_3": {
+      "x": 384,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "roll_4": {
+      "x": 512,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "roll_5": {
+      "x": 640,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "roll_6": {
+      "x": 768,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "roll_7": {
+      "x": 896,
+      "y": 128,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "roll_8": {
+      "x": 0,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "roll_9": {
+      "x": 128,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "roll_10": {
+      "x": 256,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "roll_11": {
+      "x": 384,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "bank_left": {
+      "x": 512,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "hover": {
+      "x": 640,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "bank_right": {
+      "x": 768,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "thrust": {
+      "x": 896,
+      "y": 256,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "slash_0": {
+      "x": 0,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "slash_1": {
+      "x": 128,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "charge": {
+      "x": 256,
+      "y": 384,
+      "w": 128,
+      "h": 128,
+      "anchorX": 64,
+      "anchorY": 64
+    },
+    "power_up": {
       "x": 384,
       "y": 384,
       "w": 128,
