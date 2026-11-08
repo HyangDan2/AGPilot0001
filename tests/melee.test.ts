@@ -114,7 +114,8 @@ describe("Two-hit melee rhythm", () => {
     ]);
     const t = slashes.map(s => s.tick);
     // 8 ticks between the two hits, 18 ticks before the next pair.
-    expect(t.slice(0, 7)).toEqual([1, 9, 27, 35, 53, 61, 79]);
+    // startAt: 1 initializes the world at tick 60; assert relative cadence.
+    expect(t.slice(0, 7).map((tick) => tick - t[0])).toEqual([0, 8, 26, 34, 52, 60, 78]);
     expect(shots).toBeGreaterThan(slashes.length); // ranged fire stays continuous
   });
 
