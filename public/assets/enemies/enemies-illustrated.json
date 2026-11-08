@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "image": "assets/enemies/enemies-illustrated.png",
+    "size": {
+      "w": 2048,
+      "h": 2048
+    },
+    "source": "art/source/enemies-illustrated-v1-source.zip"
+  },
+  "frames": {
+    "celestialGuardian": {
+      "x": 500,
+      "y": 290,
+      "w": 520,
+      "h": 280
+    },
+    "siren": {
+      "x": 1040,
+      "y": 20,
+      "w": 160,
+      "h": 140
+    },
+    "seraph": {
+      "x": 1220,
+      "y": 20,
+      "w": 180,
+      "h": 160
+    },
+    "golem": {
+      "x": 1420,
+      "y": 20,
+      "w": 180,
+      "h": 200
+    },
+    "kraken": {
+      "x": 20,
+      "y": 590,
+      "w": 420,
+      "h": 260
+    },
+    "seedWisp": {
+      "x": 1060,
+      "y": 240,
+      "w": 150,
+      "h": 140
+    },
+    "thornMantis": {
+      "x": 1230,
+      "y": 240,
+      "w": 170,
+      "h": 160
+    },
+    "amberMoth": {
+      "x": 1420,
+      "y": 240,
+      "w": 220,
+      "h": 180
+    },
+    "rootGuardian": {
+      "x": 1060,
+      "y": 440,
+      "w": 240,
+      "h": 220
+    },
+    "hollowStag": {
+      "x": 20,
+      "y": 910,
+      "w": 420,
+      "h": 280
+    },
+    "fateWeaver": {
+      "x": 460,
+      "y": 910,
+      "w": 560,
+      "h": 320
+    }
+  }
+}
