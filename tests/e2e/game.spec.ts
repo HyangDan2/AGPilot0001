@@ -1,6 +1,45 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
+  test("loads v5 40-frame independent Eira atlas with 24-frame rotation", async ({ page }) => {
+    await page.goto("./");
+    const valid = await page.evaluate(async () => {
+      const root = "./assets/characters/eira/";
+      const [v5, metadata, v2, legacy] = await Promise.all([
+        fetch(root + "eira-motion-v5-atlas-256.png"),
+        fetch(root + "eira-motion-v5.json"),
+        fetch(root + "eira-motion-v2-atlas-256.png"),
+        fetch(root + "eira-flight.png"),
+      ]);
+      if (!v5.ok || !metadata.ok || !v2.ok || !legacy.ok) return false;
+      const img = await createImageBitmap(await v5.blob());
+      const data = await metadata.json() as {
+        frames: Record<string, { x: number; y: number; w: number; h: number }>;
+        animations: Record<string, string[]>;
+      };
+      const order = [
+        ...data.animations.idle,
+        ...data.animations.slash_l,
+        ...data.animations.slash_r,
+        ...data.animations.roll,
+      ];
+      const ok = img.width === 2048 && img.height === 1280 &&
+        order.length === 40 && new Set(order).size === 40 &&
+        data.animations.idle.length === 8 &&
+        data.animations.slash_l.length === 4 &&
+        data.animations.slash_r.length === 4 &&
+        data.animations.roll.length === 24 &&
+        order.every((key) => {
+          const r = data.frames[key];
+          return r !== undefined && r.w === 256 && r.h === 256 &&
+            r.x >= 0 && r.y >= 0 && r.x + r.w <= img.width && r.y + r.h <= img.height;
+        });
+      img.close();
+      return ok;
+    });
+    expect(valid).toBe(true);
+  });
+
   test("loads v2 28-frame Eira atlas and retains the original fallback", async ({ page }) => {
     await page.goto("./");
     const result = await page.evaluate(async () => {

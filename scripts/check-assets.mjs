@@ -124,7 +124,38 @@ function main() {
     report.checked++;
   }
 
-  const maxImageBudget = 6.0 * 1024 * 1024; // 6 MB
+  // Eira v5 is additive: full 40-frame artwork plus its 28-frame v2 fallback
+  // are retained separately to allow instant rollback.
+  const v5Img = path.resolve("public/assets/characters/eira/eira-motion-v5-atlas-256.png");
+  const v5Json = path.resolve("public/assets/characters/eira/eira-motion-v5.json");
+  if (!fs.existsSync(v5Img) || !fs.existsSync(v5Json)) {
+    console.error("FAIL: Eira motion v5 atlas or metadata is missing");
+    hasError = true;
+  } else {
+    const png = fs.readFileSync(v5Img);
+    const metadata = JSON.parse(fs.readFileSync(v5Json, "utf8"));
+    const expected = { idle: 8, slash_l: 4, slash_r: 4, roll: 24 };
+    const countsMatch = Object.entries(expected).every(
+      ([animation, count]) => metadata.animations?.[animation]?.length === count,
+    );
+    const allFrames = Object.values(metadata.frames ?? {});
+    const rectsMatch = allFrames.length === 40 && allFrames.every(
+      (f) => f.x >= 0 && f.y >= 0 && f.w === 256 && f.h === 256 &&
+        f.x + f.w <= 2048 && f.y + f.h <= 1280,
+    );
+    const signatureMatches = png.subarray(0, 8).toString("hex") === "89504e470d0a1a0a";
+    const pngDimensionsMatch = signatureMatches &&
+      png.readUInt32BE(16) === 2048 && png.readUInt32BE(20) === 1280;
+    if (!countsMatch || !rectsMatch || !pngDimensionsMatch) {
+      console.error("FAIL: Invalid Eira motion v5 atlas dimensions or frame map");
+      hasError = true;
+    }
+    report.totalBytes += png.length;
+    report.checked++;
+  }
+
+  // The v2 atlas and original art are preserved in this 9 MB release image budget.
+  const maxImageBudget = 9.0 * 1024 * 1024;
   if (report.totalBytes > maxImageBudget) {
     console.error(`FAIL: Asset budget exceeded: ${(report.totalBytes / 1024 / 1024).toFixed(2)} MB > 6.0 MB`);
     hasError = true;

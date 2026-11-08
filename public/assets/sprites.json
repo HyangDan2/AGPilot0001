@@ -25,9 +25,11 @@
       "drawH": 160,
       "facing": "up",
       "src": "assets/characters/eira/eira-flight.png",
-      "motionAtlas": "assets/characters/eira/eira-motion-v2-atlas-256.png",
-      "motionMeta": "assets/characters/eira/eira-motion-v2.json",
-      "legacyAtlas": "assets/characters/eira/eira-flight.png"
+      "motionAtlas": "assets/characters/eira/eira-motion-v5-atlas-256.png",
+      "motionMeta": "assets/characters/eira/eira-motion-v5.json",
+      "legacyAtlas": "assets/characters/eira/eira-flight.png",
+      "previousMotionAtlas": "assets/characters/eira/eira-motion-v2-atlas-256.png",
+      "previousMotionMeta": "assets/characters/eira/eira-motion-v2.json"
     },
     "kestrel": {
       "w": 76,

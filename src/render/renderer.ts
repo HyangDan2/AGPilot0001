@@ -33,6 +33,25 @@ interface SpriteRect {
 }
 
 const EIRA_CELL = 128;
+
+/** 40 newly illustrated frames: Idle 8, Slash L/R 4 each, true 360-view Roll 24.
+ * All earlier Eira atlases stay in place as fallback/recovery assets.
+ */
+const EIRA_MOTION_V5_CELL = 256;
+const EIRA_MOTION_V5_ORDER = [
+  ...Array.from({ length: 8 }, (_, i) => `idle_${String(i).padStart(2, "0")}`),
+  ...Array.from({ length: 4 }, (_, i) => `slash_l_${String(i).padStart(2, "0")}`),
+  ...Array.from({ length: 4 }, (_, i) => `slash_r_${String(i).padStart(2, "0")}`),
+  ...Array.from({ length: 24 }, (_, i) => `roll_${String(i).padStart(2, "0")}`),
+];
+const EIRA_MOTION_V5_FRAMES: Record<string, { sx: number; sy: number }> = Object.fromEntries(
+  EIRA_MOTION_V5_ORDER.map((key, i) => [
+    key,
+    { sx: (i % 8) * EIRA_MOTION_V5_CELL, sy: Math.floor(i / 8) * EIRA_MOTION_V5_CELL },
+  ]),
+);
+
+
 /** v2 frames are a separate, approved source-derived atlas. Legacy art is untouched. */
 const EIRA_MOTION_V2_CELL = 256;
 const EIRA_MOTION_V2_ORDER = ["idle_00","idle_01","idle_02","idle_03","idle_04","idle_05","idle_06","idle_07","slash_l_00","slash_l_01","slash_l_02","slash_l_03","slash_r_00","slash_r_01","slash_r_02","slash_r_03","roll_00","roll_01","roll_02","roll_03","roll_04","roll_05","roll_06","roll_07","roll_08","roll_09","roll_10","roll_11"] as const;
@@ -143,6 +162,8 @@ export class GameRenderer {
   public reducedMotion = false;
 
   private eiraImg: HTMLImageElement | null = null;
+  private eiraMotionV5Img: HTMLImageElement | null = null;
+  private eiraMotionV5Loaded = false;
   private eiraMotionV2Img: HTMLImageElement | null = null;
   private eiraMotionV2Loaded = false;
   private enemiesImg: HTMLImageElement | null = null;
@@ -175,6 +196,16 @@ export class GameRenderer {
       this.eiraMotionV2Loaded = true;
     };
     motionV2.src = "./assets/characters/eira/eira-motion-v2-atlas-256.png";
+
+    // New independent 40-frame animation: never overwrite or mutate v2/legacy art.
+    const motionV5 = new Image();
+    motionV5.onload = () => {
+      if (motionV5.naturalWidth === 2048 && motionV5.naturalHeight === 1280) {
+        this.eiraMotionV5Img = motionV5;
+        this.eiraMotionV5Loaded = true;
+      }
+    };
+    motionV5.src = "./assets/characters/eira/eira-motion-v5-atlas-256.png";
 
     const enemies = new Image();
     enemies.src = "./assets/enemies/enemies-atlas.png";
@@ -487,7 +518,12 @@ export class GameRenderer {
 
     // 10. Melee Slash Arc (Swept Blade Visuals)
     // v2 slash sprites already include their own blade trails; avoid a duplicate arc.
-    if (world.player.downTimer === 0 && world.player.meleeSwing && !this.eiraMotionV2Loaded) {
+    if (
+      world.player.downTimer === 0 &&
+      world.player.meleeSwing &&
+      !this.eiraMotionV5Loaded &&
+      !this.eiraMotionV2Loaded
+    ) {
       this.drawMeleeSlash(world.player);
     }
 
@@ -1402,7 +1438,8 @@ export class GameRenderer {
   private drawPlayer(p: Player, tick: number): void {
     const ctx = this.ctx;
     const atlasFrames = this.eiraImg?.naturalWidth === 512 ? EIRA_FRAMES_LEGACY : EIRA_FRAMES;
-    const useMotionV2 = this.eiraMotionV2Loaded && this.eiraMotionV2Img !== null;
+    const useMotionV5 = this.eiraMotionV5Loaded && this.eiraMotionV5Img !== null;
+    const useMotionV2 = !useMotionV5 && this.eiraMotionV2Loaded && this.eiraMotionV2Img !== null;
     ctx.save();
     ctx.translate(p.x, p.y);
 
@@ -1442,7 +1479,11 @@ export class GameRenderer {
       ];
       rollFrameKey = rollFrames[rollStep12];
 
-      if (useMotionV2) {
+      if (useMotionV5) {
+        // Roll 24 frames already illustrate the full rear -> side -> front -> side -> rear
+        // rotation. No additional whole-canvas rotation or frame interpolation is allowed.
+        scale = 1;
+      } else if (useMotionV2) {
         // The 12 v2 poses already contain the lean/mirror progression.
         // Do not also rotate and squeeze the whole sprite by 360 degrees.
         ctx.rotate(Math.sin(rollProgress * Math.PI * 2) * 0.035);
@@ -1478,12 +1519,22 @@ export class GameRenderer {
     ctx.fill();
 
     // Three transparent afterimages. v2 samples previous approved roll frames.
-    if (isRolling && (useMotionV2 || (this.eiraLoaded && this.eiraImg))) {
+    if (isRolling && (useMotionV5 || useMotionV2 || (this.eiraLoaded && this.eiraImg))) {
       for (const lag of [0.06, 0.12, 0.18]) {
         const pastProgress = Math.max(0, rollProgress - lag);
         ctx.save();
         ctx.globalAlpha = 0.35 * (1 - lag / 0.22);
-        if (useMotionV2 && this.eiraMotionV2Img) {
+        if (useMotionV5 && this.eiraMotionV5Img) {
+          const pastIndex = Math.min(23, Math.floor(pastProgress * 24));
+          const key = `roll_${String(pastIndex).padStart(2, "0")}`;
+          const past = EIRA_MOTION_V5_FRAMES[key];
+          ctx.translate((rollProgress - pastProgress) * -42, (rollProgress - pastProgress) * 26);
+          ctx.drawImage(
+            this.eiraMotionV5Img, past.sx, past.sy,
+            EIRA_MOTION_V5_CELL, EIRA_MOTION_V5_CELL,
+            -80, -80, 160, 160,
+          );
+        } else if (useMotionV2 && this.eiraMotionV2Img) {
           const pastIndex = Math.min(11, Math.floor(pastProgress * 12));
           const key = `roll_${String(pastIndex).padStart(2, "0")}`;
           const past = EIRA_MOTION_V2_FRAMES[key];
@@ -1506,7 +1557,29 @@ export class GameRenderer {
     }
 
 
-    if (useMotionV2 && this.eiraMotionV2Img) {
+    if (useMotionV5 && this.eiraMotionV5Img) {
+      // Dedicated 40-frame v5: 8 idle + 4 slash L + 4 slash R + 24 roll.
+      let v5Key: string;
+      if (isRolling) {
+        const index = Math.min(23, Math.floor(rollProgress * 24));
+        v5Key = `roll_${String(index).padStart(2, "0")}`;
+      } else if (p.meleeSwing) {
+        // Each sword swing is 8 simulation ticks, four independently drawn poses.
+        const elapsed = 8 - Math.max(1, p.meleeSwing.duration);
+        const index = Math.min(3, Math.floor(elapsed / 2));
+        const motion = p.meleeSwing.direction === "l2r" ? "slash_l" : "slash_r";
+        v5Key = `${motion}_${String(index).padStart(2, "0")}`;
+      } else {
+        const index = Math.floor((tick % 40) / 5); // 8 frames at 12 FPS
+        v5Key = `idle_${String(index).padStart(2, "0")}`;
+      }
+      const frame = EIRA_MOTION_V5_FRAMES[v5Key] ?? EIRA_MOTION_V5_FRAMES.idle_00;
+      ctx.drawImage(
+        this.eiraMotionV5Img, frame.sx, frame.sy,
+        EIRA_MOTION_V5_CELL, EIRA_MOTION_V5_CELL,
+        -80, -80, 160, 160,
+      );
+    } else if (useMotionV2 && this.eiraMotionV2Img) {
       // Dedicated 28-frame v2: 8 idle + 4 slash-left + 4 slash-right + 12 roll.
       // Movement banks the existing pose without swapping back to outdated character art.
       let v2Key: string;
