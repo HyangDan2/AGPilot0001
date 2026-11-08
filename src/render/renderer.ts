@@ -38,6 +38,38 @@ const EIRA_FRAMES: Record<string, { sx: number; sy: number }> = {
   idle_1: { sx: 128, sy: 0 },
   idle_2: { sx: 256, sy: 0 },
   idle_3: { sx: 384, sy: 0 },
+  idle_4: { sx: 512, sy: 0 },
+  idle_5: { sx: 640, sy: 0 },
+  idle_6: { sx: 768, sy: 0 },
+  idle_7: { sx: 896, sy: 0 },
+  roll_0: { sx: 0, sy: 128 },
+  roll_1: { sx: 128, sy: 128 },
+  roll_2: { sx: 256, sy: 128 },
+  roll_3: { sx: 384, sy: 128 },
+  roll_4: { sx: 512, sy: 128 },
+  roll_5: { sx: 640, sy: 128 },
+  roll_6: { sx: 768, sy: 128 },
+  roll_7: { sx: 896, sy: 128 },
+  roll_8: { sx: 0, sy: 256 },
+  roll_9: { sx: 128, sy: 256 },
+  roll_10: { sx: 256, sy: 256 },
+  roll_11: { sx: 384, sy: 256 },
+  bank_left: { sx: 512, sy: 256 },
+  hover: { sx: 640, sy: 256 },
+  bank_right: { sx: 768, sy: 256 },
+  thrust: { sx: 896, sy: 256 },
+  slash_0: { sx: 0, sy: 384 },
+  slash_1: { sx: 128, sy: 384 },
+  charge: { sx: 256, sy: 384 },
+  power_up: { sx: 384, sy: 384 },
+};
+
+// Fallback to the approved 512x512 v0.7 atlas until the expanded atlas finishes building.
+const EIRA_FRAMES_LEGACY: Record<string, { sx: number; sy: number }> = {
+  idle_0: { sx: 0, sy: 0 },
+  idle_1: { sx: 128, sy: 0 },
+  idle_2: { sx: 256, sy: 0 },
+  idle_3: { sx: 384, sy: 0 },
   idle_4: { sx: 384, sy: 0 },
   idle_5: { sx: 256, sy: 0 },
   idle_6: { sx: 128, sy: 0 },
@@ -1332,6 +1364,7 @@ export class GameRenderer {
 
   private drawPlayer(p: Player, tick: number): void {
     const ctx = this.ctx;
+    const atlasFrames = this.eiraImg?.naturalWidth === 512 ? EIRA_FRAMES_LEGACY : EIRA_FRAMES;
     ctx.save();
     ctx.translate(p.x, p.y);
 
@@ -1409,8 +1442,8 @@ export class GameRenderer {
         ctx.globalAlpha = 0.35 * (1 - lag / 0.22);
         ctx.drawImage(
           this.eiraImg,
-          EIRA_FRAMES[rollFrameKey].sx,
-          EIRA_FRAMES[rollFrameKey].sy,
+          atlasFrames[rollFrameKey].sx,
+          atlasFrames[rollFrameKey].sy,
           EIRA_CELL,
           EIRA_CELL,
           -80,
@@ -1449,7 +1482,7 @@ export class GameRenderer {
         frameKey = idleCycle[animStep8];
       }
 
-      const frame = EIRA_FRAMES[frameKey] || EIRA_FRAMES.idle_0;
+      const frame = atlasFrames[frameKey] || atlasFrames.idle_0;
       const drawSize = 160;
       const half = drawSize / 2;
       ctx.drawImage(

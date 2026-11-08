@@ -1,0 +1,33 @@
+name: Rebuild approved Eira artwork
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/restore-eira-original.mjs'
+      - 'public/assets/characters/eira/canonical/**'
+      - '.github/workflows/restore-eira-art.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  rebuild:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run art:eira
+      - name: Commit approved source-based sprites
+        run: |
+          git add public/assets/characters/eira/eira-flight.png public/assets/characters/eira/eira-flight.json public/assets/characters/eira/frames/
+          if ! git diff --cached --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "art: rebuild Eira PNG atlas from approved v0.7.1 originals [skip ci]"
+            git push origin HEAD:main
+          fi
