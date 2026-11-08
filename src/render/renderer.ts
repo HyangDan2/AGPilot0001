@@ -33,6 +33,16 @@ interface SpriteRect {
 }
 
 const EIRA_CELL = 128;
+/** v2 frames are a separate, approved source-derived atlas. Legacy art is untouched. */
+const EIRA_MOTION_V2_CELL = 256;
+const EIRA_MOTION_V2_ORDER = ["idle_00","idle_01","idle_02","idle_03","idle_04","idle_05","idle_06","idle_07","slash_l_00","slash_l_01","slash_l_02","slash_l_03","slash_r_00","slash_r_01","slash_r_02","slash_r_03","roll_00","roll_01","roll_02","roll_03","roll_04","roll_05","roll_06","roll_07","roll_08","roll_09","roll_10","roll_11"] as const;
+const EIRA_MOTION_V2_FRAMES: Record<string, { sx: number; sy: number }> = Object.fromEntries(
+  EIRA_MOTION_V2_ORDER.map((key, i) => [
+    key,
+    { sx: (i % 8) * EIRA_MOTION_V2_CELL, sy: Math.floor(i / 8) * EIRA_MOTION_V2_CELL },
+  ]),
+);
+
 const EIRA_FRAMES: Record<string, { sx: number; sy: number }> = {
   idle_0: { sx: 0, sy: 0 },
   idle_1: { sx: 128, sy: 0 },
@@ -133,6 +143,8 @@ export class GameRenderer {
   public reducedMotion = false;
 
   private eiraImg: HTMLImageElement | null = null;
+  private eiraMotionV2Img: HTMLImageElement | null = null;
+  private eiraMotionV2Loaded = false;
   private enemiesImg: HTMLImageElement | null = null;
   private illustratedEnemiesImg: HTMLImageElement | null = null;
   private eiraLoaded = false;
@@ -155,6 +167,14 @@ export class GameRenderer {
       this.eiraImg = eira;
       this.eiraLoaded = true;
     };
+
+    // Separate, versioned 28-frame atlas. Keep the original image as a permanent fallback.
+    const motionV2 = new Image();
+    motionV2.onload = () => {
+      this.eiraMotionV2Img = motionV2;
+      this.eiraMotionV2Loaded = true;
+    };
+    motionV2.src = "./assets/characters/eira/eira-motion-v2-atlas-256.png";
 
     const enemies = new Image();
     enemies.src = "./assets/enemies/enemies-atlas.png";
@@ -466,7 +486,8 @@ export class GameRenderer {
     this.drawBullets(world);
 
     // 10. Melee Slash Arc (Swept Blade Visuals)
-    if (world.player.downTimer === 0 && world.player.meleeSwing) {
+    // v2 slash sprites already include their own blade trails; avoid a duplicate arc.
+    if (world.player.downTimer === 0 && world.player.meleeSwing && !this.eiraMotionV2Loaded) {
       this.drawMeleeSlash(world.player);
     }
 
@@ -1381,6 +1402,7 @@ export class GameRenderer {
   private drawPlayer(p: Player, tick: number): void {
     const ctx = this.ctx;
     const atlasFrames = this.eiraImg?.naturalWidth === 512 ? EIRA_FRAMES_LEGACY : EIRA_FRAMES;
+    const useMotionV2 = this.eiraMotionV2Loaded && this.eiraMotionV2Img !== null;
     ctx.save();
     ctx.translate(p.x, p.y);
 
@@ -1420,14 +1442,21 @@ export class GameRenderer {
       ];
       rollFrameKey = rollFrames[rollStep12];
 
-      // 360° axial rotation angle
-      const spinAngle = rollProgress * Math.PI * 2;
-      ctx.rotate(spinAngle);
-
-      scale = 1 + Math.sin(rollProgress * Math.PI) * 0.42;
-      const scaleX = (0.35 + 0.65 * Math.abs(Math.cos(spinAngle))) * scale;
-      const scaleY = (0.75 + 0.25 * Math.abs(Math.sin(spinAngle))) * scale;
-      ctx.scale(scaleX, scaleY);
+      if (useMotionV2) {
+        // The 12 v2 poses already contain the lean/mirror progression.
+        // Do not also rotate and squeeze the whole sprite by 360 degrees.
+        ctx.rotate(Math.sin(rollProgress * Math.PI * 2) * 0.035);
+        scale = 1 + Math.sin(rollProgress * Math.PI) * 0.08;
+        ctx.scale(scale, scale);
+      } else {
+        // Legacy fallback retains its existing 360 degree spin.
+        const spinAngle = rollProgress * Math.PI * 2;
+        ctx.rotate(spinAngle);
+        scale = 1 + Math.sin(rollProgress * Math.PI) * 0.42;
+        const scaleX = (0.35 + 0.65 * Math.abs(Math.cos(spinAngle))) * scale;
+        const scaleY = (0.75 + 0.25 * Math.abs(Math.sin(spinAngle))) * scale;
+        ctx.scale(scaleX, scaleY);
+      }
     }
 
     // Divine ground drop shadow
@@ -1448,30 +1477,60 @@ export class GameRenderer {
     ctx.arc(0, 60 + (tick % 7) * 3, 3, 0, Math.PI * 2);
     ctx.fill();
 
-    // Phase 5: 3 Cyan/Azure Afterimages during Roll
-    if (isRolling && this.eiraLoaded && this.eiraImg) {
+    // Three transparent afterimages. v2 samples previous approved roll frames.
+    if (isRolling && (useMotionV2 || (this.eiraLoaded && this.eiraImg))) {
       for (const lag of [0.06, 0.12, 0.18]) {
         const pastProgress = Math.max(0, rollProgress - lag);
-        const pastAngle = pastProgress * Math.PI * 2;
         ctx.save();
-        ctx.rotate(pastAngle - rollProgress * Math.PI * 2);
         ctx.globalAlpha = 0.35 * (1 - lag / 0.22);
-        ctx.drawImage(
-          this.eiraImg,
-          atlasFrames[rollFrameKey].sx,
-          atlasFrames[rollFrameKey].sy,
-          EIRA_CELL,
-          EIRA_CELL,
-          -80,
-          -80,
-          160,
-          160,
-        );
+        if (useMotionV2 && this.eiraMotionV2Img) {
+          const pastIndex = Math.min(11, Math.floor(pastProgress * 12));
+          const key = `roll_${String(pastIndex).padStart(2, "0")}`;
+          const past = EIRA_MOTION_V2_FRAMES[key];
+          ctx.translate((rollProgress - pastProgress) * -42, (rollProgress - pastProgress) * 26);
+          ctx.drawImage(
+            this.eiraMotionV2Img, past.sx, past.sy,
+            EIRA_MOTION_V2_CELL, EIRA_MOTION_V2_CELL,
+            -80, -80, 160, 160,
+          );
+        } else if (this.eiraLoaded && this.eiraImg) {
+          const pastAngle = pastProgress * Math.PI * 2;
+          ctx.rotate(pastAngle - rollProgress * Math.PI * 2);
+          ctx.drawImage(
+            this.eiraImg, atlasFrames[rollFrameKey].sx, atlasFrames[rollFrameKey].sy,
+            EIRA_CELL, EIRA_CELL, -80, -80, 160, 160,
+          );
+        }
         ctx.restore();
       }
     }
 
-    if (this.eiraLoaded && this.eiraImg) {
+
+    if (useMotionV2 && this.eiraMotionV2Img) {
+      // Dedicated 28-frame v2: 8 idle + 4 slash-left + 4 slash-right + 12 roll.
+      // Movement banks the existing pose without swapping back to outdated character art.
+      let v2Key: string;
+      if (isRolling) {
+        const rollIndex = Math.min(11, Math.floor(rollProgress * 12));
+        v2Key = `roll_${String(rollIndex).padStart(2, "0")}`;
+      } else if (p.meleeSwing) {
+        // A sword swing lasts 8 simulation ticks; 4 art poses play for 2 ticks each.
+        const elapsed = 8 - Math.max(1, p.meleeSwing.duration);
+        const index = Math.min(3, Math.floor(elapsed / 2));
+        const motion = p.meleeSwing.direction === "l2r" ? "slash_l" : "slash_r";
+        v2Key = `${motion}_${String(index).padStart(2, "0")}`;
+      } else {
+        const idleIndex = Math.floor((tick % 40) / 5); // 8 poses at 12 FPS
+        v2Key = `idle_${String(idleIndex).padStart(2, "0")}`;
+      }
+      const frame = EIRA_MOTION_V2_FRAMES[v2Key] ?? EIRA_MOTION_V2_FRAMES.idle_00;
+      ctx.drawImage(
+        this.eiraMotionV2Img,
+        frame.sx, frame.sy, EIRA_MOTION_V2_CELL, EIRA_MOTION_V2_CELL,
+        -80, -80, 160, 160,
+      );
+    } else if (this.eiraLoaded && this.eiraImg) {
+      // Existing original atlas remains 100% intact as fallback.
       // Phase 3: Animation Priority Resolution
       let frameKey = "idle_0";
       if (isRolling) {

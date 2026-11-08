@@ -95,6 +95,35 @@ function main() {
     report.checked++;
   }
 
+  // Approved Eira Motion v2 is an additive asset; never mutate the existing Eira atlas.
+  const v2Img = path.resolve("public/assets/characters/eira/eira-motion-v2-atlas-256.png");
+  const v2Json = path.resolve("public/assets/characters/eira/eira-motion-v2.json");
+  const legacyEira = path.resolve("public/assets/characters/eira/eira-flight.png");
+  if (!fs.existsSync(v2Img) || !fs.existsSync(v2Json) || !fs.existsSync(legacyEira)) {
+    console.error("FAIL: Missing Eira v2 sprite assets or original fallback");
+    hasError = true;
+  } else {
+    const png = fs.readFileSync(v2Img);
+    const frameData = JSON.parse(fs.readFileSync(v2Json, "utf8"));
+    const expected = { idle: 8, slash_l: 4, slash_r: 4, roll: 12 };
+    const validGroups = Object.entries(expected).every(
+      ([name, count]) => frameData.animations?.[name]?.length === count,
+    );
+    const allFrames = Object.values(frameData.frames ?? {});
+    const validRects = allFrames.length === 28 && allFrames.every(
+      (f) => f.x >= 0 && f.y >= 0 && f.w === 256 && f.h === 256 &&
+             f.x + f.w <= 2048 && f.y + f.h <= 1024,
+    );
+    const validPng = png.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" &&
+                     png.readUInt32BE(16) === 2048 && png.readUInt32BE(20) === 1024;
+    if (!validPng || !validGroups || !validRects) {
+      console.error("FAIL: Invalid Eira v2 28-frame atlas coordinates or animation groups");
+      hasError = true;
+    }
+    report.totalBytes += png.length;
+    report.checked++;
+  }
+
   const maxImageBudget = 6.0 * 1024 * 1024; // 6 MB
   if (report.totalBytes > maxImageBudget) {
     console.error(`FAIL: Asset budget exceeded: ${(report.totalBytes / 1024 / 1024).toFixed(2)} MB > 6.0 MB`);

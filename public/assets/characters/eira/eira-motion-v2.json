@@ -1,0 +1,304 @@
+{
+  "version": "2.0.0",
+  "meta": {
+    "image": "assets/characters/eira/eira-motion-v2-atlas-256.png",
+    "source": "art/source/eira-motion-v2-master-atlas-512.png",
+    "size": {
+      "w": 2048,
+      "h": 1024
+    },
+    "cell": 256,
+    "columns": 8,
+    "rows": 4,
+    "coordinateOrigin": "top-left",
+    "anchor": {
+      "x": 128,
+      "y": 128
+    },
+    "legacyBackup": "assets/characters/eira/eira-flight.png",
+    "policy": "approved-original-art; legacy kept intact"
+  },
+  "animations": {
+    "idle": [
+      "idle_00",
+      "idle_01",
+      "idle_02",
+      "idle_03",
+      "idle_04",
+      "idle_05",
+      "idle_06",
+      "idle_07"
+    ],
+    "slash_l": [
+      "slash_l_00",
+      "slash_l_01",
+      "slash_l_02",
+      "slash_l_03"
+    ],
+    "slash_r": [
+      "slash_r_00",
+      "slash_r_01",
+      "slash_r_02",
+      "slash_r_03"
+    ],
+    "roll": [
+      "roll_00",
+      "roll_01",
+      "roll_02",
+      "roll_03",
+      "roll_04",
+      "roll_05",
+      "roll_06",
+      "roll_07",
+      "roll_08",
+      "roll_09",
+      "roll_10",
+      "roll_11"
+    ]
+  },
+  "timing": {
+    "idle": {
+      "fps": 12,
+      "loop": true
+    },
+    "slash": {
+      "framesPerHit": 4,
+      "swingTicks": 8,
+      "firstToSecondTicks": 8,
+      "recoveryTicks": 18,
+      "simulationFps": 60
+    },
+    "roll": {
+      "frames": 12,
+      "simulationDurationTicks": 72,
+      "frameIndex": "floor(progress*12)",
+      "preTransformed": true
+    }
+  },
+  "frames": {
+    "idle_00": {
+      "x": 0,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_01": {
+      "x": 256,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_02": {
+      "x": 512,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_03": {
+      "x": 768,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_04": {
+      "x": 1024,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_05": {
+      "x": 1280,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_06": {
+      "x": 1536,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "idle_07": {
+      "x": 1792,
+      "y": 0,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_l_00": {
+      "x": 0,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_l_01": {
+      "x": 256,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_l_02": {
+      "x": 512,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_l_03": {
+      "x": 768,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_r_00": {
+      "x": 1024,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_r_01": {
+      "x": 1280,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_r_02": {
+      "x": 1536,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "slash_r_03": {
+      "x": 1792,
+      "y": 256,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_00": {
+      "x": 0,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_01": {
+      "x": 256,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_02": {
+      "x": 512,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_03": {
+      "x": 768,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_04": {
+      "x": 1024,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_05": {
+      "x": 1280,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_06": {
+      "x": 1536,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_07": {
+      "x": 1792,
+      "y": 512,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_08": {
+      "x": 0,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_09": {
+      "x": 256,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_10": {
+      "x": 512,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    },
+    "roll_11": {
+      "x": 768,
+      "y": 768,
+      "w": 256,
+      "h": 256,
+      "anchorX": 128,
+      "anchorY": 128
+    }
+  }
+}

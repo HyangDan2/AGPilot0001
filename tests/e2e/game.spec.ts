@@ -1,6 +1,39 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
+  test("loads v2 28-frame Eira atlas and retains the original fallback", async ({ page }) => {
+    await page.goto("./");
+    const result = await page.evaluate(async () => {
+      const base = "./assets/characters/eira/";
+      const [sprite, metadata, original] = await Promise.all([
+        fetch(base + "eira-motion-v2-atlas-256.png"),
+        fetch(base + "eira-motion-v2.json"),
+        fetch(base + "eira-flight.png"),
+      ]);
+      if (!sprite.ok || !metadata.ok || !original.ok) return false;
+      const img = await createImageBitmap(await sprite.blob());
+      const meta = await metadata.json() as {
+        frames: Record<string, { x: number; y: number; w: number; h: number }>;
+        animations: Record<string, string[]>;
+      };
+      const keys = Object.keys(meta.frames);
+      const passes = img.width === 2048 && img.height === 1024 &&
+        keys.length === 28 &&
+        meta.animations.idle.length === 8 &&
+        meta.animations.slash_l.length === 4 &&
+        meta.animations.slash_r.length === 4 &&
+        meta.animations.roll.length === 12 &&
+        keys.every((key) => {
+          const r = meta.frames[key];
+          return r.x >= 0 && r.y >= 0 && r.w === 256 && r.h === 256 &&
+            r.x + r.w <= img.width && r.y + r.h <= img.height;
+        });
+      img.close();
+      return passes;
+    });
+    expect(result).toBe(true);
+  });
+
   test("loads approved illustrated enemy atlas with 11 replacement frames", async ({ page }) => {
     await page.goto("./");
     const loaded = await page.evaluate(async () => {
