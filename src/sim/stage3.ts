@@ -26,7 +26,7 @@ export const STAGE3_WAVES: WaveDef[] = [
   { at: 18.0, kind: "amberMoth", path: "hover", x: 470, y: -90 },
 
   // 0:20.0: Spore Wisp flank pincer ambush (5 + 5 = 10 enemies)
-  { at: 20.0, kind: "seedWisp", formation: "vee", count: 5, spacing: 32, path: "swoopL", x: 180, y: -40 },
+  { at: 20.0, kind: "seedWisp", formation: "vee", count: 5, spacing: 32, path: "swoopL", x: 180, y: -40, reward: "aegis" },
   { at: 20.0, kind: "seedWisp", formation: "vee", count: 5, spacing: 32, path: "swoopR", x: 540, y: -40 },
 
   // 0:23.0 & 0:24.5: Root Guardian ancient ground nodes (1 + 1 = 2 enemies)

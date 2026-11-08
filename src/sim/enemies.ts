@@ -547,8 +547,9 @@ export function killEnemy(world: World, enemy: Enemy, events: GameEvent[]): void
     world.phaseTimer = 180;
   }
 
-  // Midboss defeat handling (Albatross, Kraken, or Hollow Stag)
+  // Each midboss drops an Azure Aegis repair item, independent of formation rewards.
   if (enemy.kind === "albatross" || enemy.kind === "kraken" || enemy.kind === "hollowStag") {
+    world.pickups.push({ id: world.nextId++, kind: "aegis", x: enemy.x, y: enemy.y, age: 0, alive: true });
     events.push({ t: "midbossDefeated", kind: enemy.kind });
     world.phase = "play";
     // Advance stageTick so next wave begins in ~2.0 seconds

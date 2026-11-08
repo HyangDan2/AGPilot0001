@@ -6,7 +6,7 @@ import { STAGE3_WAVES } from "../src/sim/stage3";
 import { fireEnemyBullet } from "../src/sim/patterns";
 import { GameApp } from "../src/core/loop";
 import { GameEvent, NO_INPUT } from "../src/sim/types";
-import { damageEnemy } from "../src/sim/enemies";
+import { damageEnemy, spawnEnemy } from "../src/sim/enemies";
 import { addManaUnits } from "../src/sim/player";
 
 describe("Three-Stage Premium Campaign (v0.9.0)", () => {
@@ -407,5 +407,21 @@ describe("Azure Aegis Orbs & Gungnir Ultimate v2", () => {
     // The stageTick should have been re-anchored to ~2.0s before the next wave (at 48.0s -> 46.0s = 2760 ticks)
     // rather than waiting 14 seconds!
     expect(w.stageTick).toBe(2760); // (48 - 2) * 60 = 2760
+  });
+});
+
+describe("Aegis repair item availability", () => {
+  it("offers a formation-clear repair reward in all three stages", () => {
+    for (const waves of [STAGE1_WAVES, STAGE2_WAVES, STAGE3_WAVES]) {
+      expect(waves.some((wave) => wave.reward === "aegis")).toBe(true);
+    }
+  });
+  it("drops a repair pickup from each midboss", () => {
+    for (const [stage, kind] of [[1, "albatross"], [2, "kraken"], [3, "hollowStag"]] as const) {
+      const w = createWorld({ seed: 11, startAt: 1, startStage: stage });
+      const midboss = spawnEnemy(w, kind, 360, 300, "hover");
+      damageEnemy(w, midboss, midboss.maxHp + 1, []);
+      expect(w.pickups.filter((item) => item.kind === "aegis")).toHaveLength(1);
+    }
   });
 });

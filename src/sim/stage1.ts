@@ -31,7 +31,7 @@ export const STAGE1_WAVES: WaveDef[] = [
 
   // 0:18 Armored Behemoth with escort gargoyles
   { at: 18.0, kind: "condor", path: "hover", x: 360, y: -90 },
-  { at: 20.0, kind: "kestrel", formation: "vee", count: 3, spacing: 36, path: "swoopL", x: 180, y: -40 },
+  { at: 20.0, kind: "kestrel", formation: "vee", count: 3, spacing: 36, path: "swoopL", x: 180, y: -40, reward: "aegis" },
   { at: 20.0, kind: "kestrel", formation: "vee", count: 3, spacing: 36, path: "swoopR", x: 540, y: -40 },
 
   // 0:23 Floating Arcane Bastions & dive phantoms

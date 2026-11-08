@@ -26,7 +26,7 @@ export const STAGE2_WAVES: WaveDef[] = [
   { at: 18.5, kind: "golem", path: "hover", x: 480, y: -90 },
 
   // 0:20.0: Abyssal Phantom flank ambush (4 + 4 = 8 enemies)
-  { at: 20.0, kind: "siren", formation: "vee", count: 4, spacing: 34, path: "swoopL", x: 180, y: -40 },
+  { at: 20.0, kind: "siren", formation: "vee", count: 4, spacing: 34, path: "swoopL", x: 180, y: -40, reward: "aegis" },
   { at: 20.0, kind: "siren", formation: "vee", count: 4, spacing: 34, path: "swoopR", x: 540, y: -40 },
 
   // 0:23.0: Mana Storm Elites (4 enemies)
