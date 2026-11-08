@@ -71,6 +71,30 @@ function main() {
     report.sprites[id] = sp;
   }
 
+  // The 11 replacement sprites are bundled in a separate approved atlas.
+  // Reject a missing/wrong-size atlas so deployment cannot silently show SVGs.
+  const illustratedPath = path.resolve("public/assets/enemies/enemies-illustrated.png");
+  const illustratedMeta = path.resolve("public/assets/enemies/enemies-illustrated.json");
+  if (!fs.existsSync(illustratedPath) || !fs.existsSync(illustratedMeta)) {
+    console.error("FAIL: Missing approved illustrated enemy atlas or metadata");
+    hasError = true;
+  } else {
+    const png = fs.readFileSync(illustratedPath);
+    const signature = "89504e470d0a1a0a";
+    if (png.subarray(0, 8).toString("hex") !== signature ||
+        png.readUInt32BE(16) !== 2048 || png.readUInt32BE(20) !== 2048) {
+      console.error("FAIL: Invalid illustrated enemy atlas PNG dimensions");
+      hasError = true;
+    }
+    const artMeta = JSON.parse(fs.readFileSync(illustratedMeta, "utf8"));
+    if (Object.keys(artMeta.frames ?? {}).length !== 11) {
+      console.error("FAIL: Expected 11 illustrated enemies");
+      hasError = true;
+    }
+    report.totalBytes += png.length;
+    report.checked++;
+  }
+
   const maxImageBudget = 6.0 * 1024 * 1024; // 6 MB
   if (report.totalBytes > maxImageBudget) {
     console.error(`FAIL: Asset budget exceeded: ${(report.totalBytes / 1024 / 1024).toFixed(2)} MB > 6.0 MB`);

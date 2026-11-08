@@ -117,6 +117,13 @@ const ENEMY_FRAMES: Record<string, SpriteRect> = {
   fateWeaver: { sx: 460, sy: 910, sw: 560, sh: 320, dw: 480, dh: 274 }, // Fate Weaver (Final Boss)
 };
 
+// Approved illustrated art replaces legacy SVG placeholders for these 11 enemy kinds.
+const ILLUSTRATED_ENEMIES = new Set([
+  "celestialGuardian", "siren", "seraph", "golem", "kraken",
+  "seedWisp", "thornMantis", "amberMoth", "rootGuardian",
+  "hollowStag", "fateWeaver",
+]);
+
 export class GameRenderer {
   private ctx: CanvasRenderingContext2D;
   private particles: Particle[] = [];
@@ -127,8 +134,10 @@ export class GameRenderer {
 
   private eiraImg: HTMLImageElement | null = null;
   private enemiesImg: HTMLImageElement | null = null;
+  private illustratedEnemiesImg: HTMLImageElement | null = null;
   private eiraLoaded = false;
   private enemiesLoaded = false;
+  private illustratedEnemiesLoaded = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d")!;
@@ -152,6 +161,13 @@ export class GameRenderer {
     enemies.onload = () => {
       this.enemiesImg = enemies;
       this.enemiesLoaded = true;
+    };
+
+    const illustrated = new Image();
+    illustrated.src = "./assets/enemies/enemies-illustrated.png";
+    illustrated.onload = () => {
+      this.illustratedEnemiesImg = illustrated;
+      this.illustratedEnemiesLoaded = true;
     };
   }
 
@@ -1863,9 +1879,18 @@ export class GameRenderer {
     }
 
     const frame = ENEMY_FRAMES[enemy.kind];
-    if (this.enemiesLoaded && this.enemiesImg && frame) {
+    const illustrated = ILLUSTRATED_ENEMIES.has(enemy.kind);
+    // Use illustrated art for the 11 new enemies, original atlas for the legacy 7.
+    // While the illustrated atlas loads, the old texture remains a safe fallback.
+    const activeAtlas =
+      illustrated && this.illustratedEnemiesLoaded && this.illustratedEnemiesImg
+        ? this.illustratedEnemiesImg
+        : this.enemiesLoaded
+          ? this.enemiesImg
+          : null;
+    if (activeAtlas && frame) {
       ctx.drawImage(
-        this.enemiesImg,
+        activeAtlas,
         frame.sx,
         frame.sy,
         frame.sw,

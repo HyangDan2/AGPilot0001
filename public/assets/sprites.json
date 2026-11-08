@@ -13,7 +13,9 @@
   },
   "enemies": {
     "atlas": "assets/enemies/enemies-atlas.png",
-    "meta": "assets/enemies/enemies-atlas.json"
+    "meta": "assets/enemies/enemies-atlas.json",
+    "illustratedAtlas": "assets/enemies/enemies-illustrated.png",
+    "illustratedMeta": "assets/enemies/enemies-illustrated.json"
   },
   "sprites": {
     "player": {
@@ -86,7 +88,9 @@
       "drawW": 520,
       "drawH": 280,
       "facing": "down",
-      "src": "assets/enemies/celestial_guardian.png"
+      "src": "assets/enemies/celestial_guardian.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "celestialGuardian"
     },
     "siren": {
       "w": 160,
@@ -94,7 +98,9 @@
       "drawW": 88,
       "drawH": 78,
       "facing": "down",
-      "src": "assets/enemies/siren.png"
+      "src": "assets/enemies/siren.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "siren"
     },
     "seraph": {
       "w": 180,
@@ -102,7 +108,9 @@
       "drawW": 96,
       "drawH": 86,
       "facing": "down",
-      "src": "assets/enemies/seraph.png"
+      "src": "assets/enemies/seraph.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "seraph"
     },
     "golem": {
       "w": 180,
@@ -110,7 +118,9 @@
       "drawW": 110,
       "drawH": 122,
       "facing": "down",
-      "src": "assets/enemies/golem.png"
+      "src": "assets/enemies/golem.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "golem"
     },
     "kraken": {
       "w": 420,
@@ -118,7 +128,9 @@
       "drawW": 340,
       "drawH": 210,
       "facing": "down",
-      "src": "assets/enemies/kraken.png"
+      "src": "assets/enemies/kraken.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "kraken"
     },
     "seedWisp": {
       "w": 150,
@@ -126,7 +138,9 @@
       "drawW": 80,
       "drawH": 75,
       "facing": "down",
-      "src": "assets/enemies/seed_wisp.png"
+      "src": "assets/enemies/seed_wisp.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "seedWisp"
     },
     "thornMantis": {
       "w": 170,
@@ -134,7 +148,9 @@
       "drawW": 94,
       "drawH": 88,
       "facing": "down",
-      "src": "assets/enemies/thorn_mantis.png"
+      "src": "assets/enemies/thorn_mantis.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "thornMantis"
     },
     "amberMoth": {
       "w": 220,
@@ -142,7 +158,9 @@
       "drawW": 120,
       "drawH": 98,
       "facing": "down",
-      "src": "assets/enemies/amber_moth.png"
+      "src": "assets/enemies/amber_moth.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "amberMoth"
     },
     "rootGuardian": {
       "w": 240,
@@ -150,7 +168,9 @@
       "drawW": 140,
       "drawH": 128,
       "facing": "down",
-      "src": "assets/enemies/root_guardian.png"
+      "src": "assets/enemies/root_guardian.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "rootGuardian"
     },
     "hollowStag": {
       "w": 420,
@@ -158,7 +178,9 @@
       "drawW": 320,
       "drawH": 212,
       "facing": "down",
-      "src": "assets/enemies/hollow_stag.png"
+      "src": "assets/enemies/hollow_stag.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "hollowStag"
     },
     "fateWeaver": {
       "w": 560,
@@ -166,7 +188,9 @@
       "drawW": 520,
       "drawH": 298,
       "facing": "down",
-      "src": "assets/enemies/fate_weaver.png"
+      "src": "assets/enemies/fate_weaver.png",
+      "runtimeAtlas": "assets/enemies/enemies-illustrated.png",
+      "atlasFrame": "fateWeaver"
     }
   }
 }

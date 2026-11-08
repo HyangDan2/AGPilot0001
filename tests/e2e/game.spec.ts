@@ -1,6 +1,23 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
+  test("loads approved illustrated enemy atlas with 11 replacement frames", async ({ page }) => {
+    await page.goto("./");
+    const loaded = await page.evaluate(async () => {
+      const [imgResponse, metaResponse] = await Promise.all([
+        fetch("./assets/enemies/enemies-illustrated.png"),
+        fetch("./assets/enemies/enemies-illustrated.json"),
+      ]);
+      if (!imgResponse.ok || !metaResponse.ok) return false;
+      const atlas = await createImageBitmap(await imgResponse.blob());
+      const meta = await metaResponse.json() as { frames: Record<string, unknown> };
+      const valid = atlas.width === 2048 && atlas.height === 2048 && Object.keys(meta.frames).length === 11;
+      atlas.close();
+      return valid;
+    });
+    expect(loaded).toBe(true);
+  });
+
   test("renders title screen with HD²LAB brand, controls and settings", async ({ page }) => {
     const errors: string[] = [];
     page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
