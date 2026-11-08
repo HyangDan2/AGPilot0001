@@ -96,6 +96,40 @@ describe("Alternating Left/Right Sword Combat (좌우 교대 검격)", () => {
   });
 });
 
+describe("Two-hit melee rhythm", () => {
+  it("performs two fast swings followed by a longer recovery without slowing projectile shots", () => {
+    const w = createWorld({ seed: 20261108, startAt: 1.0 });
+    const held = { moveX: 0, moveY: 0, fire: true, roll: false, ult: false, dragDx: 0, dragDy: 0 };
+    const slashes: Array<{ tick: number; direction: string }> = [];
+    let shots = 0;
+    for (let i = 0; i < 85; i++) {
+      const events = step(w, held);
+      for (const e of events) {
+        if (e.t === "meleeSlash") slashes.push({ tick: w.tick, direction: e.direction });
+        if (e.t === "shot") shots++;
+      }
+    }
+    expect(slashes.slice(0, 7).map(s => s.direction)).toEqual([
+      "l2r", "r2l", "l2r", "r2l", "l2r", "r2l", "l2r",
+    ]);
+    const t = slashes.map(s => s.tick);
+    // 8 ticks between the two hits, 18 ticks before the next pair.
+    expect(t.slice(0, 7)).toEqual([1, 9, 27, 35, 53, 61, 79]);
+    expect(shots).toBeGreaterThan(slashes.length); // ranged fire stays continuous
+  });
+
+  it("rolling cancels a pending melee combo", () => {
+    const w = createWorld({ seed: 20261108, startAt: 1.0 });
+    const held = { moveX: 0, moveY: 0, fire: true, roll: false, ult: false, dragDx: 0, dragDy: 0 };
+    step(w, held);
+    expect(w.player.meleeComboStep).toBe(1);
+    const ev = step(w, { ...held, roll: true });
+    expect(ev.some(e => e.t === "roll")).toBe(true);
+    expect(w.player.meleeComboStep).toBe(0);
+    expect(w.player.meleeSwing).toBeNull();
+  });
+});
+
 describe("Short-range melee collision contract", () => {
   it("hits a close target but rejects distant and lateral targets", () => {
     const w = createWorld({ seed: 11, startAt: 1 });

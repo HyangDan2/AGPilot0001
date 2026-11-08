@@ -13,6 +13,10 @@ import { damageEnemy } from "./enemies";
 export const PLAYER_SPEED = 420; // logical px / s
 export const PLAYER_HIT_RADIUS = 10;
 export const ROLL_DURATION_TICKS = 72; // ~1.2s at 60Hz
+// Two quick sword attacks (8 ticks apart) followed by an 18-tick recovery.
+// Projectile shooting cadence is kept independent of the sword combo.
+export const MELEE_COMBO_GAP_TICKS = 8;
+export const MELEE_COMBO_RECOVERY_TICKS = 18;
 export const RESPAWN_INVULN_TICKS = 180; // 3s
 export const DOWN_DURATION_TICKS = 60; // 1s before respawn
 
@@ -42,6 +46,8 @@ export function createPlayer(): Player {
     slashDirection: "r2l", // alternates to "l2r" on first swing
     comboCount: 0,
     meleeSwing: null,
+    meleeCooldown: 0,
+    meleeComboStep: 0,
     manaUnits: 0,
     mana: 0,
     maxMana: 100,
@@ -163,6 +169,10 @@ export function updatePlayer(
   if (rollTriggered && p.rolls > 0 && p.rollTimer === 0) {
     p.rolls--;
     p.rollTimer = ROLL_DURATION_TICKS;
+    // Evasion takes precedence over a sword combo.
+    p.meleeSwing = null;
+    p.meleeComboStep = 0;
+    p.meleeCooldown = 0;
     events.push({ t: "roll" });
   }
 
@@ -203,25 +213,33 @@ export function updatePlayer(
     }
   }
 
-  // Firing
-  if (p.fireCooldown > 0) {
-    p.fireCooldown--;
+  // Melee timing is independent from automatic projectile fire.
+  // First slash -> 8 ticks -> second slash -> 18 ticks of recovery.
+  if (p.meleeCooldown > 0) p.meleeCooldown--;
+  if (input.fire && p.meleeCooldown === 0 && p.rollTimer === 0) {
+    fireMeleeSwing(world, events);
+    p.meleeCooldown = p.meleeComboStep === 1
+      ? MELEE_COMBO_GAP_TICKS
+      : MELEE_COMBO_RECOVERY_TICKS;
   }
+  // Releasing fire after the first slash cancels the pending pair instead of
+  // surprising the player with a delayed second slash on the next press.
+  if (!input.fire && p.meleeCooldown === 0) p.meleeComboStep = 0;
 
-  // Cannot fire while rolling
+  // Projectile shots keep their original, unaffected cooldown.
+  if (p.fireCooldown > 0) p.fireCooldown--;
   if (input.fire && p.fireCooldown === 0 && p.rollTimer === 0) {
     firePlayerWeapon(world, events);
   }
 }
 
-function firePlayerWeapon(world: World, events: GameEvent[]): void {
+function fireMeleeSwing(world: World, events: GameEvent[]): void {
   const p = world.player;
-  const shotSpeed = 960; // px/s upward
-
-  // Alternating sword slash: LEFT -> RIGHT -> LEFT -> RIGHT (1:L->R, 2:R->L, 3:L->R, 4:R->L)
+  // LEFT -> RIGHT two-hit combo, then re-arm for the next pair.
   const nextDir: SlashDirection = p.slashDirection === "l2r" ? "r2l" : "l2r";
   p.slashDirection = nextDir;
   p.comboCount = (p.comboCount % 4) + 1;
+  p.meleeComboStep = p.meleeComboStep === 0 ? 1 : 0;
   const swingId = world.nextId++;
   p.meleeSwing = {
     id: swingId,
@@ -237,6 +255,11 @@ function firePlayerWeapon(world: World, events: GameEvent[]): void {
     x: p.x,
     y: p.y - 20,
   });
+}
+
+function firePlayerWeapon(world: World, events: GameEvent[]): void {
+  const p = world.player;
+  const shotSpeed = 960; // px/s upward
 
   if (p.power === 1) {
     p.fireCooldown = 9; // ~6.6 shots/sec

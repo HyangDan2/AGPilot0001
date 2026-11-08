@@ -182,6 +182,8 @@ export interface Player {
   slashDirection: SlashDirection;
   comboCount: number;
   meleeSwing: MeleeSwing | null;
+  meleeCooldown: number; // ticks until next allowed sword swing
+  meleeComboStep: 0 | 1; // 0=first slash, 1=second slash then recovery
   manaUnits: number;
   mana: number;
   maxMana: number;
