@@ -1,6 +1,56 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
+  test("publishes cropped Eira face social thumbnail and icon assets", async ({ page }) => {
+    await page.goto("./");
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      "content", "https://hyangdan2.github.io/AGPilot0001/assets/title/eira-face-thumbnail.jpg",
+    );
+    const sizes = await page.evaluate(async () => {
+      const urls = [
+        "./assets/title/eira-face-thumbnail.jpg",
+        "./assets/title/eira-face-icon-512.png",
+        "./assets/title/eira-face-icon-192.png",
+        "./assets/title/eira-face-apple-touch-icon.png",
+        "./assets/title/eira-face-favicon-32.png",
+      ];
+      const images = [];
+      for (const url of urls) {
+        const res = await fetch(url);
+        if (!res.ok) return [];
+        const bitmap = await createImageBitmap(await res.blob());
+        images.push([bitmap.width, bitmap.height]);
+        bitmap.close();
+      }
+      return images;
+    });
+    expect(sizes).toEqual([[1200, 630], [512, 512], [192, 192], [180, 180], [32, 32]]);
+  });
+
+  test("right-side TOP RECORD is below PAUSE/MUTE on a 320px portrait screen", async ({ browser, baseURL }) => {
+    const context = await browser.newContext({
+      baseURL, viewport: { width: 320, height: 720 }, isMobile: true, hasTouch: true,
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto("./?test=1");
+      await page.locator("#btn-start").click();
+      const coords = await page.evaluate(() => {
+        const canvas = document.querySelector<HTMLCanvasElement>("#game")!;
+        const pause = document.querySelector<HTMLElement>("#btn-pause")!;
+        const mute = document.querySelector<HTMLElement>("#btn-ingame-mute")!;
+        const field = canvas.getBoundingClientRect();
+        return {
+          controlsBottom: Math.max(pause.getBoundingClientRect().bottom, mute.getBoundingClientRect().bottom),
+          recordTop: field.top + 146 * field.height / canvas.height,
+        };
+      });
+      expect(coords.controlsBottom).toBeLessThan(coords.recordTop);
+    } finally {
+      await context.close();
+    }
+  });
+
   test("loads Eira v6 no-flash roll atlas and preserves v5/v2/original fallback", async ({ page }) => {
     await page.goto("./");
     const result = await page.evaluate(async () => {

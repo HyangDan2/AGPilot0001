@@ -19,12 +19,15 @@ export const MELEE_COMBO_GAP_TICKS = 8;
 export const MELEE_COMBO_RECOVERY_TICKS = 18;
 export const RESPAWN_INVULN_TICKS = 180; // 3s
 export const DOWN_DURATION_TICKS = 60; // 1s before respawn
+export const MANA_GAIN_MULTIPLIER = 10; // Faster ULT charge from every source
+export const ULTIMATE_TOTAL_DAMAGE = 35; // Half of previous 70 across 42 active ticks
+export const AEGIS_SHIELD_INVULN_TICKS = 45; // 0.75s after a body hit consumes a shield
 
 export function addManaUnits(player: Player, amount: number): void {
   if (player.manaUnits === undefined || (player.mana > 0 && player.manaUnits === 0)) {
     player.manaUnits = player.mana * 40;
   }
-  player.manaUnits = Math.min(4000, player.manaUnits + amount);
+  player.manaUnits = Math.min(4000, player.manaUnits + amount * MANA_GAIN_MULTIPLIER);
   player.mana = player.manaUnits / 40;
 }
 
@@ -121,9 +124,10 @@ export function updatePlayer(
         }
       }
 
-      // Continuous tick damage calculation: total exactly 70 over 42 ticks
+      // Exact 35 total damage, distributed deterministically across 42 active ticks.
       const elapsed = 60 - p.ultimateTimer; // 0..41
-      const dmg = Math.floor((70 * (elapsed + 1)) / 42) - Math.floor((70 * elapsed) / 42);
+      const dmg = Math.floor((ULTIMATE_TOTAL_DAMAGE * (elapsed + 1)) / 42) -
+        Math.floor((ULTIMATE_TOTAL_DAMAGE * elapsed) / 42);
 
       if (dmg > 0) {
         const beamHalfWidth = 72;
@@ -355,6 +359,23 @@ function firePlayerWeapon(world: World, events: GameEvent[]): void {
   }
 
   world.stats.shotsFired++;
+}
+
+/** Body-hit shielding: only a real player hurtbox collision consumes an Aegis orb. */
+export function absorbPlayerHit(player: Player, events: GameEvent[]): boolean {
+  const shield = player.aegisOrbs.find((orb) => orb.alive);
+  if (!shield) return false;
+  shield.alive = false;
+  shield.hp = 0;
+  player.invuln = Math.max(player.invuln, AEGIS_SHIELD_INVULN_TICKS);
+  events.push({
+    t: "shieldHit",
+    id: shield.id,
+    x: player.x,
+    y: player.y,
+    remaining: player.aegisOrbs.filter((orb) => orb.alive).length,
+  });
+  return true;
 }
 
 export function killPlayer(world: World, events: GameEvent[]): void {

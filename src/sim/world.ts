@@ -7,7 +7,7 @@ import {
   playerCollectsPickup,
 } from "./collision";
 import { spawnEnemy, updateEnemyAI, damageEnemy } from "./enemies";
-import { addManaUnits, createPlayer, killPlayer, updatePlayer } from "./player";
+import { absorbPlayerHit, addManaUnits, createPlayer, killPlayer, updatePlayer } from "./player";
 import { rand } from "./rng";
 import { WaveDef } from "./stage1";
 import { getStageDef } from "./stages";
@@ -336,6 +336,11 @@ function handleEnemyBulletCollisions(world: World, events: GameEvent[]): void {
 
     if (hitPlayer(world.player, bullet)) {
       bullet.alive = false;
+      if (!world.invulnerable && absorbPlayerHit(world.player, events)) {
+        // The shield absorbed the body hit; new invulnerability protects the
+        // remaining shield(s) from other overlapping bullets this frame.
+        continue;
+      }
       killPlayer(world, events);
       break;
     }

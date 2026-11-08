@@ -245,6 +245,9 @@ export class GameRenderer {
         this.spawnSparks(e.x, e.y);
       } else if (e.t === "pickup") {
         this.spawnPickupSparks(e.x, e.y);
+      } else if (e.t === "shieldHit") {
+        // A concise impact flash only when Eira's hurtbox actually consumes a shield.
+        this.spawnSparks(e.x, e.y);
       } else if (e.t === "graze") {
         this.spawnGrazeSparks(e.x, e.y);
       } else if (e.t === "ultimate") {
@@ -2498,15 +2501,21 @@ export class GameRenderer {
     ctx.font = "900 22px monospace";
     ctx.fillText(world.score.toString().padStart(6, "0"), 32, 68);
 
-    // TOP RECORD
+    // TOP RECORD sits below the top-right PAUSE/MUTE HTML controls.
+    // On a 320px mobile layout their bottom edge reaches ~135 logical pixels.
+    ctx.fillStyle = "rgba(8, 13, 35, 0.76)";
+    ctx.beginPath();
+    ctx.roundRect(FIELD_W - 210, 146, 184, 60, 8);
+    ctx.fill();
+
     ctx.fillStyle = "#8fa5d8";
     ctx.font = "700 12px monospace";
     ctx.textAlign = "right";
-    ctx.fillText("TOP RECORD", FIELD_W - 32, 42);
+    ctx.fillText("TOP RECORD", FIELD_W - 36, 166);
 
     ctx.fillStyle = "#f8c050";
     ctx.font = "900 22px monospace";
-    ctx.fillText(Math.max(world.score, 0).toString().padStart(6, "0"), FIELD_W - 32, 68);
+    ctx.fillText(Math.max(world.score, 0).toString().padStart(6, "0"), FIELD_W - 36, 193);
 
     // LIVES (Winged Crests)
     for (let i = 0; i < world.player.lives; i++) {

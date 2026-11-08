@@ -141,7 +141,8 @@ export function checkOrbitSwordHits(world: World, events: GameEvent[]): void {
 
   const swordRadius = 72;
 
-  // 1. Destroy/parry enemy bullets using individual destructible Aegis Orbs
+  // 1. Parry enemy bullets without consuming shield charges.
+  // Only an enemy projectile hitting Eira's BODY can destroy an Aegis orb.
   for (const b of world.bullets) {
     if (!b.alive || b.owner !== "enemy") continue;
 
@@ -152,11 +153,9 @@ export function checkOrbitSwordHits(world: World, events: GameEvent[]): void {
 
       if (Math.hypot(b.x - ox, b.y - oy) <= 18 + b.r) {
         b.alive = false;
-        orb.alive = false; // Destructible: this specific orb is broken!
-        addManaUnits(p, 15);
+         addManaUnits(p, 15);
         world.score += 250;
-        events.push({ t: "orbDestroyed", id: orb.id, x: ox, y: oy });
-        events.push({ t: "explode", size: "s", x: ox, y: oy });
+         events.push({ t: "explode", size: "s", x: ox, y: oy });
         events.push({ t: "hit", id: b.id, x: b.x, y: b.y });
         break; // Only 1 orb destroyed per bullet!
       }

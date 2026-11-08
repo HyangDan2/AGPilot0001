@@ -30,8 +30,8 @@ describe("Expansion Combat Mechanics", () => {
 
     expect(grazeEvents.length).toBe(1);
     expect(world.player.grazeCount).toBe(1);
-    expect(world.player.manaUnits).toBe(810); // 800 + 10 units (1/40 rebalance)
-    expect(world.player.mana).toBe(20.25);
+    expect(world.player.manaUnits).toBe(900); // 800 + 10 * 10 units
+    expect(world.player.mana).toBe(22.5);
     expect(world.stats.grazes).toBe(1);
     expect(world.bullets.find((b) => b.id === 999)?.grazed).toBe(true);
 
@@ -130,9 +130,9 @@ describe("Expansion Combat Mechanics", () => {
       step(world, NO_INPUT);
     }
 
-    // Enemy with 50 HP in corridor must be completely destroyed by the 70 total continuous damage
-    const deadEnemy = world.enemies.find((e) => e.id === 201);
-    expect(deadEnemy).toBeUndefined();
+    // Enemy with 50 HP takes exactly 35 beam damage and survives with 15 HP.
+    const survivor = world.enemies.find((e) => e.id === 201);
+    expect(survivor?.hp).toBe(15);
   });
 
   it("does not activate ultimate without full mana", () => {

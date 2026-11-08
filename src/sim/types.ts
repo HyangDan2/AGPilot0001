@@ -46,6 +46,7 @@ export type GameEvent =
   | { t: "warning"; isMidboss?: boolean }
   | { t: "midbossDefeated"; kind: EnemyKind }
   | { t: "orbDestroyed"; id: number; x: number; y: number }
+  | { t: "shieldHit"; id: number; x: number; y: number; remaining: number }
   | { t: "bossPhase"; phase: number }
   | { t: "stageClear"; stage: number }
   | { t: "gameOver" };

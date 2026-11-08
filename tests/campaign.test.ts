@@ -95,25 +95,22 @@ describe("Three-Stage Premium Campaign (v0.9.0)", () => {
     expect(p.manaUnits).toBe(0);
     expect(p.mana).toBe(0);
 
-    // Graze +10 units
+    // Each charge source now awards 10x its previous mana amount.
     addManaUnits(p, 10);
-    expect(p.manaUnits).toBe(10);
-    expect(p.mana).toBe(0.25); // 10 / 40 = 0.25%
+    expect(p.manaUnits).toBe(100);
+    expect(p.mana).toBe(2.5);
 
-    // Bullet hit +2 units
     addManaUnits(p, 2);
-    expect(p.manaUnits).toBe(12);
-    expect(p.mana).toBe(0.3); // 12 / 40 = 0.3%
+    expect(p.manaUnits).toBe(120);
+    expect(p.mana).toBe(3);
 
-    // Kill +8 units
     addManaUnits(p, 8);
-    expect(p.manaUnits).toBe(20);
-    expect(p.mana).toBe(0.5); // 20 / 40 = 0.5%
+    expect(p.manaUnits).toBe(200);
+    expect(p.mana).toBe(5);
 
-    // Max POW +25 units
     addManaUnits(p, 25);
-    expect(p.manaUnits).toBe(45);
-    expect(p.mana).toBe(1.125);
+    expect(p.manaUnits).toBe(450);
+    expect(p.mana).toBe(11.25);
 
     // Charge to 4000 units (100%)
     addManaUnits(p, 4000);
@@ -242,7 +239,7 @@ describe("Azure Aegis Orbs & Gungnir Ultimate v2", () => {
     expect(events.some((e) => e.t === "hit" && e.id === 991)).toBe(true);
   });
 
-  it("Gungnir Ultimate v2 deals 40 impact + 30 shockwave = 70 total damage", () => {
+  it("Gungnir Ultimate deals exactly 35 total damage over its 42 active ticks", () => {
     const w = createWorld({ seed: 42, startAt: 10 });
     w.player.x = 360;
     w.player.y = 800;
@@ -292,11 +289,11 @@ describe("Azure Aegis Orbs & Gungnir Ultimate v2", () => {
       step(w, NO_INPUT);
     }
 
-    // 100 - 70 continuous damage = 30 HP remaining (total exactly 70 damage dealt)
-    expect(target?.hp).toBe(30);
+    // 100 - 35 continuous damage = 65 HP remaining
+    expect(target?.hp).toBe(65);
   });
 
-  it("single bullet destroys exactly one Aegis Orb while the other remains active", () => {
+  it("orb parries a near miss without losing charges; pickup restores a previously used shield", () => {
     const w = createWorld({ seed: 777, startAt: 10 });
     expect(w.player.aegisOrbs.filter((o) => o.alive).length).toBe(2);
 
@@ -320,12 +317,13 @@ describe("Azure Aegis Orbs & Gungnir Ultimate v2", () => {
 
     step(w, NO_INPUT);
 
-    // Orb 0 was destroyed, but Orb 1 is still alive!
-    expect(w.player.aegisOrbs[0].alive).toBe(false);
-    expect(w.player.aegisOrbs[1].alive).toBe(true);
-    expect(w.player.aegisOrbs.filter((o) => o.alive).length).toBe(1);
+    // A parry near the orb never consumes a shield; only a body hit does.
+    expect(w.player.aegisOrbs.every((o) => o.alive)).toBe(true);
+    // Simulate a previously used shield before testing the existing pickup.
+    w.player.aegisOrbs[0].alive = false;
+    w.player.aegisOrbs[0].hp = 0;
 
-    // Aegis pickup restores the destroyed orb
+    // Aegis pickup restores the used shield
     w.pickups.push({
       id: 9992,
       kind: "aegis",
