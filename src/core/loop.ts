@@ -199,7 +199,10 @@ export class GameApp {
   }
 
   private updateOrientationLock(): void {
-    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+    // Unit-test DOM shims may not implement matchMedia or maxTouchPoints.
+    const coarsePointer = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+    const touchPoints = typeof navigator !== "undefined" ? (navigator.maxTouchPoints ?? 0) : 0;
+    const isTouchDevice = coarsePointer || touchPoints > 0;
     const shouldLock = isTouchDevice && window.innerWidth > window.innerHeight;
     if (this.landscapeLocked === shouldLock) return;
 
