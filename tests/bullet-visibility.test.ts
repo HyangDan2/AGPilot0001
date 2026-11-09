@@ -21,16 +21,19 @@ describe("Eira projectile visibility against Halvard v3 artwork", () => {
     expect(render.match(/this\.halvardV3\.drawFront\(ctx, world\.scrollY\)/g)).toHaveLength(1);
   });
 
-  it("protects bullet silhouette with dark contour and a cyan/gold tail", () => {
+  it("retains the original arc-blade shape, removes the added tail, and uses deeper blue", () => {
     const bulletMethod = source.slice(
       source.indexOf("  private drawBullets(world: World): void {"),
       source.indexOf("  private drawPickup(", source.indexOf("  private drawBullets(world: World): void {")),
     );
-    expect(bulletMethod).toContain('ctx.lineTo(0, 29)');
-    expect(bulletMethod).toContain('ctx.strokeStyle = "#12264d"');
-    expect(bulletMethod).toContain('"#24e9ff"');
-    expect(bulletMethod).toContain('ctx.lineWidth = 8');
+    expect(bulletMethod).toContain('ctx.moveTo(-11, 4)');
+    expect(bulletMethod).toContain('ctx.quadraticCurveTo(0, -18, 11, 4)');
+    expect(bulletMethod).toContain('glowColor = "#0757d3"');
+    expect(bulletMethod).toContain('strokeColor = "#1467e8"');
     expect(bulletMethod).toContain('ctx.fillStyle = fillColor');
     expect(bulletMethod).toContain('ctx.strokeStyle = strokeColor');
+    expect(bulletMethod).not.toContain('ctx.lineTo(0, 29)');
+    expect(bulletMethod).not.toContain('ctx.strokeStyle = "#12264d"');
+    expect(bulletMethod).not.toContain('ctx.lineWidth = 8');
   });
 });

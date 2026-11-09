@@ -2429,71 +2429,52 @@ export class GameRenderer {
 
         // Phase 8: Progressive Three-Lane Arc Blade Visuals
         const tier = b.tier ?? 0;
-        let glowColor = "#44d7f5";
-        let strokeColor = "#44d7f5";
+        let glowColor = "#0575da";
+        let strokeColor = "#0776db";
         let fillColor = "#ffffff";
         let lineWidth = 2.5;
         let shadowBlur = 12;
 
         if (tier === 1) {
           // Tier 1: Compressed Blue-White
-          glowColor = "#60a5fa";
-          strokeColor = "#93c5fd";
+          glowColor = "#0757d3";
+          strokeColor = "#1467e8";
           fillColor = "#ffffff";
           lineWidth = 3.0;
           shadowBlur = 15;
         } else if (tier === 2) {
           // Tier 2: Blue-White with Gold Halo
-          glowColor = "#f8c050";
-          strokeColor = "#fcd34d";
+          glowColor = "#1162df";
+          strokeColor = "#075cd4";
           fillColor = "#f0fdf4";
           lineWidth = 3.5;
           shadowBlur = 18;
         } else if (tier >= 3) {
           // Tier 3: Radiant Platinum with Golden Core Sparks
-          glowColor = "#ffd700";
-          strokeColor = "#ffffff";
+          glowColor = "#1759c9";
+          strokeColor = "#1a67d3";
           fillColor = "#ffffff";
           lineWidth = 4.2;
           shadowBlur = 24;
         }
+
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = shadowBlur;
+        ctx.fillStyle = fillColor;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = lineWidth;
 
         // Lane tilt matching bullet horizontal trajectory
         if (b.vx !== 0) {
           ctx.rotate(b.vx * 0.0012);
         }
 
-        // A short downstream tail makes upward projectile motion readable on
-        // the moving sky-sea artwork. Dark guard first, bright cyan core second.
-        ctx.lineCap = "round";
-        ctx.shadowBlur = 0;
-        ctx.beginPath();
-        ctx.moveTo(0, 5);
-        ctx.lineTo(0, 29);
-        ctx.strokeStyle = "#12264d";
-        ctx.lineWidth = 8;
-        ctx.stroke();
-        ctx.strokeStyle = tier >= 2 ? "#ffd66e" : "#24e9ff";
-        ctx.lineWidth = 3;
-        ctx.stroke();
-
-        // Fill remains pearly white. A strong midnight-blue silhouette is
-        // rendered before the illuminated rim to survive white clouds/sea.
         ctx.beginPath();
         ctx.moveTo(-11, 4);
         ctx.quadraticCurveTo(0, -18, 11, 4);
         ctx.quadraticCurveTo(0, -7, -11, 4);
         ctx.closePath();
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = "#12264d";
-        ctx.lineWidth = 8;
-        ctx.stroke();
-        ctx.shadowColor = glowColor;
-        ctx.shadowBlur = shadowBlur;
-        ctx.fillStyle = fillColor;
         ctx.fill();
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = lineWidth;
         ctx.stroke();
 
         // Tier 3 radiant gold core sparks
