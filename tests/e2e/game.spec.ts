@@ -77,19 +77,24 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
   test("visibly scrolls each Halvard depth independently and permits layer toggles", async ({ page }) => {
     await page.addInitScript(() => {
       const original = CanvasRenderingContext2D.prototype.drawImage;
-      (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace = {};
+      type MotionTrace = Record<string, Record<string, number[]>>;
+      (window as Window & { __parallaxTrace?: MotionTrace }).__parallaxTrace = {};
       CanvasRenderingContext2D.prototype.drawImage = (function(
         this: CanvasRenderingContext2D, ...args: Parameters<typeof original>
       ) {
         const image = args[0];
         if (image instanceof HTMLImageElement && image.src.includes("/halvard-v3/")) {
           const kind = image.src.split("/").pop() || "";
-          const trace = (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace!;
-          if (!trace[kind]) trace[kind] = [];
-          if (args.length === 9 && args[1] === 6 && args[2] === 6) {
-            trace[kind].push(Number(args[6])); // first unique sprite, not all positions mixed
+          const trace = (window as Window & { __parallaxTrace?: MotionTrace }).__parallaxTrace!;
+          if (!trace[kind]) trace[kind] = {};
+          if (args.length === 9) {
+            // Same source sprite, x and scale identify one independent instance.
+            const key = `${args[1]}:${args[2]}:${args[5]}:${args[7]}`;
+            if (!trace[kind][key]) trace[kind][key] = [];
+            if (trace[kind][key].length < 500) trace[kind][key].push(Number(args[6]));
           } else if (kind === "base.webp" && args.length === 5) {
-            trace[kind].push(Number(args[2]));
+            if (!trace[kind].base) trace[kind].base = [];
+            trace[kind].base.push(Number(args[2]));
           }
         }
         return original.apply(this, args);
@@ -98,37 +103,52 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
     await page.goto("./?test=1");
     await page.locator("#btn-start").click();
     await expect.poll(() => page.evaluate(() => {
-      const trace = (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace ?? {};
+      const trace = (window as Window & {
+        __parallaxTrace?: Record<string, Record<string, number[]>>
+      }).__parallaxTrace ?? {};
       return ["base.webp", "islands.webp", "temples.webp", "clouds.webp"].every(
-        (name) => (trace[name]?.length ?? 0) >= 6,
+        (name) => Object.values(trace[name] ?? {}).some((values) => values.length > 6),
       );
     })).toBe(true);
     await page.waitForTimeout(700);
-    const detail = await page.evaluate(() => {
-      const trace = (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace!;
-      return Object.fromEntries(["base.webp", "islands.webp", "temples.webp", "clouds.webp"].map(
-        (name) => [name, Math.max(...trace[name]) - Math.min(...trace[name])],
-      ));
+    const motion = await page.evaluate(() => {
+      const trace = (window as Window & {
+        __parallaxTrace?: Record<string, Record<string, number[]>>
+      }).__parallaxTrace!;
+      return Object.fromEntries(
+        ["base.webp", "islands.webp", "temples.webp", "clouds.webp"].map((name) => {
+          const tracks = Object.values(trace[name] ?? {}).filter((values) => values.length > 3);
+          const spread = tracks.length
+            ? Math.max(...tracks.map((values) => Math.max(...values) - Math.min(...values)))
+            : 0;
+          return [name, spread];
+        }),
+      );
     });
-    expect(detail["base.webp"]).toBe(0);
-    expect(detail["islands.webp"]).toBeGreaterThan(2);
-    expect(detail["temples.webp"]).toBeGreaterThan(6);
-    expect(detail["clouds.webp"]).toBeGreaterThan(12);
+    expect(motion["base.webp"]).toBe(0);
+    expect(motion["islands.webp"]).toBeGreaterThan(2);
+    expect(motion["temples.webp"]).toBeGreaterThan(6);
+    expect(motion["clouds.webp"]).toBeGreaterThan(12);
+
     const isReady = await page.evaluate(() => {
-      const overlay = (window as Window & { __halvardV3?: { ready: boolean; setVisible: (key: "clouds", show: boolean) => void } }).__halvardV3;
-      if (!overlay?.ready) return false;
-      overlay.setVisible("clouds", false);
+      const bg = (window as Window & {
+        __halvardV3?: { ready: boolean; setVisible: (key: "clouds", show: boolean) => void }
+      }).__halvardV3;
+      if (!bg?.ready) return false;
+      bg.setVisible("clouds", false);
       return true;
     });
     expect(isReady).toBe(true);
-    const countBefore = await page.evaluate(() => (
-      (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace?.["clouds.webp"]?.length ?? 0
-    ));
+    await page.waitForTimeout(80); // let the currently queued canvas frame finish
+    const totalCloudDraws = () => page.evaluate(() => {
+      const trace = (window as Window & {
+        __parallaxTrace?: Record<string, Record<string, number[]>>
+      }).__parallaxTrace ?? {};
+      return Object.values(trace["clouds.webp"] ?? {}).reduce((sum, values) => sum + values.length, 0);
+    });
+    const before = await totalCloudDraws();
     await page.waitForTimeout(200);
-    const countAfter = await page.evaluate(() => (
-      (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace?.["clouds.webp"]?.length ?? 0
-    ));
-    expect(countAfter).toBe(countBefore);
+    expect(await totalCloudDraws()).toBe(before);
   });
 
   test("publishes cropped Eira face social thumbnail and icon assets", async ({ page }) => {
