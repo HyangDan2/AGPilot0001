@@ -161,6 +161,8 @@ export class GameRenderer {
   private warningTimer = 0;
   public reducedMotion = false;
 
+  private slashFxImg: HTMLImageElement | null = null;
+  private slashFxLoaded = false;
   private eiraImg: HTMLImageElement | null = null;
   // Stage 1 illustrated Halvard background. Existing procedural rendering remains the fallback.
   private halvardSkySeaImg: HTMLImageElement | null = null;
@@ -197,6 +199,16 @@ export class GameRenderer {
     };
     // If the asset fails to load, the original stage background remains visible.
     skySea.src = "./assets/backgrounds/stage1-halvard-skysea-v1.webp";
+
+    // Original transparent two-direction sword FX, independent of approved Eira art.
+    const slashFx = new Image();
+    slashFx.onload = () => {
+      if (slashFx.naturalWidth === 2048 && slashFx.naturalHeight === 1024) {
+        this.slashFxImg = slashFx;
+        this.slashFxLoaded = true;
+      }
+    };
+    slashFx.src = "./assets/fx/eira-slash-v1.png";
 
     const eira = new Image();
     eira.src = "./assets/characters/eira/eira-flight.png";
@@ -549,14 +561,9 @@ export class GameRenderer {
     // 9. Projectiles (Player Arc Blades & Enemy Arcane Orbs)
     this.drawBullets(world);
 
-    // 10. Separate outer sword-glow layer: 20% larger than the old reach.
-    // Independently drawn sword sprites remain unscaled and intact.
+    // 10. PNG sword energy trail behind Eira; approved character art unchanged.
     if (world.player.downTimer === 0 && world.player.meleeSwing) {
-      if (this.eiraMotionV6Loaded || this.eiraMotionV5Loaded || this.eiraMotionV2Loaded) {
-        this.drawMeleeHalo(world.player);
-      } else {
-        this.drawMeleeSlash(world.player);
-      }
+      this.drawMeleeFx(world.player, "back");
     }
 
     // 10.5. Azure Aegis Orbs (Magical Shielding Subweapons)
@@ -567,9 +574,14 @@ export class GameRenderer {
     // 10.8. Gungnir's Judgement Ultimate v2
     this.drawUltimateBeam(world.player, world.tick);
 
-    // 11. Valkyrie Eira (Default 160px Scale)
+    // 11. Valkyrie Eira (Default 160px Scale, approved v6 art unchanged)
     if (world.player.downTimer === 0) {
       this.drawPlayer(world.player, world.tick);
+    }
+
+    // Front white cutting edge sits above Eira; the trailing energy stays below.
+    if (world.player.downTimer === 0 && world.player.meleeSwing) {
+      this.drawMeleeFx(world.player, "front");
     }
 
     // 12. Particle System (Explosions, Mana Sparks, Smoke)
@@ -1220,37 +1232,22 @@ export class GameRenderer {
     ctx.restore();
   }
 
-  /** Narrow 115px sword-glow rim behind the existing 160px character art. */
-  private drawMeleeHalo(p: Player): void {
+  /** Render one independently generated 8-tick PNG slash beat. */
+  private drawMeleeFx(p: Player, layer: "back" | "front"): void {
     if (!p.meleeSwing) return;
+    // The old Canvas crescent stays available during slow/missing asset loads.
+    if (!this.slashFxLoaded || !this.slashFxImg) {
+      if (layer === "back") this.drawMeleeSlash(p);
+      return;
+    }
+    const frame = Math.min(7, Math.max(0, 8 - Math.max(1, p.meleeSwing.duration)));
+    const directionRow = p.meleeSwing.direction === "r2l" ? 1 : 0;
+    const row = (layer === "front" ? 2 : 0) + directionRow;
     const ctx = this.ctx;
-    const progress = Math.max(0, Math.min(1, 1 - p.meleeSwing.duration / 8));
-    const leftToRight = p.meleeSwing.direction === "l2r";
-    const sweep = (120 * Math.PI) / 180;
-    const tip = leftToRight
-      ? (-150 * Math.PI) / 180 + progress * sweep
-      : (-30 * Math.PI) / 180 - progress * sweep;
-    const trail = (48 * Math.PI) / 180;
-    const start = leftToRight ? tip - trail : tip + trail;
-    const color = leftToRight ? "#44d7f5" : "#f8c050";
-
     ctx.save();
-    ctx.translate(p.x, p.y - 12);
-    ctx.globalAlpha *= 0.72 + Math.sin(progress * Math.PI) * 0.22;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.arc(0, 0, 115, start, tip, !leftToRight);
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = "#eefbff";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(0, 0, 115, start, tip, !leftToRight);
-    ctx.stroke();
+    ctx.globalAlpha *= this.reducedMotion ? 0.75 : 1;
+    ctx.drawImage(this.slashFxImg, frame * 256, row * 256, 256, 256,
+      p.x - 128, p.y - 140, 256, 256);
     ctx.restore();
   }
 

@@ -6,3 +6,7 @@ art/work/
 audio/work/
 __pycache__/
 .DS_Store
+
+# Derived original sword FX atlas (generated in development/CI build)
+public/assets/fx/eira-slash-v1.png
+art/reviews/eira-slash-v1-contact.png
