@@ -62,7 +62,7 @@ describe("ULT charging and body-hit Aegis protection", () => {
     expect(events.some((e) => e.t === "shieldHit")).toBe(false);
   });
 
-  it("keeps shields safe on orb parries and during Roll invulnerability", () => {
+  it("ignores orb-only near misses and keeps shields safe during Roll invulnerability", () => {
     const w = createWorld({ seed: 20261109, startAt: 10 });
     w.player.invuln = 0;
     const angle = (w.player.orbitSwords.angle + 0.08) % (2 * Math.PI);
@@ -73,7 +73,8 @@ describe("ULT charging and body-hit Aegis protection", () => {
       vx: 0, vy: 0, r: 5, dmg: 1, owner: "enemy", alive: true,
     });
     const first = step(w, NO_INPUT);
-    expect(first.some((e) => e.t === "hit" && e.id === 9222)).toBe(true);
+    expect(first.some((e) => e.t === "hit" && e.id === 9222)).toBe(false);
+    expect(w.bullets.some((bullet) => bullet.id === 9222 && bullet.alive)).toBe(true);
     expect(w.player.aegisOrbs.filter((orb) => orb.alive).length).toBe(2);
     w.player.rollTimer = 10;
     w.bullets.push({
