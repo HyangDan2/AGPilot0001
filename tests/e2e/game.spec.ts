@@ -1,6 +1,39 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
+  test("loads the painted Stage 1 skysea background at full portrait resolution", async ({ page }) => {
+    await page.goto("./");
+    const imageInfo = await page.evaluate(async () => {
+      const response = await fetch("./assets/backgrounds/stage1-halvard-skysea-v1.webp");
+      if (!response.ok) return null;
+      const bitmap = await createImageBitmap(await response.blob());
+      const result = { width: bitmap.width, height: bitmap.height };
+      bitmap.close();
+      return result;
+    });
+    expect(imageInfo).toEqual({ width: 887, height: 1774 });
+  });
+
+  test("actually draws the Halvard illustration during Stage 1 gameplay", async ({ page }) => {
+    await page.addInitScript(() => {
+      const original = CanvasRenderingContext2D.prototype.drawImage;
+      (window as Window & { __skySeaDrawCount?: number }).__skySeaDrawCount = 0;
+      CanvasRenderingContext2D.prototype.drawImage = function(...args) {
+        const image = args[0];
+        if (image instanceof HTMLImageElement &&
+            image.src.includes("stage1-halvard-skysea-v1.webp")) {
+          (window as Window & { __skySeaDrawCount?: number }).__skySeaDrawCount!++;
+        }
+        return original.apply(this, args);
+      } as typeof original;
+    });
+    await page.goto("./?test=1");
+    await page.locator("#btn-start").click();
+    await expect.poll(() => page.evaluate(() =>
+      (window as Window & { __skySeaDrawCount?: number }).__skySeaDrawCount ?? 0,
+    )).toBeGreaterThan(2);
+  });
+
   test("publishes cropped Eira face social thumbnail and icon assets", async ({ page }) => {
     await page.goto("./");
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(

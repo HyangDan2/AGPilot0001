@@ -182,6 +182,26 @@ function main() {
     report.checked++;
   }
 
+  // Stage 1 painting is generated as WebP from committed source for fast mobile loading.
+  // The 2/3-stage original backgrounds remain purely procedural.
+  const halvardSource = path.resolve("art/source/halvard-skysea-v1.png");
+  const halvardWebp = path.resolve("public/assets/backgrounds/stage1-halvard-skysea-v1.webp");
+  if (!fs.existsSync(halvardSource) || !fs.existsSync(halvardWebp)) {
+    console.error("FAIL: Missing original or generated Halvard illustrated background");
+    hasError = true;
+  } else {
+    const buf = fs.readFileSync(halvardWebp);
+    const valid = buf.length > 50000 && buf.length < 1000000 &&
+      buf.toString("ascii", 0, 4) === "RIFF" &&
+      buf.toString("ascii", 8, 12) === "WEBP";
+    if (!valid) {
+      console.error("FAIL: Invalid or oversized Halvard WebP");
+      hasError = true;
+    }
+    report.totalBytes += buf.length;
+    report.checked++;
+  }
+
   // Includes all versioned Eira artwork retained for rollback (not only active v6).
   const maxImageBudget = 12.0 * 1024 * 1024;
   if (report.totalBytes > maxImageBudget) {

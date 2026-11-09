@@ -162,6 +162,9 @@ export class GameRenderer {
   public reducedMotion = false;
 
   private eiraImg: HTMLImageElement | null = null;
+  // Stage 1 illustrated Halvard background. Existing procedural rendering remains the fallback.
+  private halvardSkySeaImg: HTMLImageElement | null = null;
+  private halvardSkySeaLoaded = false;
   private eiraMotionV6Img: HTMLImageElement | null = null;
   private eiraMotionV6Loaded = false;
   private eiraMotionV5Img: HTMLImageElement | null = null;
@@ -183,6 +186,17 @@ export class GameRenderer {
 
   private loadAssets(): void {
     if (typeof Image === "undefined") return;
+
+    // Stage 1 only: preserve original aspect ratio and never tile the sea's horizon.
+    const skySea = new Image();
+    skySea.onload = () => {
+      if (skySea.naturalWidth === 887 && skySea.naturalHeight === 1774) {
+        this.halvardSkySeaImg = skySea;
+        this.halvardSkySeaLoaded = true;
+      }
+    };
+    // If the asset fails to load, the original stage background remains visible.
+    skySea.src = "./assets/backgrounds/stage1-halvard-skysea-v1.webp";
 
     const eira = new Image();
     eira.src = "./assets/characters/eira/eira-flight.png";
@@ -491,22 +505,25 @@ export class GameRenderer {
       ctx.translate(dx, dy);
     }
 
-    // 1. Layer 1 (0.0x): Far Sky & Celestial Aurora across 2 Dedicated Stages
-    this.drawCelestialSky(world.scrollY, world.stageTick, world.phase, world.currentStage);
+    const hasIllustratedHalvard = world.currentStage === 1 &&
+      this.halvardSkySeaLoaded && this.halvardSkySeaImg !== null;
 
-    // 2. Layer 2 (0.2x): Distant Floating Continents & Citadels
-    this.drawDistantCitadels(world.scrollY, world.stageTick, world.currentStage);
-
-    // 3. Layer 3 (0.5x): Mid Floating Temple Ruins & Runic Monoliths
-    this.drawFloatingRuins(world.scrollY, world.stageTick, world.currentStage);
-
-    // 4. Ancient Sky Sanctuary Landing Dais (intro takeoff sequence in Stage 1)
-    if (world.stageTick < 300 && world.currentStage === 1) {
-      this.drawSanctuary(world.scrollY);
+    if (hasIllustratedHalvard) {
+      // Stage 1: high-quality celestial ocean painting (static horizon, slow camera
+      // drift), with subtle separately animated clouds. No primitive striped sky
+      // or duplicated procedural floating citadels on top of the illustration.
+      this.drawHalvardSkySea(world.stageTick, world.phase);
+      this.drawHalvardMidClouds(world.scrollY);
+    } else {
+      // Retain exact original rendering for stages 2/3 AND for failed image loads.
+      this.drawCelestialSky(world.scrollY, world.stageTick, world.phase, world.currentStage);
+      this.drawDistantCitadels(world.scrollY, world.stageTick, world.currentStage);
+      this.drawFloatingRuins(world.scrollY, world.stageTick, world.currentStage);
+      if (world.stageTick < 300 && world.currentStage === 1) {
+        this.drawSanctuary(world.scrollY);
+      }
+      this.drawCloudShadows(world.scrollY);
     }
-
-    // 5. Low-altitude Cloud Shadows
-    this.drawCloudShadows(world.scrollY);
 
     // 6. Floating Ancient Bastions & Ground Targets
     for (const enemy of world.enemies) {
@@ -558,8 +575,13 @@ export class GameRenderer {
     // 12. Particle System (Explosions, Mana Sparks, Smoke)
     this.updateAndDrawParticles();
 
-    // 13. Layer 4 (1.1x): High-altitude Clouds & Floating Debris
-    this.drawHighCloudsAndDebris(world.scrollY, world.stageTick);
+    // 13. Stage-appropriate foreground: gentle sea fog for illustrated Halvard,
+    // unchanged high-cloud/debris layer for Ragnarok, Yggdrasil, and fallback.
+    if (hasIllustratedHalvard) {
+      this.drawHalvardForegroundFog(world.scrollY);
+    } else {
+      this.drawHighCloudsAndDebris(world.scrollY, world.stageTick);
+    }
 
     // 13.5. Dynamic Weather & Feathers / Crystal Shards
     this.drawWeatherEffects(world.tick, world.stageTick, world.currentStage);
@@ -574,6 +596,103 @@ export class GameRenderer {
 
     // 15. In-Game HUD (Neon Arcane Interface)
     this.drawHUD(world);
+  }
+
+  /**
+   * Painted Halvard battlefield: 887x1774 source displayed at native aspect
+   * ratio within the 720x1280 playfield. The extra vertical 160px becomes
+   * a smooth, non-looping camera travel; the sun/horizon never repeats.
+   */
+  private drawHalvardSkySea(stageTick: number, phase: string): void {
+    if (!this.halvardSkySeaImg) return;
+    const ctx = this.ctx;
+    const image = this.halvardSkySeaImg;
+    const scale = FIELD_W / image.naturalWidth;
+    const height = image.naturalHeight * scale;
+    const panRange = Math.max(0, height - FIELD_H);
+    const progress = Math.max(0, Math.min(1, stageTick / (64 * 60)));
+    const ease = progress * progress * (3 - 2 * progress);
+    const cameraY = -panRange * (0.10 + ease * 0.80);
+
+    ctx.save();
+    ctx.drawImage(image, 0, cameraY, FIELD_W, height);
+
+    // Twilight and boss darkening are gentle: cyan/yellow bullets need contrast.
+    const dusk = Math.max(0, Math.min(1, (stageTick - 1500) / 2200));
+    const boss = phase === "boss" ? 0.09 : 0;
+    const tint = 0.035 + dusk * 0.16 + boss;
+    ctx.fillStyle = `rgba(12, 13, 46, ${tint.toFixed(3)})`;
+    ctx.fillRect(0, 0, FIELD_W, FIELD_H);
+
+    // Slight center shading keeps hostile projectiles readable on bright water.
+    const centerShade = ctx.createLinearGradient(0, 0, FIELD_W, 0);
+    centerShade.addColorStop(0, "rgba(6, 18, 42, 0.02)");
+    centerShade.addColorStop(0.25, "rgba(6, 18, 42, 0.09)");
+    centerShade.addColorStop(0.5, "rgba(6, 18, 42, 0.16)");
+    centerShade.addColorStop(0.75, "rgba(6, 18, 42, 0.09)");
+    centerShade.addColorStop(1, "rgba(6, 18, 42, 0.02)");
+    ctx.fillStyle = centerShade;
+    ctx.fillRect(0, 0, FIELD_W, FIELD_H);
+    ctx.restore();
+  }
+
+  /** Feather-soft middle-distance clouds drifting at 0.2x scroll speed. */
+  private drawHalvardMidClouds(scrollY: number): void {
+    const ctx = this.ctx;
+    const wisps = [
+      { x: -45, y: 90, rx: 180, ry: 74 },
+      { x: 735, y: 350, rx: 185, ry: 90 },
+      { x: 42, y: 690, rx: 188, ry: 92 },
+      { x: 728, y: 1060, rx: 182, ry: 85 },
+    ];
+    ctx.save();
+    for (const wisp of wisps) {
+      const travel = (wisp.y + scrollY * 0.20) % (FIELD_H + 440);
+      const y = travel - 190;
+      ctx.save();
+      ctx.translate(wisp.x, y);
+      ctx.scale(wisp.rx, wisp.ry);
+      const gradient = ctx.createRadialGradient(0, 0, 0.10, 0, 0, 1);
+      gradient.addColorStop(0, "rgba(240, 249, 255, 0.13)");
+      gradient.addColorStop(0.55, "rgba(225, 239, 255, 0.07)");
+      gradient.addColorStop(1, "rgba(220, 237, 255, 0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  /** Low-opacity foreground coastal mist (0.5x) and sparse sea glints. */
+  private drawHalvardForegroundFog(scrollY: number): void {
+    const ctx = this.ctx;
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const travel = (scrollY * 0.50 + i * 580) % 1740;
+      const y = travel - 220;
+      const x = i % 2 === 0 ? -18 : FIELD_W + 18;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(235, 118);
+      const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      gradient.addColorStop(0, "rgba(235, 247, 255, 0.075)");
+      gradient.addColorStop(1, "rgba(235, 247, 255, 0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(0, 0, 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    // Glints belong only to the sea, never behind cloud/sky formations.
+    for (let i = 0; i < 9; i++) {
+      const x = 48 + (i * 167) % (FIELD_W - 96);
+      const y = 855 + ((i * 103 + scrollY * 0.35) % 390);
+      ctx.fillStyle = "rgba(238, 250, 255, 0.12)";
+      ctx.fillRect(x, y, 3 + (i % 3), 1);
+    }
+    ctx.restore();
   }
 
   private drawCelestialSky(scrollY: number, stageTick: number, phase: string, currentStage = 1): void {

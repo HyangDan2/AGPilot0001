@@ -18,7 +18,11 @@
     "audio:check": "node scripts/check-audio.mjs",
     "verify": "node scripts/check-env.mjs && npm run assets:check && npm run audio:check && npm run lint && npm run typecheck && npm test && npm run build",
     "test:e2e": "playwright test",
-    "format": "prettier --write src tests scripts *.json *.ts"
+    "format": "prettier --write src tests scripts *.json *.ts",
+    "art:bg": "node scripts/build-halvard-background.mjs",
+    "preassets:check": "npm run art:bg",
+    "predev": "npm run art:bg",
+    "prebuild": "npm run art:bg"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",
