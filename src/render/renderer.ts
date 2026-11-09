@@ -163,6 +163,7 @@ export class GameRenderer {
   private warningTimer = 0;
   public reducedMotion = false;
 
+  private playerBulletWhiteCoreImg: HTMLImageElement | null = null;
   private slashFxImg: HTMLImageElement | null = null;
   private slashFxLoaded = false;
   private eiraImg: HTMLImageElement | null = null;
@@ -205,6 +206,16 @@ export class GameRenderer {
     };
     // If the asset fails to load, the original stage background remains visible.
     skySea.src = "./assets/backgrounds/stage1-halvard-skysea-v1.webp";
+
+    // ImageGen-derived whitecore highlight. Original bullet silhouette and
+    // collision geometry remain unchanged if loading fails.
+    const whiteCore = new Image();
+    whiteCore.onload = () => {
+      if (whiteCore.naturalWidth === 32 && whiteCore.naturalHeight === 32) {
+        this.playerBulletWhiteCoreImg = whiteCore;
+      }
+    };
+    whiteCore.src = "./assets/fx/eira-whitecore-imagegen.png";
 
     // Original transparent two-direction sword FX, independent of approved Eira art.
     const slashFx = new Image();
@@ -2493,8 +2504,23 @@ export class GameRenderer {
         ctx.quadraticCurveTo(0, -18, 11, 4);
         ctx.quadraticCurveTo(0, -7, -11, 4);
         ctx.closePath();
+        // Wider, bright-white reflective surface without changing the outline.
+        ctx.shadowColor = "#ffffff";
+        ctx.shadowBlur = 6;
         ctx.fill();
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = shadowBlur;
         ctx.stroke();
+
+        // Screen-blend the independently ImageGen-drawn glint inside the
+        // original projectile path; avoids a new oversized bullet silhouette.
+        if (this.playerBulletWhiteCoreImg) {
+          ctx.save();
+          ctx.clip();
+          ctx.globalCompositeOperation = "screen";
+          ctx.drawImage(this.playerBulletWhiteCoreImg, -16, -17, 32, 32);
+          ctx.restore();
+        }
 
         // Tier 3 radiant gold core sparks
         if (tier >= 3) {
