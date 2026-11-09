@@ -563,7 +563,7 @@ export class GameRenderer {
 
     // 10. PNG sword energy trail behind Eira; approved character art unchanged.
     if (world.player.downTimer === 0 && world.player.meleeSwing) {
-      this.drawMeleeFx(world.player, "back");
+      this.drawMeleeFx(world.player, "back", world.tick);
     }
 
     // 10.5. Azure Aegis Orbs (Magical Shielding Subweapons)
@@ -581,7 +581,7 @@ export class GameRenderer {
 
     // Front white cutting edge sits above Eira; the trailing energy stays below.
     if (world.player.downTimer === 0 && world.player.meleeSwing) {
-      this.drawMeleeFx(world.player, "front");
+      this.drawMeleeFx(world.player, "front", world.tick);
     }
 
     // 12. Particle System (Explosions, Mana Sparks, Smoke)
@@ -1233,14 +1233,14 @@ export class GameRenderer {
   }
 
   /** Render one independently generated 8-tick PNG slash beat. */
-  private drawMeleeFx(p: Player, layer: "back" | "front"): void {
+  private drawMeleeFx(p: Player, layer: "back" | "front", tick: number): void {
     if (!p.meleeSwing) return;
     // The old Canvas crescent stays available during slow/missing asset loads.
     if (!this.slashFxLoaded || !this.slashFxImg) {
       if (layer === "back") this.drawMeleeSlash(p);
       return;
     }
-    const frame = Math.min(7, Math.max(0, 8 - Math.max(1, p.meleeSwing.duration)));
+    const frame = Math.min(7, Math.max(0, tick - p.meleeSwing.tick));
     const directionRow = p.meleeSwing.direction === "r2l" ? 1 : 0;
     const row = (layer === "front" ? 2 : 0) + directionRow;
     const ctx = this.ctx;
