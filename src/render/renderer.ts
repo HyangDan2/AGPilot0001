@@ -1,3 +1,4 @@
+import { HalvardV3Background } from "./backgrounds/halvard";
 import {
   DT,
   Enemy,
@@ -167,6 +168,7 @@ export class GameRenderer {
   // Stage 1 illustrated Halvard background. Existing procedural rendering remains the fallback.
   private halvardSkySeaImg: HTMLImageElement | null = null;
   private halvardSkySeaLoaded = false;
+  private halvardV3 = new HalvardV3Background();
   private eiraMotionV6Img: HTMLImageElement | null = null;
   private eiraMotionV6Loaded = false;
   private eiraMotionV5Img: HTMLImageElement | null = null;
@@ -517,10 +519,14 @@ export class GameRenderer {
       ctx.translate(dx, dy);
     }
 
+    const hasHalvardV3 = world.currentStage === 1 && this.halvardV3.ready;
     const hasIllustratedHalvard = world.currentStage === 1 &&
       this.halvardSkySeaLoaded && this.halvardSkySeaImg !== null;
 
-    if (hasIllustratedHalvard) {
+    if (hasHalvardV3) {
+      // Physically separate source-derived sprites, per-object parallax velocities.
+      this.halvardV3.drawBack(ctx, world.scrollY, world.stageTick, world.phase);
+    } else if (hasIllustratedHalvard) {
       // Stage 1: high-quality celestial ocean painting (static horizon, slow camera
       // drift), with subtle separately animated clouds. No primitive striped sky
       // or duplicated procedural floating citadels on top of the illustration.
@@ -589,7 +595,9 @@ export class GameRenderer {
 
     // 13. Stage-appropriate foreground: gentle sea fog for illustrated Halvard,
     // unchanged high-cloud/debris layer for Ragnarok, Yggdrasil, and fallback.
-    if (hasIllustratedHalvard) {
+    if (hasHalvardV3) {
+      this.halvardV3.drawFront(ctx, world.scrollY);
+    } else if (hasIllustratedHalvard) {
       this.drawHalvardForegroundFog(world.scrollY);
     } else {
       this.drawHighCloudsAndDebris(world.scrollY, world.stageTick);

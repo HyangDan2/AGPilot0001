@@ -202,6 +202,48 @@ function main() {
     report.checked++;
   }
 
+  // Physically isolated, four-depth v3 illustrated Halvard background.
+  // The optimized five-WebP bundle is generated reproducibly from committed ZIP;
+  // original unmodified 941x1672 paintings remain in art/source/halvard-v3.
+  const v3Root = path.resolve("public/assets/backgrounds/halvard-v3");
+  const v3Paths = ["base.webp", "islands.webp", "temples.webp", "clouds.webp", "shimmer.webp"];
+  const sourceZip = path.resolve("art/source/halvard-v3-runtime-bundle.zip");
+  const originalPaintings = ["base.png", "islands.png", "temples.png", "clouds.png", "shimmer.png"];
+  if (!fs.existsSync(sourceZip) ||
+      !originalPaintings.every((name) => fs.existsSync(path.resolve("art/source/halvard-v3", name))) ||
+      !v3Paths.every((name) => fs.existsSync(path.join(v3Root, name))) ||
+      !fs.existsSync(path.join(v3Root, "manifest.json"))) {
+    console.error("FAIL: Missing source or runtime asset for Halvard v3");
+    hasError = true;
+  } else {
+    const manifest = JSON.parse(fs.readFileSync(path.join(v3Root, "manifest.json"), "utf8"));
+    const expectedFrames = { islands: 7, temples: 3, clouds: 10 };
+    const validSprites = Object.entries(expectedFrames).every(([kind, count]) => {
+      const layer = manifest.layers[kind];
+      if (!layer || layer.frames.length !== count || layer.instances.length < count) return false;
+      const ids = new Set(layer.frames.map((frame) => frame.id));
+      return layer.instances.every((item) => ids.has(item.frame)) &&
+        layer.speed > 0 && layer.wrapPeriod > 0;
+    });
+    if (!validSprites || manifest.version !== "3.0.0" ||
+        manifest.layers.islands.speed !== 30 ||
+        manifest.layers.temples.speed !== 85 ||
+        manifest.layers.clouds.speed !== 180) {
+      console.error("FAIL: Halvard v3 independent parallax manifest invalid");
+      hasError = true;
+    }
+    for (const file of v3Paths) {
+      const bytes = fs.readFileSync(path.join(v3Root, file));
+      if (bytes.toString("ascii", 0, 4) !== "RIFF" ||
+          bytes.toString("ascii", 8, 12) !== "WEBP") {
+        console.error("FAIL: Halvard v3 malformed " + file);
+        hasError = true;
+      }
+      report.totalBytes += bytes.length;
+      report.checked++;
+    }
+  }
+
   // Independently generated 8-beat x 2-direction x 2-layer RGBA slash FX.
   // Generated before validation in dev, verify and build; never touch Eira artwork.
   const slashPngPath = path.resolve("public/assets/fx/eira-slash-v1.png");
@@ -227,7 +269,7 @@ function main() {
   }
 
   // Includes all versioned Eira artwork retained for rollback (not only active v6).
-  const maxImageBudget = 12.0 * 1024 * 1024;
+  const maxImageBudget = 15.0 * 1024 * 1024; // Includes retained v1, v2 and v3 illustrations
   if (report.totalBytes > maxImageBudget) {
     console.error(`FAIL: Asset budget exceeded: ${(report.totalBytes / 1024 / 1024).toFixed(2)} MB > ${(maxImageBudget / 1024 / 1024).toFixed(1)} MB`);
     hasError = true;

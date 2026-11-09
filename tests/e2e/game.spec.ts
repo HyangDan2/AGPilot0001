@@ -24,7 +24,8 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
       ) {
         const image = args[0];
         if (image instanceof HTMLImageElement &&
-            image.src.includes("stage1-halvard-skysea-v1.webp")) {
+            (image.src.includes("stage1-halvard-skysea-v1.webp") ||
+             image.src.includes("halvard-v3/"))) {
           (window as Window & { __skySeaDrawCount?: number }).__skySeaDrawCount!++;
         }
         return original.apply(this, args);
@@ -35,6 +36,99 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
     await expect.poll(() => page.evaluate(() =>
       (window as Window & { __skySeaDrawCount?: number }).__skySeaDrawCount ?? 0,
     )).toBeGreaterThan(2);
+  });
+
+  test("loads separately illustrated Halvard v3 layers and frame maps", async ({ page }) => {
+    await page.goto("./");
+    const result = await page.evaluate(async () => {
+      const root = "./assets/backgrounds/halvard-v3/";
+      const manifestResponse = await fetch(root + "manifest.json");
+      if (!manifestResponse.ok) return null;
+      const data = await manifestResponse.json();
+      const files = ["base.webp", "islands.webp", "temples.webp", "clouds.webp", "shimmer.webp"];
+      const layers = await Promise.all(files.map(async (file) => {
+        const response = await fetch(root + file);
+        if (!response.ok) return null;
+        const bitmap = await createImageBitmap(await response.blob());
+        const dims = [bitmap.width, bitmap.height];
+        bitmap.close();
+        return dims;
+      }));
+      return {
+        version: data.version,
+        images: layers,
+        counts: [
+          data.layers.islands.frames.length, data.layers.temples.frames.length,
+          data.layers.clouds.frames.length,
+        ],
+        speeds: [
+          data.layers.islands.speed, data.layers.temples.speed, data.layers.clouds.speed,
+        ],
+      };
+    });
+    expect(result).toEqual({
+      version: "3.0.0",
+      images: [[941, 1672], [1024, 2048], [2048, 1536], [2048, 2048], [941, 1672]],
+      counts: [7, 3, 10],
+      speeds: [30, 85, 180],
+    });
+  });
+
+  test("visibly scrolls each Halvard depth independently and permits layer toggles", async ({ page }) => {
+    await page.addInitScript(() => {
+      const original = CanvasRenderingContext2D.prototype.drawImage;
+      (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace = {};
+      CanvasRenderingContext2D.prototype.drawImage = (function(
+        this: CanvasRenderingContext2D, ...args: Parameters<typeof original>
+      ) {
+        const image = args[0];
+        if (image instanceof HTMLImageElement && image.src.includes("/halvard-v3/")) {
+          const kind = image.src.split("/").pop() || "";
+          const trace = (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace!;
+          if (!trace[kind]) trace[kind] = [];
+          if (args.length === 9 && args[1] === 6 && args[2] === 6) {
+            trace[kind].push(Number(args[6])); // first unique sprite, not all positions mixed
+          } else if (kind === "base.webp" && args.length === 5) {
+            trace[kind].push(Number(args[2]));
+          }
+        }
+        return original.apply(this, args);
+      }) as typeof original;
+    });
+    await page.goto("./?test=1");
+    await page.locator("#btn-start").click();
+    await expect.poll(() => page.evaluate(() => {
+      const trace = (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace ?? {};
+      return ["base.webp", "islands.webp", "temples.webp", "clouds.webp"].every(
+        (name) => (trace[name]?.length ?? 0) >= 6,
+      );
+    })).toBe(true);
+    await page.waitForTimeout(700);
+    const detail = await page.evaluate(() => {
+      const trace = (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace!;
+      return Object.fromEntries(["base.webp", "islands.webp", "temples.webp", "clouds.webp"].map(
+        (name) => [name, Math.max(...trace[name]) - Math.min(...trace[name])],
+      ));
+    });
+    expect(detail["base.webp"]).toBe(0);
+    expect(detail["islands.webp"]).toBeGreaterThan(2);
+    expect(detail["temples.webp"]).toBeGreaterThan(6);
+    expect(detail["clouds.webp"]).toBeGreaterThan(12);
+    const isReady = await page.evaluate(() => {
+      const overlay = (window as Window & { __halvardV3?: { ready: boolean; setVisible: (key: "clouds", show: boolean) => void } }).__halvardV3;
+      if (!overlay?.ready) return false;
+      overlay.setVisible("clouds", false);
+      return true;
+    });
+    expect(isReady).toBe(true);
+    const countBefore = await page.evaluate(() => (
+      (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace?.["clouds.webp"]?.length ?? 0
+    ));
+    await page.waitForTimeout(200);
+    const countAfter = await page.evaluate(() => (
+      (window as Window & { __parallaxTrace?: { [key: string]: number[] } }).__parallaxTrace?.["clouds.webp"]?.length ?? 0
+    ));
+    expect(countAfter).toBe(countBefore);
   });
 
   test("publishes cropped Eira face social thumbnail and icon assets", async ({ page }) => {

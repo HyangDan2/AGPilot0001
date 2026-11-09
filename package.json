@@ -20,9 +20,10 @@
     "test:e2e": "playwright test",
     "format": "prettier --write src tests scripts *.json *.ts",
     "art:bg": "node scripts/build-halvard-background.mjs",
-    "preassets:check": "npm run art:bg && npm run art:slash",
-    "predev": "npm run art:bg && npm run art:slash",
-    "prebuild": "npm run art:bg && npm run art:slash",
+    "art:parallax": "node scripts/build-halvard-v3.mjs",
+    "preassets:check": "npm run art:bg && npm run art:parallax && npm run art:slash",
+    "predev": "npm run art:bg && npm run art:parallax && npm run art:slash",
+    "prebuild": "npm run art:bg && npm run art:parallax && npm run art:slash",
     "art:slash": "node scripts/generate-slash-fx.mjs"
   },
   "devDependencies": {
