@@ -543,7 +543,17 @@ export class GameRenderer {
       this.drawCloudShadows(world.scrollY);
     }
 
-    // 6. Floating Ancient Bastions & Ground Targets
+    // 6. Foreground atmosphere is drawn before gameplay-critical objects.
+    // Stage 1 painted clouds must never hide Eira's projectiles or HUD.
+    if (hasHalvardV3) {
+      this.halvardV3.drawFront(ctx, world.scrollY);
+    } else if (hasIllustratedHalvard) {
+      this.drawHalvardForegroundFog(world.scrollY);
+    } else {
+      this.drawHighCloudsAndDebris(world.scrollY, world.stageTick);
+    }
+
+    // 7. Floating Ancient Bastions & Ground Targets
     for (const enemy of world.enemies) {
       if (enemy.ground && enemy.alive) {
         this.drawEnemy(enemy);
@@ -593,16 +603,8 @@ export class GameRenderer {
     // 12. Particle System (Explosions, Mana Sparks, Smoke)
     this.updateAndDrawParticles();
 
-    // 13. Stage-appropriate foreground: gentle sea fog for illustrated Halvard,
-    // unchanged high-cloud/debris layer for Ragnarok, Yggdrasil, and fallback.
-    if (hasHalvardV3) {
-      this.halvardV3.drawFront(ctx, world.scrollY);
-    } else if (hasIllustratedHalvard) {
-      this.drawHalvardForegroundFog(world.scrollY);
-    } else {
-      this.drawHighCloudsAndDebris(world.scrollY, world.stageTick);
-    }
-
+    // 13. Atmospheric particles remain behind the final HUD. Foreground
+    // painted clouds were already rendered beneath every gameplay object.
     // 13.5. Dynamic Weather & Feathers / Crystal Shards
     this.drawWeatherEffects(world.tick, world.stageTick, world.currentStage);
 
@@ -2456,23 +2458,42 @@ export class GameRenderer {
           shadowBlur = 24;
         }
 
-        ctx.shadowColor = glowColor;
-        ctx.shadowBlur = shadowBlur;
-        ctx.fillStyle = fillColor;
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = lineWidth;
-
         // Lane tilt matching bullet horizontal trajectory
         if (b.vx !== 0) {
           ctx.rotate(b.vx * 0.0012);
         }
 
+        // A short downstream tail makes upward projectile motion readable on
+        // the moving sky-sea artwork. Dark guard first, bright cyan core second.
+        ctx.lineCap = "round";
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.moveTo(0, 5);
+        ctx.lineTo(0, 29);
+        ctx.strokeStyle = "#12264d";
+        ctx.lineWidth = 8;
+        ctx.stroke();
+        ctx.strokeStyle = tier >= 2 ? "#ffd66e" : "#24e9ff";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Fill remains pearly white. A strong midnight-blue silhouette is
+        // rendered before the illuminated rim to survive white clouds/sea.
         ctx.beginPath();
         ctx.moveTo(-11, 4);
         ctx.quadraticCurveTo(0, -18, 11, 4);
         ctx.quadraticCurveTo(0, -7, -11, 4);
         ctx.closePath();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = "#12264d";
+        ctx.lineWidth = 8;
+        ctx.stroke();
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = shadowBlur;
+        ctx.fillStyle = fillColor;
         ctx.fill();
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = lineWidth;
         ctx.stroke();
 
         // Tier 3 radiant gold core sparks
