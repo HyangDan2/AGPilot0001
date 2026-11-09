@@ -21,10 +21,11 @@
     "format": "prettier --write src tests scripts *.json *.ts",
     "art:bg": "node scripts/build-halvard-background.mjs",
     "art:parallax": "node scripts/build-halvard-v3.mjs",
-    "preassets:check": "npm run art:bg && npm run art:parallax && npm run art:slash",
-    "predev": "npm run art:bg && npm run art:parallax && npm run art:slash",
-    "prebuild": "npm run art:bg && npm run art:parallax && npm run art:slash",
-    "art:slash": "node scripts/generate-slash-fx.mjs"
+    "preassets:check": "npm run art:bg && npm run art:parallax && npm run art:slash && npm run art:stage23",
+    "predev": "npm run art:bg && npm run art:parallax && npm run art:slash && npm run art:stage23",
+    "prebuild": "npm run art:bg && npm run art:parallax && npm run art:slash && npm run art:stage23",
+    "art:slash": "node scripts/generate-slash-fx.mjs",
+    "art:stage23": "node scripts/build-stage23-backgrounds.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",

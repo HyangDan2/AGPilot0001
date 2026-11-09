@@ -1,4 +1,5 @@
 import { HalvardV3Background } from "./backgrounds/halvard";
+import { Stage23Background } from "./backgrounds/stage23";
 import {
   DT,
   Enemy,
@@ -169,6 +170,8 @@ export class GameRenderer {
   private halvardSkySeaImg: HTMLImageElement | null = null;
   private halvardSkySeaLoaded = false;
   private halvardV3 = new HalvardV3Background();
+  private stage2Background = new Stage23Background(2);
+  private stage3Background = new Stage23Background(3);
   private eiraMotionV6Img: HTMLImageElement | null = null;
   private eiraMotionV6Loaded = false;
   private eiraMotionV5Img: HTMLImageElement | null = null;
@@ -520,10 +523,14 @@ export class GameRenderer {
     }
 
     const hasHalvardV3 = world.currentStage === 1 && this.halvardV3.ready;
+    const stageIllustration = world.currentStage === 2 ? this.stage2Background : world.currentStage === 3 ? this.stage3Background : null;
+    const hasStage23 = stageIllustration !== null && stageIllustration.ready;
     const hasIllustratedHalvard = world.currentStage === 1 &&
       this.halvardSkySeaLoaded && this.halvardSkySeaImg !== null;
 
-    if (hasHalvardV3) {
+    if (hasStage23 && stageIllustration) {
+      stageIllustration.drawBack(ctx, world.scrollY, world.stageTick, world.phase);
+    } else if (hasHalvardV3) {
       // Physically separate source-derived sprites, per-object parallax velocities.
       this.halvardV3.drawBack(ctx, world.scrollY, world.stageTick, world.phase);
     } else if (hasIllustratedHalvard) {
@@ -545,7 +552,9 @@ export class GameRenderer {
 
     // 6. Foreground atmosphere is drawn before gameplay-critical objects.
     // Stage 1 painted clouds must never hide Eira's projectiles or HUD.
-    if (hasHalvardV3) {
+    if (hasStage23 && stageIllustration) {
+      stageIllustration.drawFront(ctx, world.scrollY);
+    } else if (hasHalvardV3) {
       this.halvardV3.drawFront(ctx, world.scrollY);
     } else if (hasIllustratedHalvard) {
       this.drawHalvardForegroundFog(world.scrollY);

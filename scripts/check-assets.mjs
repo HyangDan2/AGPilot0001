@@ -244,6 +244,31 @@ function main() {
     }
   }
 
+
+  // Stage 2/3 four-depth raster atlas validation, generated from authored SVG painting.
+  for (const [folder,stage] of [["ragnarok-v1",2],["yggdrasil-v1",3]]) {
+    const root=path.resolve("public/assets/backgrounds",folder);
+    const manifestFile=path.join(root,"manifest.json");
+    if(!fs.existsSync(manifestFile)){console.error("FAIL: Missing "+folder+" manifest");hasError=true;continue;}
+    const manifest=JSON.parse(fs.readFileSync(manifestFile,"utf-8"));
+    if(manifest.version!=="1.0.0"||manifest.stage!==stage ||
+       JSON.stringify(manifest.gameDimensions)!=="[720,1280]" ||
+       manifest.layers.islands.frames.length!==6 ||
+       manifest.layers.temples.frames.length!==6 ||
+       manifest.layers.clouds.frames.length!==10){
+      console.error("FAIL: Invalid stage asset manifest "+folder);hasError=true;
+    }
+    for(const kind of ["base","islands","temples","clouds"]){
+      const file=path.join(root,kind+".webp");
+      if(!fs.existsSync(file)){console.error("FAIL: Missing "+file);hasError=true;continue;}
+      const buf=fs.readFileSync(file);
+      if(buf.toString("ascii",0,4)!=="RIFF"||buf.toString("ascii",8,12)!=="WEBP"||buf.length>1200000){
+        console.error("FAIL: Corrupt or oversized "+file);hasError=true;
+      }
+      report.totalBytes+=buf.length;report.checked++;
+    }
+  }
+
   // Independently generated 8-beat x 2-direction x 2-layer RGBA slash FX.
   // Generated before validation in dev, verify and build; never touch Eira artwork.
   const slashPngPath = path.resolve("public/assets/fx/eira-slash-v1.png");
