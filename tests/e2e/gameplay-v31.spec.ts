@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("boot uses clean Halvard plate, canvas stays hidden until gameplay",async({page})=>{
+test("boot uses clean Halvard plate behind a transparent, visible canvas",async({page})=>{
   await page.goto("./");
-  await expect(page.locator("#game")).toHaveCSS("visibility","hidden");
+  await expect(page.locator("#game")).toBeVisible();
   await expect(page.locator("#game-container")).toHaveCSS("background-image",/halvard-v3\/base\.webp/);
   await page.locator("#btn-start").click();
   await expect(page.locator("#game")).toHaveCSS("visibility","visible");

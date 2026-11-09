@@ -522,13 +522,9 @@ export class GameRenderer {
     }
   }
 
-  public hideCanvas(): void {
-    const canvas = this.ctx.canvas as HTMLCanvasElement | undefined;
-    if (canvas?.style) canvas.style.visibility = "hidden";
-  }
-  public showCanvas(): void {
-    const canvas = this.ctx.canvas as HTMLCanvasElement | undefined;
-    if (canvas?.style) canvas.style.visibility = "visible";
+  /** Transparent game surface: underlying container displays clean Halvard plate. */
+  public clearCanvas(): void {
+    this.ctx.clearRect(0, 0, FIELD_W, FIELD_H);
   }
 
   public render(world: World): void {

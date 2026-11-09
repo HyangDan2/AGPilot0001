@@ -31,7 +31,6 @@ export class GameApp {
   ) {
     // The boot/title backdrop is the static Halvard clean plate, not a
     // first frame of the outdated procedural striped canvas.
-    canvas.style.visibility = "hidden";
     this.renderer = new GameRenderer(canvas);
     this.renderer.highScore = this.highScore;
     this.renderer.reducedMotion = this.settings.reducedMotion;
@@ -84,9 +83,8 @@ export class GameApp {
     }
     this.isRunning = true;
     this.isPaused = false;
-    // First full gameplay frame is ready before we reveal the canvas.
+    // First full gameplay frame is ready before the simulation starts.
     this.renderer.render(this.world);
-    this.renderer.showCanvas();
     this.updateOrientationLock();
     this.audio.setGameplayPaused(this.landscapeLocked);
     this.lastTime = performance.now();
@@ -133,7 +131,7 @@ export class GameApp {
       this.renderer.highScore = this.highScore;
     }
     this.world = createWorld();
-    this.renderer.hideCanvas();
+    this.renderer.clearCanvas();
     this.ui.showTitle(this.highScore, this.settings.muted, this.settings.reducedMotion);
     this.audio.setGameplayPaused(this.landscapeLocked);
   }
