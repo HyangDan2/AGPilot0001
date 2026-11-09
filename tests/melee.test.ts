@@ -29,13 +29,13 @@ describe("Alternating Left/Right Sword Combat (좌우 교대 검격)", () => {
     }
   });
 
-  it("hits enemies within 130px frontal reach exactly once per swing", () => {
+  it("hits enemies within 108px frontal reach exactly once per swing", () => {
     const world = createWorld({ seed: 20261103, startAt: 1.0 });
     const p = world.player;
     p.x = 360;
     p.y = 800;
 
-    // Spawn an enemy right ahead of player (within 130px)
+    // Spawn an enemy right ahead of player (within 108px)
     const enemy = spawnEnemy(world, "condor", 360, 720, "straight"); // 80px distance ahead
     const initialHp = enemy.hp;
 

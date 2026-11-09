@@ -211,7 +211,7 @@ describe("Pause Menu & Return to Title (v0.7.1)", () => {
 });
 
 describe("Azure Aegis Orbs & Gungnir Ultimate v2", () => {
-  it("Aegis Orbs parry incoming enemy bullets and generate mana", () => {
+  it("Aegis Orbs do not collide with incoming enemy bullets", () => {
     const w = createWorld({ seed: 42, startAt: 10 });
     w.player.x = 360;
     w.player.y = 800;
@@ -233,10 +233,11 @@ describe("Azure Aegis Orbs & Gungnir Ultimate v2", () => {
 
     const events = step(w, NO_INPUT);
 
-    // Bullet parried and removed
+    // The orb no longer parries a near miss; the shield remains intact.
     const bulletAfter = w.bullets.find((b) => b.id === 991);
-    expect(bulletAfter).toBeUndefined();
-    expect(events.some((e) => e.t === "hit" && e.id === 991)).toBe(true);
+    expect(bulletAfter?.alive).toBe(true);
+    expect(w.player.aegisOrbs.every((orb) => orb.alive)).toBe(true);
+    expect(events.some((e) => e.t === "hit" && e.id === 991)).toBe(false);
   });
 
   it("Gungnir Ultimate deals exactly 35 total damage over its 42 active ticks", () => {
@@ -293,7 +294,7 @@ describe("Azure Aegis Orbs & Gungnir Ultimate v2", () => {
     expect(target?.hp).toBe(65);
   });
 
-  it("orb parries a near miss without losing charges; pickup restores a previously used shield", () => {
+  it("orb ignores a near miss without losing charges; pickup restores a previously used shield", () => {
     const w = createWorld({ seed: 777, startAt: 10 });
     expect(w.player.aegisOrbs.filter((o) => o.alive).length).toBe(2);
 

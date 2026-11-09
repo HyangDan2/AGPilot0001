@@ -191,6 +191,7 @@ export interface Player {
   ultimateTimer: number;
   prevUlt: boolean;
   grazeCount: number;
+  bodyContactIds: number[]; // Enemy bodies already touched; reset only after separating
   aegisOrbs: AegisOrb[];
   lanePower: LanePower;
   orbitSwords: {

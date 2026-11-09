@@ -11,7 +11,9 @@ import {
 import { damageEnemy } from "./enemies";
 
 export const PLAYER_SPEED = 420; // logical px / s
-export const PLAYER_HIT_RADIUS = 10;
+export const PLAYER_BODY_HITBOX_RX = 19; // Torso half-width, excluding hair/wings
+export const PLAYER_BODY_HITBOX_RY = 25; // Torso half-height, excluding skirt/tail
+export const PLAYER_BODY_HITBOX_OFFSET_Y = -6; // Center on Eira's upper torso
 export const ROLL_DURATION_TICKS = 72; // ~1.2s at 60Hz
 // Two quick sword attacks (8 ticks apart) followed by an 18-tick recovery.
 // Projectile shooting cadence is kept independent of the sword combo.
@@ -57,6 +59,7 @@ export function createPlayer(): Player {
     ultimateTimer: 0,
     prevUlt: false,
     grazeCount: 0,
+    bodyContactIds: [],
     aegisOrbs: [
       { id: 1, angleOffset: 0, alive: true, hp: 1 },
       { id: 2, angleOffset: Math.PI, alive: true, hp: 1 },

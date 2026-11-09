@@ -28,6 +28,7 @@ describe("Enemy Flight Patterns Continuity", () => {
     ultimateTimer: 0,
     prevUlt: false,
     grazeCount: 0,
+    bodyContactIds: [],
     orbitSwords: { angle: 0, active: true },
     aegisOrbs: [
       { id: 0, angleOffset: 0, alive: true, hp: 1 },

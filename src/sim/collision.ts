@@ -1,5 +1,10 @@
 import { damageEnemy } from "./enemies";
-import { addManaUnits } from "./player";
+import {
+  addManaUnits,
+  PLAYER_BODY_HITBOX_RX,
+  PLAYER_BODY_HITBOX_RY,
+  PLAYER_BODY_HITBOX_OFFSET_Y,
+} from "./player";
 import { Bullet, Enemy, GameEvent, Pickup, Player, World } from "./types";
 
 export function circlesIntersect(
@@ -16,6 +21,38 @@ export function circlesIntersect(
   return dx * dx + dy * dy <= r * r;
 }
 
+/**
+ * An ellipse centered over Eira's armored torso, enlarged by projectile radius.
+ * Weapon, braid, wings and skirt are deliberately excluded from the hurtbox.
+ */
+export function playerBodyIntersectsCircle(
+  player: Player,
+  x: number,
+  y: number,
+  radius: number,
+): boolean {
+  const dx = (x - player.x) / (PLAYER_BODY_HITBOX_RX + radius);
+  const dy = (y - (player.y + PLAYER_BODY_HITBOX_OFFSET_Y)) /
+    (PLAYER_BODY_HITBOX_RY + radius);
+  return dx * dx + dy * dy <= 1;
+}
+
+/** Enemy body/major living parts, not their visual trails or oversized sprite boxes. */
+export function enemyBodyTouchesPlayer(player: Player, enemy: Enemy): boolean {
+  if (!enemy.alive) return false;
+  const mainRadius = enemy.parts.length > 0 ? Math.min(enemy.r, 48) : enemy.r;
+  if (playerBodyIntersectsCircle(player, enemy.x, enemy.y, mainRadius)) return true;
+  return enemy.parts.some((part) =>
+    part.alive &&
+    playerBodyIntersectsCircle(
+      player,
+      enemy.x + part.dx,
+      enemy.y + part.dy,
+      Math.min(part.r, 28),
+    ),
+  );
+}
+
 export function hitPlayer(player: Player, bullet: Bullet): boolean {
   if (
     player.downTimer > 0 ||
@@ -26,7 +63,7 @@ export function hitPlayer(player: Player, bullet: Bullet): boolean {
   ) {
     return false;
   }
-  return circlesIntersect(player.x, player.y, 10, bullet.x, bullet.y, bullet.r);
+  return playerBodyIntersectsCircle(player, bullet.x, bullet.y, bullet.r);
 }
 
 export function hitEnemy(enemy: Enemy, bullet: Bullet): boolean {
@@ -63,8 +100,8 @@ export function checkMeleeHits(world: World, events: GameEvent[]): void {
   }
 
   const swing = p.meleeSwing;
-  const MELEE_REACH = 90;
-  const MELEE_ARC_COS = Math.cos((50 * Math.PI) / 180); // 100 deg frontal arc
+  const MELEE_REACH = 108; // +20% from 90px
+  const MELEE_ARC_COS = Math.cos((60 * Math.PI) / 180); // 120 deg frontal arc
   const meleeDamage = p.power >= 2 ? 3 : 2;
 
   for (const enemy of world.enemies) {
@@ -112,14 +149,14 @@ export function checkGraze(world: World, events: GameEvent[]): void {
   const p = world.player;
   if (p.downTimer > 0 || p.rollTimer > 0) return;
 
-  const GRAZE_INNER = 12; // hurtbox
-  const GRAZE_OUTER = 36; // graze field
+  const GRAZE_OUTER = 36; // graze field, excluding the enlarged body hurtbox
 
   for (const b of world.bullets) {
     if (!b.alive || b.owner !== "enemy" || b.grazed) continue;
 
-    const dist = Math.hypot(b.x - p.x, b.y - p.y);
-    if (dist > GRAZE_INNER && dist <= GRAZE_OUTER + b.r) {
+    const dist = Math.hypot(b.x - p.x, b.y - (p.y + PLAYER_BODY_HITBOX_OFFSET_Y));
+    if (!playerBodyIntersectsCircle(p, b.x, b.y, b.r) &&
+        dist <= GRAZE_OUTER + b.r) {
       b.grazed = true;
       p.grazeCount++;
       addManaUnits(p, 10);
@@ -141,28 +178,9 @@ export function checkOrbitSwordHits(world: World, events: GameEvent[]): void {
 
   const swordRadius = 72;
 
-  // 1. Parry enemy bullets without consuming shield charges.
-  // Only an enemy projectile hitting Eira's BODY can destroy an Aegis orb.
-  for (const b of world.bullets) {
-    if (!b.alive || b.owner !== "enemy") continue;
-
-    for (const orb of p.aegisOrbs) {
-      if (!orb.alive) continue;
-      const ox = p.x + Math.cos(p.orbitSwords.angle + orb.angleOffset) * swordRadius;
-      const oy = p.y + Math.sin(p.orbitSwords.angle + orb.angleOffset) * swordRadius;
-
-      if (Math.hypot(b.x - ox, b.y - oy) <= 18 + b.r) {
-        b.alive = false;
-         addManaUnits(p, 15);
-        world.score += 250;
-         events.push({ t: "explode", size: "s", x: ox, y: oy });
-        events.push({ t: "hit", id: b.id, x: b.x, y: b.y });
-        break; // Only 1 orb destroyed per bullet!
-      }
-    }
-  }
-
-  // 2. Damage enemies contacting alive Aegis Orbs
+  // Aegis orbs no longer collide with or intercept enemy bullets.
+  // Only a true hit on Eira's armored torso consumes one shield charge.
+  // The surviving orbs keep their offensive collision with enemies.
   for (const orb of p.aegisOrbs) {
     if (!orb.alive) continue;
     const ox = p.x + Math.cos(p.orbitSwords.angle + orb.angleOffset) * swordRadius;

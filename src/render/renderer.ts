@@ -532,16 +532,14 @@ export class GameRenderer {
     // 9. Projectiles (Player Arc Blades & Enemy Arcane Orbs)
     this.drawBullets(world);
 
-    // 10. Melee Slash Arc (Swept Blade Visuals)
-    // v2 slash sprites already include their own blade trails; avoid a duplicate arc.
-    if (
-      world.player.downTimer === 0 &&
-      world.player.meleeSwing &&
-      !this.eiraMotionV6Loaded &&
-      !this.eiraMotionV5Loaded &&
-      !this.eiraMotionV2Loaded
-    ) {
-      this.drawMeleeSlash(world.player);
+    // 10. Separate outer sword-glow layer: 20% larger than the old reach.
+    // Independently drawn sword sprites remain unscaled and intact.
+    if (world.player.downTimer === 0 && world.player.meleeSwing) {
+      if (this.eiraMotionV6Loaded || this.eiraMotionV5Loaded || this.eiraMotionV2Loaded) {
+        this.drawMeleeHalo(world.player);
+      } else {
+        this.drawMeleeSlash(world.player);
+      }
     }
 
     // 10.5. Azure Aegis Orbs (Magical Shielding Subweapons)
@@ -1103,6 +1101,40 @@ export class GameRenderer {
     ctx.restore();
   }
 
+  /** Narrow 115px sword-glow rim behind the existing 160px character art. */
+  private drawMeleeHalo(p: Player): void {
+    if (!p.meleeSwing) return;
+    const ctx = this.ctx;
+    const progress = Math.max(0, Math.min(1, 1 - p.meleeSwing.duration / 8));
+    const leftToRight = p.meleeSwing.direction === "l2r";
+    const sweep = (120 * Math.PI) / 180;
+    const tip = leftToRight
+      ? (-150 * Math.PI) / 180 + progress * sweep
+      : (-30 * Math.PI) / 180 - progress * sweep;
+    const trail = (48 * Math.PI) / 180;
+    const start = leftToRight ? tip - trail : tip + trail;
+    const color = leftToRight ? "#44d7f5" : "#f8c050";
+
+    ctx.save();
+    ctx.translate(p.x, p.y - 12);
+    ctx.globalAlpha *= 0.72 + Math.sin(progress * Math.PI) * 0.22;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(0, 0, 115, start, tip, !leftToRight);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = "#eefbff";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, 0, 115, start, tip, !leftToRight);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   private drawMeleeSlash(p: Player): void {
     if (!p.meleeSwing) return;
     const ctx = this.ctx;
@@ -1113,7 +1145,7 @@ export class GameRenderer {
     ctx.save();
     ctx.translate(p.x, p.y - 12);
 
-    const arcSpan = (100 * Math.PI) / 180;
+    const arcSpan = (120 * Math.PI) / 180;
     const startAngle = isL2R
       ? (-155 * Math.PI) / 180 + progress * 0.15
       : (-25 * Math.PI) / 180 - progress * 0.15;
@@ -1125,7 +1157,7 @@ export class GameRenderer {
     const trailSpan = (32 + progress * 40) * (Math.PI / 180);
     const tailAngle = isL2R ? tipAngle - trailSpan : tipAngle + trailSpan;
 
-    const reach = 96;
+    const reach = 115; // +20%, same outer size as the sprite halo
     const bellySpan = trailSpan * 0.45;
     const bellyAngle = isL2R ? tipAngle - bellySpan : tipAngle + bellySpan;
     const bellyR = reach - 13; // Max width at blade belly is 13px

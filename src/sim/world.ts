@@ -2,6 +2,7 @@ import {
   checkGraze,
   checkMeleeHits,
   checkOrbitSwordHits,
+  enemyBodyTouchesPlayer,
   hitEnemy,
   hitPlayer,
   playerCollectsPickup,
@@ -140,7 +141,7 @@ export function step(world: World, input: InputFrame): GameEvent[] {
   // Melee Swept Arc Collision
   checkMeleeHits(world, events);
 
-  // Orbiting Aegis Swords Collision & Projectile Defense
+  // Orbiting Aegis swords only damage enemies; they cannot intercept hostile bullets.
   checkOrbitSwordHits(world, events);
 
   // Bullet Graze Check (Charges Ultimate Gauge)
@@ -163,6 +164,10 @@ export function step(world: World, input: InputFrame): GameEvent[] {
 
   // Collisions: Player bullets vs Enemies
   handlePlayerBulletCollisions(world, events);
+
+  // Physical enemy contact resolves first: bosses cannot be shielded by an
+  // incidental bullet hit in the same frame.
+  checkEnemyBodyCollisions(world, events);
 
   // Collisions: Enemy bullets vs Player
   handleEnemyBulletCollisions(world, events);
@@ -327,6 +332,42 @@ function handlePlayerBulletCollisions(world: World, events: GameEvent[]): void {
         break;
       }
     }
+  }
+}
+
+const LETHAL_CONTACT_BOSSES = new Set([
+  "albatross", "celestialGuardian", "leviathan", "kraken",
+  "hollowStag", "fateWeaver", "valkyrieQueen",
+]);
+
+/**
+ * A newly entered enemy body triggers exactly one hit until Eira separates.
+ * General enemies consume a shield or a life; boss bodies ignore shield charges.
+ * Existing Roll, ULT, shield and respawn invulnerability all remain in force.
+ */
+export function checkEnemyBodyCollisions(world: World, events: GameEvent[]): void {
+  const player = world.player;
+  const touching = world.enemies.filter((enemy) =>
+    enemy.alive && enemyBodyTouchesPlayer(player, enemy),
+  );
+  const previousContacts = new Set(player.bodyContactIds);
+  player.bodyContactIds = touching.map((enemy) => enemy.id);
+
+  // Still track overlap during invulnerability: do not punish a player merely
+  // because the immunity timer expires while already overlapping an enemy.
+  if (player.downTimer > 0 || player.rollTimer > 0 || player.invuln > 0 ||
+      world.invulnerable) return;
+
+  const fresh = touching.filter((enemy) => !previousContacts.has(enemy.id));
+  const contact = fresh.find((enemy) => LETHAL_CONTACT_BOSSES.has(enemy.kind)) ?? fresh[0];
+  if (!contact) return;
+
+  if (LETHAL_CONTACT_BOSSES.has(contact.kind)) {
+    // Boss contact = one immediate life lost, regardless of Aegis charges.
+    // This is not an instant game-over; the regular respawn flow is preserved.
+    killPlayer(world, events);
+  } else if (!absorbPlayerHit(player, events)) {
+    killPlayer(world, events);
   }
 }
 

@@ -40,7 +40,7 @@ describe("Expansion Combat Mechanics", () => {
     expect(world.player.grazeCount).toBe(1);
   });
 
-  it("orbiting aegis swords parry enemy bullets and damage nearby enemies", () => {
+  it("orbiting aegis orbs ignore enemy bullets but still attack nearby enemies", () => {
     const world = createWorld({ seed: 42, startAt: 10 });
     world.player.x = 360;
     world.player.y = 800;
@@ -64,9 +64,10 @@ describe("Expansion Combat Mechanics", () => {
 
     const events = step(world, NO_INPUT);
     const bulletAfter = world.bullets.find((b) => b.id === 888);
-    // Bullet was parried and removed or marked dead
-    expect(bulletAfter).toBeUndefined();
-    expect(events.some((e) => e.t === "hit" && e.id === 888)).toBe(true);
+    // The orb is not a projectile hitbox; only the player's body can be hit.
+    expect(bulletAfter?.alive).toBe(true);
+    expect(events.some((e) => e.t === "hit" && e.id === 888)).toBe(false);
+    expect(world.player.aegisOrbs.every((orb) => orb.alive)).toBe(true);
   });
 
   it("activates Gungnir Judgement ultimate when mana >= 100", () => {
