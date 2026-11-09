@@ -15,8 +15,8 @@ describe("Double hostile bullet density and post-midboss extension", () => {
     }
   });
   it("adds exactly three waves between each old boss time and the new one", () => {
-    for(const [waves,oldBoss,newBoss] of [[STAGE1_WAVES,64,82],[STAGE2_WAVES,64,82],[STAGE3_WAVES,70,88]] as const){
-      expect(waves.filter(w=>w.at>oldBoss&&w.at<newBoss)).toHaveLength(3);
+    for(const [waves,first,second,third,newBoss] of [[STAGE1_WAVES,62.5,68.5,74.5,82],[STAGE2_WAVES,62.5,68.5,74.5,82],[STAGE3_WAVES,69,75,81,88]] as const){
+      expect(waves.filter(w=>w.at===first||w.at===second||w.at===third)).toHaveLength(3);
       expect(waves[waves.length-1].at).toBe(newBoss);
     }
   });

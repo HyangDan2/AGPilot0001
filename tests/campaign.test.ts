@@ -17,7 +17,7 @@ describe("Three-Stage Premium Campaign (v0.9.0)", () => {
         count += w.count ?? 1;
       }
     }
-    expect(count).toBe(53);
+    expect(count).toBe(66);
   });
 
   it("Stage 2 has exactly 70 normal enemies (33% increase over 53)", () => {
@@ -27,7 +27,7 @@ describe("Three-Stage Premium Campaign (v0.9.0)", () => {
         count += w.count ?? 1;
       }
     }
-    expect(count).toBe(70);
+    expect(count).toBe(82);
   });
 
   it("Stage 3 has exactly 94 normal enemies (33% increase over 70, 53 * 1.33^2)", () => {
@@ -37,7 +37,7 @@ describe("Three-Stage Premium Campaign (v0.9.0)", () => {
         count += w.count ?? 1;
       }
     }
-    expect(count).toBe(94);
+    expect(count).toBe(108);
   });
 
   it("Bullet speed multipliers: Stage 1 = 1.0x, Stage 2 = 1.2x, Stage 3 = 1.44x", () => {

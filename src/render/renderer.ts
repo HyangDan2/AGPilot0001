@@ -511,8 +511,14 @@ export class GameRenderer {
     }
   }
 
-  public hideCanvas(): void { this.ctx.canvas.style.visibility = "hidden"; }
-  public showCanvas(): void { this.ctx.canvas.style.visibility = "visible"; }
+  public hideCanvas(): void {
+    const canvas = this.ctx.canvas as HTMLCanvasElement | undefined;
+    if (canvas?.style) canvas.style.visibility = "hidden";
+  }
+  public showCanvas(): void {
+    const canvas = this.ctx.canvas as HTMLCanvasElement | undefined;
+    if (canvas?.style) canvas.style.visibility = "visible";
+  }
 
   public render(world: World): void {
     const ctx = this.ctx;

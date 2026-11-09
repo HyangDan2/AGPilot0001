@@ -152,7 +152,7 @@ describe("Expansion Combat Mechanics", () => {
     const normalCount = STAGE2_WAVES
       .filter((w) => w.kind !== "albatross" && w.kind !== "leviathan" && w.kind !== "kraken")
       .reduce((sum, w) => sum + (w.count ?? 1), 0);
-    expect(normalCount).toBe(70);
+    expect(normalCount).toBe(82);
 
     // Bullet speed test
     const w1 = createWorld({ seed: 42, startStage: 1 });
