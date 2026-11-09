@@ -59,6 +59,10 @@ export const STAGE2_WAVES: WaveDef[] = [
   // 0:57.0: Abyssal Phantom final charge (6 enemies)
   { at: 57.0, kind: "siren", formation: "line", count: 6, spacing: 28, path: "sCurve", x: 360, y: -40 },
 
-  // 0:64.0: FINAL BOSS: Leviathan (Abyssal Sky Dragon)
-  { at: 64.0, kind: "leviathan", path: "hover", x: 360, y: -200 },
+  // Three new post-midboss waves; final boss delayed by 18s.
+  { at: 62.5, kind: "seraph", formation: "line", count: 5, spacing: 30, path: "swoopR", x: 560, y: -40 },
+  { at: 68.5, kind: "golem", path: "ground", x: 360, y: -90 },
+  { at: 74.5, kind: "siren", formation: "vee", count: 6, spacing: 36, path: "sCurve", x: 360, y: -40 },
+  // 1:22 FINAL BOSS: Leviathan (Abyssal Sky Dragon)
+  { at: 82.0, kind: "leviathan", path: "hover", x: 360, y: -200 },
 ];

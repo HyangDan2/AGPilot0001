@@ -63,6 +63,10 @@ export const STAGE3_WAVES: WaveDef[] = [
   { at: 62.0, kind: "seedWisp", formation: "line", count: 7, spacing: 28, path: "swoopL", x: 180, y: -40 },
   { at: 64.5, kind: "seedWisp", formation: "line", count: 7, spacing: 28, path: "swoopR", x: 540, y: -40 },
 
-  // 1:10.0: FINAL BOSS: Fate Weaver (Cosmic Rune Loom)
-  { at: 70.0, kind: "fateWeaver", path: "hover", x: 360, y: -200 },
+  // Three new post-midboss waves; final boss delayed by 18s.
+  { at: 69.0, kind: "seedWisp", formation: "vee", count: 7, spacing: 28, path: "swoopR", x: 570, y: -40 },
+  { at: 75.0, kind: "rootGuardian", path: "ground", x: 360, y: -90 },
+  { at: 81.0, kind: "thornMantis", formation: "line", count: 6, spacing: 75, path: "dive", x: 360, y: -50 },
+  // 1:28 FINAL BOSS: Fate Weaver (Cosmic Rune Loom)
+  { at: 88.0, kind: "fateWeaver", path: "hover", x: 360, y: -200 },
 ];

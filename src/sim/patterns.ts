@@ -180,15 +180,13 @@ export function fireEnemyBullet(
     vy = Math.sin(angle) * actualSpeed;
   }
 
+  // All hostile emitters (minions, midbosses, bosses) fire exactly twice.
+  // A slight fixed angular separation prevents visually coincident bullets.
+  world.bullets.push({ id: world.nextId++, x, y, vx, vy, r: 6, dmg: 1, owner: "enemy", alive: true });
+  const angle = 0.095;
+  const c = Math.cos(angle), s = Math.sin(angle);
   world.bullets.push({
-    id: world.nextId++,
-    x,
-    y,
-    vx,
-    vy,
-    r: 6,
-    dmg: 1,
-    owner: "enemy",
-    alive: true,
+    id: world.nextId++, x, y, vx: vx * c - vy * s, vy: vx * s + vy * c,
+    r: 6, dmg: 1, owner: "enemy", alive: true,
   });
 }

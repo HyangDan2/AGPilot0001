@@ -51,6 +51,10 @@ export const STAGE1_WAVES: WaveDef[] = [
   { at: 53.0, kind: "kestrelRed", formation: "line", count: 6, spacing: 32, path: "sCurve", x: 360, y: -40, reward: "pow" },
   { at: 57.0, kind: "harrier", count: 4, spacing: 110, path: "dive", x: 360, y: -50 },
 
-  // 1:04 FINAL BOSS: Sun-Winged Sovereign (Celestial Guardian)
-  { at: 64.0, kind: "celestialGuardian", path: "hover", x: 360, y: -200 },
+  // Three new post-midboss waves; final boss delayed by 18s.
+  { at: 62.5, kind: "kestrel", formation: "vee", count: 6, spacing: 35, path: "swoopL", x: 160, y: -40 },
+  { at: 68.5, kind: "gunboat", path: "ground", x: 340, y: -90 },
+  { at: 74.5, kind: "kestrelRed", formation: "line", count: 6, spacing: 32, path: "sCurve", x: 360, y: -40 },
+  // 1:22 FINAL BOSS: Sun-Winged Sovereign (Celestial Guardian)
+  { at: 82.0, kind: "celestialGuardian", path: "hover", x: 360, y: -200 },
 ];
