@@ -18,14 +18,17 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
     await page.addInitScript(() => {
       const original = CanvasRenderingContext2D.prototype.drawImage;
       (window as Window & { __skySeaDrawCount?: number }).__skySeaDrawCount = 0;
-      CanvasRenderingContext2D.prototype.drawImage = function(...args) {
+      CanvasRenderingContext2D.prototype.drawImage = (function(
+        this: CanvasRenderingContext2D,
+        ...args: Parameters<typeof original>
+      ) {
         const image = args[0];
         if (image instanceof HTMLImageElement &&
             image.src.includes("stage1-halvard-skysea-v1.webp")) {
           (window as Window & { __skySeaDrawCount?: number }).__skySeaDrawCount!++;
         }
         return original.apply(this, args);
-      } as typeof original;
+      }) as typeof original;
     });
     await page.goto("./?test=1");
     await page.locator("#btn-start").click();
