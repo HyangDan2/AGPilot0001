@@ -29,7 +29,11 @@ export class GameApp {
     canvas: HTMLCanvasElement,
     uiContainer: HTMLElement,
   ) {
+    // The boot/title backdrop is the static Halvard clean plate, not a
+    // first frame of the outdated procedural striped canvas.
+    canvas.style.visibility = "hidden";
     this.renderer = new GameRenderer(canvas);
+    this.renderer.highScore = this.highScore;
     this.renderer.reducedMotion = this.settings.reducedMotion;
     this.audio = new AudioRuntime();
     this.audio.setMuted(this.settings.muted);
@@ -54,8 +58,7 @@ export class GameApp {
 
     this.ui.showTitle(this.highScore, this.settings.muted, this.settings.reducedMotion);
 
-    // Initial render of title backdrop
-    this.renderer.render(this.world);
+    // Do not render gameplay behind title before stage image loading.
 
     // Mobile/tablet landscape blocks simulation without overwriting a manual pause.
     window.addEventListener("resize", () => this.updateOrientationLock());
@@ -81,6 +84,9 @@ export class GameApp {
     }
     this.isRunning = true;
     this.isPaused = false;
+    // First full gameplay frame is ready before we reveal the canvas.
+    this.renderer.render(this.world);
+    this.renderer.showCanvas();
     this.updateOrientationLock();
     this.audio.setGameplayPaused(this.landscapeLocked);
     this.lastTime = performance.now();
@@ -124,11 +130,12 @@ export class GameApp {
     if (this.world.score > this.highScore) {
       saveHighScore(this.world.score);
       this.highScore = loadHighScore();
+      this.renderer.highScore = this.highScore;
     }
     this.world = createWorld();
+    this.renderer.hideCanvas();
     this.ui.showTitle(this.highScore, this.settings.muted, this.settings.reducedMotion);
     this.audio.setGameplayPaused(this.landscapeLocked);
-    this.renderer.render(this.world);
   }
 
   private startNextStage(): void {
@@ -272,11 +279,13 @@ export class GameApp {
         this.stopLoop();
         saveHighScore(this.world.score);
         this.highScore = loadHighScore();
+        this.renderer.highScore = this.highScore;
         this.ui.showGameOver(this.world.score, this.highScore);
       } else if (e.t === "stageClear") {
         this.stopLoop();
         saveHighScore(this.world.score);
         this.highScore = loadHighScore();
+        this.renderer.highScore = this.highScore;
         if (e.stage < 3) {
           this.ui.showStageClear(
             e.stage,

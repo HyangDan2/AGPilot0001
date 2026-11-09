@@ -169,6 +169,7 @@ export class GameRenderer {
   // Stage 1 illustrated Halvard background. Existing procedural rendering remains the fallback.
   private halvardSkySeaImg: HTMLImageElement | null = null;
   private halvardSkySeaLoaded = false;
+  public highScore = 0; // real persisted localStorage record, not current run score
   private halvardV3 = new HalvardV3Background();
   private stage2Background = new Stage23Background(2);
   private stage3Background = new Stage23Background(3);
@@ -509,6 +510,9 @@ export class GameRenderer {
       }
     }
   }
+
+  public hideCanvas(): void { this.ctx.canvas.style.visibility = "hidden"; }
+  public showCanvas(): void { this.ctx.canvas.style.visibility = "visible"; }
 
   public render(world: World): void {
     const ctx = this.ctx;
@@ -2682,7 +2686,7 @@ export class GameRenderer {
 
     ctx.fillStyle = "#f8c050";
     ctx.font = "900 22px monospace";
-    ctx.fillText(Math.max(world.score, 0).toString().padStart(6, "0"), FIELD_W - 36, 193);
+    ctx.fillText(this.highScore.toString().padStart(6, "0"), FIELD_W - 36, 193);
 
     // LIVES (Winged Crests)
     for (let i = 0; i < world.player.lives; i++) {
