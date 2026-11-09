@@ -87,12 +87,13 @@ test.describe("HD²LAB ARCADE : VALKYRIE EIRA E2E & Browser Gate", () => {
           const kind = image.src.split("/").pop() || "";
           const trace = (window as Window & { __parallaxTrace?: MotionTrace }).__parallaxTrace!;
           if (!trace[kind]) trace[kind] = {};
-          if (args.length === 9) {
+          const argumentCount = (args as unknown[]).length;
+          if (argumentCount === 9) {
             // Same source sprite, x and scale identify one independent instance.
             const key = `${args[1]}:${args[2]}:${args[5]}:${args[7]}`;
             if (!trace[kind][key]) trace[kind][key] = [];
             if (trace[kind][key].length < 500) trace[kind][key].push(Number(args[6]));
-          } else if (kind === "base.webp" && args.length === 5) {
+          } else if (kind === "base.webp" && argumentCount === 5) {
             if (!trace[kind].base) trace[kind].base = [];
             trace[kind].base.push(Number(args[2]));
           }
