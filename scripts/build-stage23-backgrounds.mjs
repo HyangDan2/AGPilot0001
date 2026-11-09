@@ -1,71 +1,97 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import sharp from "sharp";
-const outRoot = path.resolve("public/assets/backgrounds");
-const N=320, C=4;
-const palette={
-  2:{top:"#0a081c",mid:"#381052",bottom:"#150721",glow:"#c64aef",accent:"#ff5b84",rock:"#20152d",rim:"#c070ed",cloud:"#9b68bd"},
-  3:{top:"#061b1a",mid:"#164735",bottom:"#07251c",glow:"#60f5ba",accent:"#ffe7a2",rock:"#193d2d",rim:"#98cb80",cloud:"#77cc9f"}
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import sharp from 'sharp';
+
+const F=320, COLS=4;
+const configs={
+  2:{slug:'ragnarok-v1',name:'RAGNAROK RIFT',speeds:[35,90,190]},
+  3:{slug:'yggdrasil-v1',name:'YGGDRASIL HEART',speeds:[25,75,165]},
 };
-function rand(seed){let z=seed*7919+1;return ()=>{z=(z*16807)%2147483647;return z/2147483647;};}
-function pre(w,h,p){return '<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><defs>'+
-'<linearGradient id="sky" x2="0" y2="1"><stop stop-color="'+p.top+'"/><stop offset=".52" stop-color="'+p.mid+'"/><stop offset="1" stop-color="'+p.bottom+'"/></linearGradient>'+
-'<linearGradient id="rock" x2=".2" y2="1"><stop stop-color="'+p.rim+'"/><stop offset=".22" stop-color="'+p.rock+'"/><stop offset="1" stop-color="'+p.bottom+'"/></linearGradient>'+
-'<radialGradient id="glow"><stop stop-color="'+p.accent+'" stop-opacity=".88"/><stop offset=".25" stop-color="'+p.glow+'" stop-opacity=".55"/><stop offset="1" stop-color="'+p.glow+'" stop-opacity="0"/></radialGradient>'+
-'<radialGradient id="mist"><stop stop-color="'+p.cloud+'" stop-opacity=".5"/><stop offset="1" stop-color="'+p.cloud+'" stop-opacity="0"/></radialGradient>'+
-'<filter id="blur"><feGaussianBlur stdDeviation="6"/></filter></defs>';}
-function background(stage){
- const p=palette[stage], r=rand(stage*31);let s=pre(720,1280,p)+'<rect width="720" height="1280" fill="url(#sky)"/>';
- s+='<ellipse cx="365" cy="270" rx="480" ry="420" fill="url(#glow)"/>';
- if(stage===2){
-   for(let i=0;i<12;i++){const rx=90+i*25; s+='<ellipse cx="385" cy="255" rx="'+rx+'" ry="'+rx*.68+'" transform="rotate('+(i*23)+' 385 255)" stroke="'+(i%3?'#a844d9':'#ff6487')+'" stroke-opacity="'+(.33-i*.014)+'" stroke-width="'+(2+i*.2)+'" fill="none"/>';}
-   for(let i=0;i<18;i++){const x=r()*720,y=r()*1000;s+='<path d="M'+x.toFixed(1)+' '+y.toFixed(1)+'l-'+(15+r()*45).toFixed(1)+' '+(45+r()*70).toFixed(1)+'l'+(4+r()*19).toFixed(1)+' -'+(20+r()*30).toFixed(1)+'l'+(12+r()*25).toFixed(1)+' '+(33+r()*48).toFixed(1)+'" stroke="'+p.accent+'" stroke-width="2.3" stroke-opacity=".35" fill="none"/>';}
- }else{
-  s+='<path d="M245 1280 Q304 1000 290 745 Q267 515 347 95 Q419 273 418 488 Q464 789 421 971 Q407 1141 501 1280Z" fill="url(#rock)" stroke="#6eaa76" stroke-width="14"/>';
-  for(let i=0;i<9;i++){const yy=180+i*71,dir=i%2?1:-1;s+='<path d="M370 '+(yy+270)+' Q'+(370+dir*145)+' '+(yy-10)+' '+(360+dir*480)+' '+(yy-180)+'" stroke="#123c2b" stroke-width="'+(34-i*2)+'" fill="none" stroke-linecap="round"/><path d="M370 '+(yy+270)+' Q'+(370+dir*145)+' '+(yy-10)+' '+(360+dir*480)+' '+(yy-180)+'" stroke="#e2d587" stroke-opacity=".4" stroke-width="4" fill="none"/>';}
-  s+='<ellipse cx="363" cy="431" rx="130" ry="185" fill="url(#glow)"/><path d="M362 349L423 433L362 520L300 433Z" fill="#74edbe" stroke="#e7ffd7" stroke-opacity=".9" stroke-width="5"/>';
- }
- for(let i=0;i<180;i++){let x=(r()*720).toFixed(1),y=(r()*1280).toFixed(1);s+='<circle cx="'+x+'" cy="'+y+'" r="'+(r()*2.1+.3).toFixed(1)+'" fill="'+p.accent+'" opacity="'+(.15+r()*.5).toFixed(2)+'"/>';}
- return s+'</svg>';
-}
-function sprite(stage,kind,index){
- const p=palette[stage],r=rand(stage*1000+index*47+(kind==="temples"?290:kind==="clouds"?770:0));let s='';
- if(kind==="clouds"){
-  for(let i=0;i<11;i++){let x=15+r()*285,y=30+r()*240;s+='<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="'+(21+r()*54).toFixed(1)+'" ry="'+(14+r()*27).toFixed(1)+'" fill="url(#mist)" opacity="'+(.35+r()*.45).toFixed(2)+'"/>';}
-  for(let i=0;i<(stage===2?7:12);i++){let x=r()*310,y=r()*290;
-   if(stage===2)s+='<path d="M'+x.toFixed(1)+' '+y.toFixed(1)+'l-12 32l13 -15l7 28" stroke="'+p.accent+'" stroke-opacity=".6" stroke-width="2" fill="none"/>';
-   else s+='<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="5" ry="13" transform="rotate('+(r()*160).toFixed(1)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" fill="'+(i%2?p.accent:p.glow)+'" opacity=".73"/>';
+const rects={
+  2:{
+    islands:[[20,180,285,320],[740,190,260,330],[270,325,320,320],[535,365,320,310],[30,570,280,340],[680,570,300,330]],
+    temples:[[0,85,455,425],[475,175,530,465],[175,315,480,435],[0,610,480,435],[490,600,500,455],[235,820,500,420]],
+    clouds:[[0,820,380,360],[345,800,370,370],[610,825,360,340],[0,960,400,300],[350,965,390,300],[610,945,380,335],[0,480,400,280],[395,500,400,290],[10,290,400,310],[585,290,415,290]],
+  },
+  3:{
+    islands:[[20,160,330,350],[650,190,335,350],[30,540,345,360],[620,520,360,350],[215,780,350,350],[350,350,365,340]],
+    temples:[[0,100,475,450],[475,190,525,465],[0,510,490,445],[495,525,515,450],[210,795,530,445],[265,335,510,460]],
+    clouds:[[0,805,380,380],[340,795,370,380],[610,800,375,375],[0,960,385,300],[365,950,365,310],[630,940,365,335],[0,460,400,340],[395,480,400,325],[0,220,400,330],[615,285,400,355]],
+  },
+};
+function ellipticalAlpha(width,height,kind) {
+  const data=Buffer.alloc(width*height*4);
+  const fade=kind==='clouds'?.44:.20;
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    const dx=(x-width*.5)/(width*.5),dy=(y-height*.51)/(height*.51);
+    const radius=Math.sqrt(dx*dx+dy*dy);
+    const t=Math.max(0,Math.min(1,(1.03-radius)/fade));
+    const feather=t*t*(3-2*t);
+    const v=kind==='clouds'?Math.round(feather*178):Math.round(feather*250);
+    const i=(y*width+x)*4;
+    data[i]=255;data[i+1]=255;data[i+2]=255;data[i+3]=v;
   }
- }else if(stage===2){
-  const mid=kind==="temples";
-  s+='<path d="M31 172L65 141L117 124L152 93L193 113L242 144L294 181L242 233L166 304L84 238Z" fill="url(#rock)" stroke="'+p.rim+'" stroke-width="'+(mid?4:2.5)+'"/>';
-  const towers=mid?7:4;for(let i=0;i<towers;i++){let x=65+i*(210/Math.max(1,towers-1)),height=(mid?65:37)+r()*(mid?75:53);s+='<path d="M'+(x-9)+' 164V'+(155-height)+'L'+x+' '+(137-height)+'L'+(x+9)+' '+(155-height)+'V164Z" fill="#120e26" stroke="'+p.rim+'" stroke-width="2"/><rect x="'+(x-3)+'" y="'+(152-height/2)+'" width="6" height="13" fill="'+p.accent+'"/>';}
-  s+='<path d="M32 178Q160 159 288 184" stroke="'+p.glow+'" stroke-opacity=".5" stroke-width="3" fill="none"/>';
- }else{
-  s+='<path d="M20 203Q82 164 154 148Q244 123 303 185L259 258L164 302L51 264Z" fill="url(#rock)" stroke="'+p.rim+'" stroke-width="4"/>';
-  for(let i=0;i<7;i++){let x=40+i*38,yy=100+r()*31;s+='<path d="M'+x+' 195Q'+(x-30)+' 141 '+(x+9)+' '+yy+'" stroke="#254b34" stroke-width="'+(13+r()*9)+'" fill="none" stroke-linecap="round"/><ellipse cx="'+(x+7)+'" cy="'+yy+'" rx="'+(16+r()*18)+'" ry="'+(16+r()*16)+'" fill="'+(i%2?'#267c53':'#53a767')+'" stroke="#c3d88e" stroke-width="2"/>';}
-  if(kind==="temples")for(let i=0;i<4;i++)s+='<path d="M'+(73+i*53)+' 200l7 -31l8 31Z" fill="#ebd79d" stroke="#63c29c" stroke-width="2"/>';
- }
- return s;
+  return sharp(data,{raw:{width,height,channels:4}}).png().toBuffer();
 }
-function spriteSheet(stage,kind,count){
- let s=pre(1280,Math.ceil(count/4)*320,palette[stage]);
- for(let i=0;i<count;i++)s+='<g transform="translate('+((i%4)*320)+' '+(Math.floor(i/4)*320)+')">'+sprite(stage,kind,i)+'</g>';
- return s+'</svg>';
+async function makeAtlas(input,kind,regions){
+  const w=F*COLS,h=F*Math.ceil(regions.length/COLS),composites=[];
+  for(let i=0;i<regions.length;i++){
+    const [px,py,pw,ph]=regions[i];
+    // Region specifications come from the original 1086x1448 key art.
+    const left=Math.max(0,Math.min(719,Math.round(px*720/1086)));
+    const top=Math.max(0,Math.min(1279,Math.round(py*1280/1448)));
+    const width=Math.max(1,Math.min(720-left,Math.round(pw*720/1086)));
+    const height=Math.max(1,Math.min(1280-top,Math.round(ph*1280/1448)));
+    const crop=await sharp(input).extract({left,top,width,height}).resize(F,F,{fit:'cover'}).png().toBuffer();
+    const alpha=await ellipticalAlpha(F,F,kind);
+    const sprite=await sharp(crop).ensureAlpha().composite([{input:alpha,blend:'dest-in'}]).png().toBuffer();
+    composites.push({input:sprite,left:(i%COLS)*F,top:Math.floor(i/COLS)*F});
+  }
+  return sharp({create:{width:w,height:h,channels:4,background:{r:0,g:0,b:0,alpha:0}}})
+    .composite(composites).webp({quality:88,effort:5}).toBuffer();
 }
-await fs.mkdir(outRoot,{recursive:true});
-for(const stage of [2,3]){
- const slug=stage===2?"ragnarok-v1":"yggdrasil-v1",dir=path.join(outRoot,slug);
- await fs.mkdir(dir,{recursive:true});
- const layers={};
- for(const kind of ["base","islands","temples","clouds"]){
-  const count=kind==="base"?0:kind==="clouds"?10:6;
-  const svg=kind==="base"?background(stage):spriteSheet(stage,kind,count);
-  await sharp(Buffer.from(svg)).webp({quality:86,effort:5}).toFile(path.join(dir,kind+".webp"));
-  const frames=Array.from({length:count},(_,i)=>({id:kind+"-"+i,rect:[(i%4)*320,Math.floor(i/4)*320,320,320]}));
-  const instances=frames.map((fr,i)=>({id:kind+"-instance-"+i,frame:fr.id,x:(i%2?-15:430)+(i%3)*23,y:-520+i*(kind==="clouds"?300:610),scale:kind==="islands"?.42+(i%3)*.08:kind==="temples"?.72+(i%3)*.16:.85+(i%3)*.12}));
-  layers[kind]={image:kind+".webp",speed:kind==="base"?0:kind==="islands"?(stage===2?35:25):kind==="temples"?(stage===2?90:75):stage===2?190:165,wrapPeriod:kind==="clouds"?3700:4500,frames,instances};
- }
- await fs.writeFile(path.join(dir,"manifest.json"),JSON.stringify({version:"1.0.0",stage,gameDimensions:[720,1280],layers},null,2));
- console.log("Generated",slug);
+async function cleanPlate(source){
+  // Soft distant matte plate: sharp background architecture is instead supplied
+  // by independently moving foreground sprites, preventing static duplicates.
+  const blurred=await sharp(source).blur(20).toBuffer();
+  const width=720,height=1280;
+  const mask=Buffer.alloc(width*height*4);
+  for(let y=0;y<height;y++){
+    const fraction=Math.max(0,Math.min(1,(y-260)/550));
+    const opacity=Math.round((fraction*fraction*(3-2*fraction))*.87*255);
+    for(let x=0;x<width;x++){
+      const i=(y*width+x)*4;
+      mask[i]=255;mask[i+1]=255;mask[i+2]=255;mask[i+3]=opacity;
+    }
+  }
+  const overlay=await sharp(blurred).ensureAlpha().composite([{
+    input:await sharp(mask,{raw:{width,height,channels:4}}).png().toBuffer(),blend:'dest-in'
+  }]).png().toBuffer();
+  return sharp(source).composite([{input:overlay,blend:'over'}]).webp({quality:87,effort:5}).toBuffer();
+}
+for(const [key,config] of Object.entries(configs)){
+  const stage=Number(key),source=path.resolve(`art/source/backgrounds/stage${stage}-concept.webp`);
+  const output=path.resolve(`public/assets/backgrounds/${config.slug}`);
+  await fs.mkdir(output,{recursive:true});
+  const art=await fs.readFile(source);
+  const metadata=await sharp(art).metadata();
+  if(metadata.width!==720||metadata.height!==1280)throw Error('Invalid source concept dimensions');
+  await fs.writeFile(path.join(output,'base.webp'),await cleanPlate(art));
+  const manifest={version:'1.0.0',stage,style:config.name,gameDimensions:[720,1280],layers:{
+    base:{image:'base.webp',speed:0,wrapPeriod:0,frames:[],instances:[]}
+  }};
+  for(const [index,kind] of ['islands','temples','clouds'].entries()){
+    const regions=rects[stage][kind];
+    await fs.writeFile(path.join(output,kind+'.webp'),await makeAtlas(art,kind,regions));
+    const frames=regions.map((_,i)=>({id:`${kind}-${i}`,rect:[(i%4)*F,Math.floor(i/4)*F,F,F]}));
+    const instances=frames.map((frame,i)=>({
+      id:`${kind}-actor-${i}`,frame:frame.id,
+      x:(i%2===0?-95:415)+(i%3)*25,
+      y:-590+i*(kind==='clouds'?370:630),
+      scale:kind==='islands'?.45+(i%3)*.13:kind==='temples'?.78+(i%3)*.16:.78+(i%3)*.13,
+    }));
+    manifest.layers[kind]={image:kind+'.webp',speed:config.speeds[index],wrapPeriod:kind==='clouds'?4600:4800,frames,instances};
+  }
+  await fs.writeFile(path.join(output,'manifest.json'),JSON.stringify(manifest,null,2));
+  console.log(`Stage ${stage} original illustration -> four-layer production assets (${config.slug})`);
 }
