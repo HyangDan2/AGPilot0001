@@ -40,7 +40,7 @@ for (const [stage,slug] of [[2,"ragnarok-v1"],[3,"yggdrasil-v1"]] as const) {
       return b?.[s]?.ready??false;
     },stage)).toBe(true);
     await page.evaluate((s)=>{
-      const h=(window as Window & {__testHook:{getWorld:()=>{currentStage:number}}}).__testHook;
+      const h=(window as unknown as Window & {__testHook:{getWorld:()=>{currentStage:number}}}).__testHook;
       h.getWorld().currentStage=s;
     },stage);
     await expect.poll(()=>page.evaluate((s)=>{
