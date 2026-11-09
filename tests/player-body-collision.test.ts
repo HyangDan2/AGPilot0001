@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { enemyBodyTouchesPlayer, hitPlayer, playerBodyIntersectsCircle, checkMeleeHits } from "../src/sim/collision";
 import { checkEnemyBodyCollisions, createWorld, step } from "../src/sim/world";
 import { spawnEnemy } from "../src/sim/enemies";
-import { NO_INPUT } from "../src/sim/types";
+import { GameEvent, NO_INPUT } from "../src/sim/types";
 
 describe("Eira torso hurtbox and one-hit enemy body contact", () => {
   it("uses a 19 x 25 oval centered on the torso, excluding wings/hair/skirt", () => {
@@ -25,7 +25,7 @@ describe("Eira torso hurtbox and one-hit enemy body contact", () => {
     const p = w.player;
     p.invuln = 0;
     const e = spawnEnemy(w, "kestrel", p.x, p.y, "hover");
-    const events = [];
+    const events: GameEvent[] = [];
     checkEnemyBodyCollisions(w, events);
     expect(events.filter((ev) => ev.t === "shieldHit")).toHaveLength(1);
     expect(p.aegisOrbs.filter((orb) => orb.alive)).toHaveLength(1);
@@ -49,7 +49,7 @@ describe("Eira torso hurtbox and one-hit enemy body contact", () => {
     p.invuln = 0;
     const boss = spawnEnemy(w, "albatross", p.x, p.y, "hover");
     expect(enemyBodyTouchesPlayer(p, boss)).toBe(true);
-    const events = [];
+    const events: GameEvent[] = [];
     checkEnemyBodyCollisions(w, events);
     expect(p.lives).toBe(2);
     expect(p.deaths).toBe(1);
