@@ -202,6 +202,30 @@ function main() {
     report.checked++;
   }
 
+  // Independently generated 8-beat x 2-direction x 2-layer RGBA slash FX.
+  // Generated before validation in dev, verify and build; never touch Eira artwork.
+  const slashPngPath = path.resolve("public/assets/fx/eira-slash-v1.png");
+  const slashMetaPath = path.resolve("public/assets/fx/eira-slash-v1.json");
+  if (!fs.existsSync(slashPngPath) || !fs.existsSync(slashMetaPath)) {
+    console.error("FAIL: Missing transparent slash FX atlas or metadata. Run npm run art:slash");
+    hasError = true;
+  } else {
+    const png = fs.readFileSync(slashPngPath);
+    const meta = JSON.parse(fs.readFileSync(slashMetaPath, "utf-8"));
+    const sizeAndAlpha = png.subarray(0, 8).toString("hex") === "89504e470d0a1a0a" &&
+      png.readUInt32BE(16) === 2048 && png.readUInt32BE(20) === 1024 && png[25] === 6;
+    const validRows = JSON.stringify(meta.rows) === JSON.stringify({
+      l2r_back: 0, r2l_back: 1, l2r_front: 2, r2l_front: 3,
+    });
+    if (!sizeAndAlpha || !validRows || meta.framesPerSequence !== 8 ||
+      meta.simulationTicksPerSwing !== 8) {
+      console.error("FAIL: Invalid RGBA Eira slash FX sprite layout");
+      hasError = true;
+    }
+    report.totalBytes += png.length;
+    report.checked++;
+  }
+
   // Includes all versioned Eira artwork retained for rollback (not only active v6).
   const maxImageBudget = 12.0 * 1024 * 1024;
   if (report.totalBytes > maxImageBudget) {

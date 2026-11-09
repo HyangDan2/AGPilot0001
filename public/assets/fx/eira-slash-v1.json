@@ -1,0 +1,36 @@
+{
+  "name": "Valkyrie Eira — Celestial Arc Slash FX",
+  "version": "1.0.0",
+  "type": "transparent-rgba-atlas",
+  "generatedBy": "scripts/generate-slash-fx.mjs",
+  "image": "assets/fx/eira-slash-v1.png",
+  "width": 2048,
+  "height": 1024,
+  "cellWidth": 256,
+  "cellHeight": 256,
+  "framesPerSequence": 8,
+  "simulationTicksPerSwing": 8,
+  "rows": {
+    "l2r_back": 0,
+    "r2l_back": 1,
+    "l2r_front": 2,
+    "r2l_front": 3
+  },
+  "animation": {
+    "l2r": [
+      "l2r_back",
+      "l2r_front"
+    ],
+    "r2l": [
+      "r2l_back",
+      "r2l_front"
+    ]
+  },
+  "notes": [
+    "Transparent PNG generated during dev, verify, and production build",
+    "Original slash-only VFX; Eira character atlas is not altered",
+    "8 animation beats match the existing 8-tick melee swing",
+    "Rendering alone changes; 108px collision reach, 120-degree frontal arc, damage and cooldowns unchanged",
+    "When atlas is missing, the Canvas crescent fallback remains available"
+  ]
+}

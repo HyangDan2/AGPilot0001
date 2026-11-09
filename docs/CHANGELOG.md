@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased] — Eira transparent sword-slash sequence
+### Added
+- Replaced the normal thin Canvas sword halo with a deterministic, original **32-cell transparent PNG atlas** (8-frame L→R/R→L attacks × background energy trail/foreground cutting edge).
+- New `scripts/generate-slash-fx.mjs` uses the already-pinned Sharp dependency to rasterize original illustrated crescent ribbons, luminous knife edges and fine directional splinters without touching any approved character sprites.
+- `GameRenderer` now draws the cyan/gold energy trail behind Eira and the sharp white slash rim in front. The old Canvas crescent remains a safe image-load fallback.
+- Production build and GitHub Pages CI generate `public/assets/fx/eira-slash-v1.png` before verification and upload it to the static site.
+- Added metadata, transparency/dimension validation and unit tests. Simulation hitbox 108px/120°, damage, swing cadence and Eira v6 assets are unchanged.
+
+
 ## [0.9.0] - 2026-11-08
 ### Added
 - **Phase 0 — Asset & Design Duplication Audit**:
