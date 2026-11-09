@@ -163,6 +163,7 @@ export class GameRenderer {
   private warningTimer = 0;
   public reducedMotion = false;
 
+  private enemyBulletCache: HTMLCanvasElement | null = null;
   private playerBulletWhiteCoreImg: HTMLImageElement | null = null;
   private slashFxImg: HTMLImageElement | null = null;
   private slashFxLoaded = false;
@@ -2443,8 +2444,34 @@ export class GameRenderer {
     }
   }
 
+  /** Render red orb + white core once; 2x barrage reuses this sprite each frame. */
+  private getEnemyBulletCache(): HTMLCanvasElement | null {
+    if (this.enemyBulletCache) return this.enemyBulletCache;
+    if (typeof document === "undefined" || typeof document.createElement !== "function") return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 48;
+    canvas.height = 48;
+    const c = canvas.getContext("2d");
+    if (!c) return null;
+    c.translate(24, 24);
+    c.shadowColor = "#ff5468";
+    c.shadowBlur = 10;
+    c.fillStyle = "#ffffff";
+    c.beginPath();
+    c.arc(0, 0, 4, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = "#ff5468";
+    c.lineWidth = 2.5;
+    c.beginPath();
+    c.arc(0, 0, 6, 0, Math.PI * 2);
+    c.stroke();
+    this.enemyBulletCache = canvas;
+    return canvas;
+  }
+
   private drawBullets(world: World): void {
     const ctx = this.ctx;
+    const enemyBulletCache = this.getEnemyBulletCache();
 
     for (const b of world.bullets) {
       if (!b.alive) continue;
@@ -2529,7 +2556,15 @@ export class GameRenderer {
 
         ctx.restore();
       } else {
-        // Glowing Arcane Orbs (Deep Violet & Magenta)
+        // Reused painted orb matches the original red-white appearance while
+        // avoiding 2 paths + 2 shadow passes for every bullet on every frame.
+        if (enemyBulletCache) {
+          const factor = b.r / 6;
+          const size = 48 * factor;
+          ctx.drawImage(enemyBulletCache, b.x - size / 2, b.y - size / 2, size, size);
+          continue;
+        }
+        // Procedural fallback for non-browser / mocked Canvas environments.
         ctx.save();
         ctx.translate(b.x, b.y);
         ctx.shadowColor = "#ff5468";
