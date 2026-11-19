@@ -5,53 +5,11 @@
     "m4a"
   ],
   "sounds": {
-    "bgm_title": {
-      "base": "assets/audio/bgm_title",
+    "bgm_main": {
+      "base": "assets/audio/bgm_main",
       "kind": "bgm",
-      "gain": 0.75,
-      "loop": true,
-      "loopStart": 0,
-      "loopEnd": 24
-    },
-    "bgm_stage": {
-      "base": "assets/audio/bgm_stage",
-      "kind": "bgm",
-      "gain": 0.75,
-      "loop": true,
-      "loopStart": 0,
-      "loopEnd": 28
-    },
-    "bgm_stage2": {
-      "base": "assets/audio/bgm_stage2",
-      "kind": "bgm",
-      "gain": 0.75,
-      "loop": true,
-      "loopStart": 0,
-      "loopEnd": 24
-    },
-    "bgm_stage3": {
-      "base": "assets/audio/bgm_stage3",
-      "kind": "bgm",
-      "gain": 0.75,
-      "loop": true,
-      "loopStart": 0,
-      "loopEnd": 24
-    },
-    "bgm_midboss": {
-      "base": "assets/audio/bgm_midboss",
-      "kind": "bgm",
-      "gain": 0.8,
-      "loop": true,
-      "loopStart": 0,
-      "loopEnd": 16
-    },
-    "bgm_boss": {
-      "base": "assets/audio/bgm_boss",
-      "kind": "bgm",
-      "gain": 0.8,
-      "loop": true,
-      "loopStart": 0,
-      "loopEnd": 20
+      "gain": 0.7,
+      "loop": true
     },
     "jingle_clear": {
       "base": "assets/audio/jingle_clear",

@@ -1,6 +1,17 @@
 import { GameEvent } from "../sim/types";
 
-export type BGMId = "bgm_title" | "bgm_stage" | "bgm_stage1" | "bgm_stage2" | "bgm_stage3" | "bgm_midboss" | "bgm_boss";
+/**
+ * The game plays exactly one music bed: the VALKYRIE EIRA trailer theme.
+ * It starts with a run and keeps playing across stages and boss encounters.
+ */
+export type BGMId = "bgm_main";
+
+export interface AudioRuntimeOptions {
+  /** Test/alternate seam for the Web Audio context. */
+  createContext?: () => AudioContext | null;
+  /** Test/alternate seam for loading the audio manifest. */
+  fetchImpl?: (input: RequestInfo | URL) => Promise<Response>;
+}
 
 export class AudioRuntime {
   private ctx: AudioContext | null = null;
@@ -14,59 +25,75 @@ export class AudioRuntime {
   private activeBgmSource: AudioBufferSourceNode | null = null;
   private activeBgmGain: GainNode | null = null;
   private currentBgmId: BGMId | null = null;
-  public currentStage: 1 | 2 | 3 = 1;
+  /** Track position (seconds) to resume from — kept in sync while playing. */
+  private bgmOffset = 0;
+  /** ctx.currentTime at which the active source was started. */
+  private bgmStartedAt = 0;
+  private gameplayPaused = false;
   private manifestLoaded = false;
+  private loadPromise: Promise<void> | null = null;
   private preferredExt = "ogg";
 
-  constructor() {
+  constructor(private readonly options: AudioRuntimeOptions = {}) {
     // AudioContext will be initialized on user interaction
   }
 
   public init(): void {
     if (this.ctx) return;
     try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtx) return;
-      this.ctx = new AudioCtx();
-      this.masterGain = this.ctx.createGain();
-      this.bgmGain = this.ctx.createGain();
-      this.sfxGain = this.ctx.createGain();
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      const ctx = this.options.createContext ? this.options.createContext() : AudioCtx ? new AudioCtx() : null;
+      if (!ctx) return;
+      this.ctx = ctx;
+      this.masterGain = ctx.createGain();
+      this.bgmGain = ctx.createGain();
+      this.sfxGain = ctx.createGain();
 
-      this.analyser = this.ctx.createAnalyser();
+      this.analyser = ctx.createAnalyser();
       this.analyser.fftSize = 256;
 
       this.bgmGain.connect(this.masterGain);
       this.sfxGain.connect(this.masterGain);
       this.masterGain.connect(this.analyser);
-      this.analyser.connect(this.ctx.destination);
+      this.analyser.connect(ctx.destination);
 
       this.setMuted(this.isMuted);
 
       // Determine audio codec support
-      const audioEl = document.createElement("audio");
-      if (audioEl.canPlayType("audio/ogg; codecs=vorbis")) {
-        this.preferredExt = "ogg";
-      } else {
+      try {
+        const audioEl = document.createElement("audio");
+        this.preferredExt = audioEl.canPlayType("audio/ogg; codecs=vorbis") ? "ogg" : "m4a";
+      } catch {
         this.preferredExt = "m4a";
       }
 
-      this.preloadAudio();
+      this.loadPromise = this.preloadAudio();
     } catch {
       // Audio not supported in this environment
     }
   }
 
+  /** Resolves once the manifest and every sound it lists have been decoded. */
+  public async whenReady(): Promise<void> {
+    await this.loadPromise;
+  }
+
   private async preloadAudio(): Promise<void> {
     if (this.manifestLoaded || !this.ctx) return;
     try {
-      const res = await fetch("./assets/audio.json");
+      const doFetch = this.options.fetchImpl ?? ((input: RequestInfo | URL) => fetch(input));
+      const res = await doFetch("./assets/audio.json");
       if (!res.ok) return;
       const manifest = await res.json();
       this.manifestLoaded = true;
 
+      const loads: Promise<void>[] = [];
       for (const [id, sound] of Object.entries<{ base: string }>(manifest.sounds)) {
-        this.loadSoundBuffer(id, `./${sound.base}.${this.preferredExt}`);
+        loads.push(this.loadSoundBuffer(id, `./${sound.base}.${this.preferredExt}`));
       }
+      await Promise.all(loads);
     } catch {
       // Offline fallback: procedural synth
     }
@@ -75,16 +102,16 @@ export class AudioRuntime {
   private async loadSoundBuffer(id: string, url: string): Promise<void> {
     if (!this.ctx || this.bufferCache.has(id)) return;
     try {
-      const res = await fetch(url);
+      const doFetch = this.options.fetchImpl ?? ((input: RequestInfo | URL) => fetch(input));
+      const res = await doFetch(url);
       if (!res.ok) return;
       const arrayBuf = await res.arrayBuffer();
       const decoded = await this.ctx.decodeAudioData(arrayBuf);
       this.bufferCache.set(id, decoded);
 
-      // If this was pending current BGM, start it
-      const resolvedCurrent = this.currentBgmId === "bgm_stage1" ? "bgm_stage" : this.currentBgmId;
-      if (resolvedCurrent === id && !this.activeBgmSource) {
-        this.playBgmInternal(id);
+      // If this was the pending current BGM, start it where the run expects it.
+      if (this.currentBgmId === id && !this.activeBgmSource && !this.gameplayPaused) {
+        this.startBgmSource(id, 0.3, this.bgmOffset);
       }
     } catch {
       // Decode error fallback
@@ -96,114 +123,157 @@ export class AudioRuntime {
     if (this.masterGain && this.ctx) {
       this.masterGain.gain.setValueAtTime(muted ? 0 : 0.75, this.ctx.currentTime);
     }
-    if (!muted && this.currentBgmId && !this.activeBgmSource) {
-      this.playBgmInternal(this.currentBgmId, 0.3);
-    }
   }
 
+  /**
+   * Pause returns the music to the exact position it was at, instead of letting
+   * it keep running under a muted gain. Mute is a separate concern: it only
+   * moves the master gain, so unmuting never rewinds or restarts the track.
+   */
   public setGameplayPaused(paused: boolean): void {
-    // Stop music during landscape pause, preserving the user's mute setting.
-    if (this.ctx && this.bgmGain) {
-      this.bgmGain.gain.setTargetAtTime(paused ? 0 : 1, this.ctx.currentTime, 0.045);
+    if (this.gameplayPaused === paused) return;
+    this.gameplayPaused = paused;
+    if (paused) {
+      this.pauseBgm();
+    } else {
+      this.resumeBgm();
     }
   }
 
-  public playBGM(id: BGMId, crossfadeDuration = 0.35): void {
-    const resolvedId = id === "bgm_stage1" ? "bgm_stage" : id;
-    if (this.currentBgmId === resolvedId && this.activeBgmSource) return;
-    this.currentBgmId = resolvedId;
+  public isGameplayPaused(): boolean {
+    return this.gameplayPaused;
+  }
+
+  public isBgmPlaying(): boolean {
+    return this.activeBgmSource !== null;
+  }
+
+  public getCurrentBgmId(): BGMId | null {
+    return this.currentBgmId;
+  }
+
+  /** Current playback position in seconds, wrapped to the track length. */
+  public currentBgmPosition(): number {
+    const duration = this.bgmDuration();
+    if (!this.ctx || !this.activeBgmSource) {
+      return duration > 0 ? this.bgmOffset % duration : this.bgmOffset;
+    }
+    const elapsed = this.bgmOffset + Math.max(0, this.ctx.currentTime - this.bgmStartedAt);
+    return duration > 0 ? elapsed % duration : elapsed;
+  }
+
+  private bgmDuration(): number {
+    if (!this.currentBgmId) return 0;
+    return this.bufferCache.get(this.currentBgmId)?.duration ?? 0;
+  }
+
+  private pauseBgm(): void {
+    if (!this.activeBgmSource) return;
+    this.bgmOffset = this.currentBgmPosition();
+    this.haltBgmSource(0.06);
+  }
+
+  private resumeBgm(): void {
+    if (!this.currentBgmId || this.activeBgmSource) return;
+    this.startBgmSource(this.currentBgmId, 0.18, this.bgmOffset);
+  }
+
+  public playBGM(id: BGMId, fadeDuration = 0.35): void {
+    // Same track still playing (or paused mid-track): let it continue so that
+    // boss warnings, stage clears and next-stage starts never restart the music.
+    if (this.currentBgmId === id && (this.activeBgmSource || this.gameplayPaused)) return;
+
+    const switching = this.currentBgmId !== null && this.activeBgmSource !== null;
+    this.currentBgmId = id;
 
     if (!this.ctx || !this.bgmGain) return;
 
-    // Smoothly crossfade: fade out previous BGM source
-    if (this.activeBgmSource && this.activeBgmGain) {
-      const oldSrc = this.activeBgmSource;
-      const oldGain = this.activeBgmGain;
-      const now = this.ctx.currentTime;
-      try {
-        oldGain.gain.setValueAtTime(oldGain.gain.value, now);
-        oldGain.gain.linearRampToValueAtTime(0.0001, now + crossfadeDuration);
-        setTimeout(() => {
-          try {
-            oldSrc.stop();
-            oldSrc.disconnect();
-            oldGain.disconnect();
-          } catch {
-            // Ignore stop error
-          }
-        }, crossfadeDuration * 1000 + 40);
-      } catch {
-        try {
-          oldSrc.stop();
-        } catch {
-          // Ignore stop error
-        }
-      }
-      this.activeBgmSource = null;
-      this.activeBgmGain = null;
-    } else if (this.activeBgmSource) {
-      this.stopBGM(crossfadeDuration);
+    if (this.activeBgmSource) {
+      this.haltBgmSource(switching ? fadeDuration : 0.06);
     }
-
-    this.playBgmInternal(resolvedId, crossfadeDuration);
+    this.bgmOffset = 0;
+    if (this.gameplayPaused) return;
+    this.startBgmSource(id, fadeDuration, 0);
   }
 
   public stopBGM(fadeDuration = 0.25): void {
-    if (this.activeBgmSource && this.activeBgmGain && this.ctx) {
-      const oldSrc = this.activeBgmSource;
-      const oldGain = this.activeBgmGain;
-      const now = this.ctx.currentTime;
-      try {
-        oldGain.gain.setValueAtTime(oldGain.gain.value, now);
-        oldGain.gain.linearRampToValueAtTime(0.0001, now + fadeDuration);
-        setTimeout(() => {
-          try {
-            oldSrc.stop();
-            oldSrc.disconnect();
-            oldGain.disconnect();
-          } catch {
-            // Ignore stop error
-          }
-        }, fadeDuration * 1000 + 40);
-      } catch {
-        try {
-          oldSrc.stop();
-        } catch {
-          // Ignore stop error
-        }
-      }
-      this.activeBgmSource = null;
-      this.activeBgmGain = null;
-    } else if (this.activeBgmSource) {
-      try {
-        this.activeBgmSource.stop();
-        this.activeBgmSource.disconnect();
-      } catch {
-        // Ignore stop error
-      }
-      this.activeBgmSource = null;
+    if (this.activeBgmSource) {
+      this.haltBgmSource(fadeDuration);
     }
+    this.currentBgmId = null;
+    this.bgmOffset = 0;
   }
 
-  private playBgmInternal(id: string, fadeDuration = 0.35): void {
-    if (!this.ctx || !this.bgmGain || this.isMuted) return;
-    const resolvedId = id === "bgm_stage1" ? "bgm_stage" : id;
-    const buf = this.bufferCache.get(resolvedId);
-    if (!buf) return; // Wait for buffer or fallback
+  /** Fades the active source out and stops it, without touching the saved offset. */
+  private haltBgmSource(fadeDuration: number): void {
+    const src = this.activeBgmSource;
+    const gain = this.activeBgmGain;
+    this.activeBgmSource = null;
+    this.activeBgmGain = null;
+    if (!src) return;
+
+    const stopNow = () => {
+      try {
+        src.stop();
+      } catch {
+        // Already stopped
+      }
+      try {
+        src.disconnect();
+      } catch {
+        // Already disconnected
+      }
+      try {
+        gain?.disconnect();
+      } catch {
+        // Already disconnected
+      }
+    };
+
+    if (!gain || !this.ctx || fadeDuration <= 0) {
+      stopNow();
+      return;
+    }
+
+    const now = this.ctx.currentTime;
+    try {
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(gain.gain.value, now);
+      gain.gain.linearRampToValueAtTime(0.0001, now + fadeDuration);
+    } catch {
+      stopNow();
+      return;
+    }
+    setTimeout(stopNow, fadeDuration * 1000 + 40);
+  }
+
+  private startBgmSource(id: BGMId, fadeDuration = 0.35, offset = 0): void {
+    if (!this.ctx || !this.bgmGain || this.activeBgmSource) return;
+    const buf = this.bufferCache.get(id);
+    if (!buf) return; // Wait for the buffer to arrive; loadSoundBuffer starts it
 
     try {
+      const duration = buf.duration || 0;
+      const startOffset = duration > 0 ? ((offset % duration) + duration) % duration : Math.max(0, offset);
+
       const src = this.ctx.createBufferSource();
       src.buffer = buf;
       src.loop = true;
       const trackGain = this.ctx.createGain();
       const now = this.ctx.currentTime;
-      trackGain.gain.setValueAtTime(0.0001, now);
-      trackGain.gain.linearRampToValueAtTime(1.0, now + fadeDuration);
+      if (fadeDuration > 0) {
+        trackGain.gain.setValueAtTime(0.0001, now);
+        trackGain.gain.linearRampToValueAtTime(1.0, now + fadeDuration);
+      } else {
+        trackGain.gain.setValueAtTime(1.0, now);
+      }
       src.connect(trackGain);
       trackGain.connect(this.bgmGain);
-      src.start(0);
+      src.start(now, startOffset);
       this.activeBgmSource = src;
       this.activeBgmGain = trackGain;
+      this.bgmStartedAt = now;
+      this.bgmOffset = startOffset;
     } catch {
       // Play error
     }
@@ -245,16 +315,14 @@ export class AudioRuntime {
           this.playAudioOrSynth("sfx_explode_l", () => this.synthExplosion("l"));
           break;
         case "warning":
-          this.playBGM(e.isMidboss ? "bgm_midboss" : "bgm_boss");
+          // Boss warning only layers a siren over the ongoing trailer theme.
           this.playAudioOrSynth("sfx_warning", () => this.synthWarning());
           break;
-        case "midbossDefeated": {
-          const stageBgm: BGMId = this.currentStage === 3 ? "bgm_stage3" : this.currentStage === 2 ? "bgm_stage2" : "bgm_stage";
-          this.playBGM(stageBgm);
+        case "midbossDefeated":
+          // Music keeps running; no track change on midboss defeat.
           break;
-        }
         case "stageClear":
-          this.stopBGM();
+          // The theme carries across the clear screen into the next stage.
           this.playAudioOrSynth("jingle_clear", () => this.synthVictoryFanfare());
           break;
         case "gameOver":

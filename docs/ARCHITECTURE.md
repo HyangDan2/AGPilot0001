@@ -59,13 +59,13 @@ Owned by the audio pipeline (AUDIO_PIPELINE.md).
   "version": 1,
   "formats": ["m4a", "ogg"],          // runtime picks the first the browser can decode
   "sounds": {
-    "bgm_stage": { "base": "audio/bgm_stage", "kind": "bgm", "loop": true, "loopStart": 3.2, "loopEnd": 92.8, "gain": 0.8 },
+    "bgm_main": { "base": "assets/audio/bgm_main", "kind": "bgm", "loop": true, "gain": 0.7 },
     "sfx_shot1": { "base": "audio/sfx_shot1", "kind": "sfx", "gain": 0.5, "maxVoices": 3 }
   }
 }
 ```
 
-Required ids — BGM: `bgm_title` (loop), `bgm_stage` (loop), `bgm_boss` (loop), `jingle_clear`, `jingle_gameover`. SFX: `sfx_shot1`, `sfx_shot2`, `sfx_shot3`, `sfx_hit`, `sfx_explode_s`, `sfx_explode_m`, `sfx_explode_l`, `sfx_pickup`, `sfx_roll`, `sfx_player_down`, `sfx_warning`, `sfx_ui`.
+Required ids — BGM: `bgm_main` (the VALKYRIE EIRA trailer theme, whole-file loop). The title screen is silent and every stage, midboss and boss encounter shares that one bed, so there is exactly one BGM id. Jingles: `jingle_clear`, `jingle_gameover`. SFX: `sfx_shot1`, `sfx_shot2`, `sfx_shot3`, `sfx_hit`, `sfx_explode_s`, `sfx_explode_m`, `sfx_explode_l`, `sfx_pickup`, `sfx_roll`, `sfx_player_down`, `sfx_warning`, `sfx_ui`.
 
 ## Events → presentation
 | GameEvent | Audio | Visual |
@@ -76,6 +76,7 @@ Required ids — BGM: `bgm_title` (loop), `bgm_stage` (loop), `bgm_boss` (loop),
 | `pickup` | `sfx_pickup` | sparkle |
 | `roll` | `sfx_roll` | roll animation |
 | `playerDown` | `sfx_player_down` | large explosion |
-| `warning` | `sfx_warning`, BGM → `bgm_boss` | WARNING banner |
-| `stageClear` | `jingle_clear` | results overlay |
-| `gameOver` | `jingle_gameover` | game-over overlay |
+| `warning` | `sfx_warning` (BGM keeps playing) | WARNING banner |
+| `midbossDefeated` | none (BGM keeps playing) | midboss explosion |
+| `stageClear` | `jingle_clear` over the continuing BGM | results overlay |
+| `gameOver` | `stopBGM` + `jingle_gameover` | game-over overlay |

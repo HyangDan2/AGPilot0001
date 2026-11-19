@@ -16,12 +16,7 @@ function main() {
   }
 
   const requiredIds = [
-    "bgm_title",
-    "bgm_stage",
-    "bgm_stage2",
-    "bgm_stage3",
-    "bgm_midboss",
-    "bgm_boss",
+    "bgm_main",
     "jingle_clear",
     "jingle_gameover",
     "sfx_shot1",

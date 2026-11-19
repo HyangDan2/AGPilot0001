@@ -1,4 +1,3 @@
-import { BGMId } from "../audio/runtime";
 import { STAGE1_WAVES, WaveDef } from "./stage1";
 import { STAGE2_WAVES } from "./stage2";
 import { STAGE3_WAVES } from "./stage3";
@@ -12,7 +11,6 @@ export interface StageDefinition {
   waves: WaveDef[];
   midboss: EnemyKind;
   boss: EnemyKind;
-  bgm: BGMId;
 }
 
 export const STAGE_DEFS: Record<1 | 2 | 3, StageDefinition> = {
@@ -24,7 +22,6 @@ export const STAGE_DEFS: Record<1 | 2 | 3, StageDefinition> = {
     waves: STAGE1_WAVES,
     midboss: "albatross",
     boss: "celestialGuardian",
-    bgm: "bgm_stage",
   },
   2: {
     id: 2,
@@ -34,7 +31,6 @@ export const STAGE_DEFS: Record<1 | 2 | 3, StageDefinition> = {
     waves: STAGE2_WAVES,
     midboss: "kraken",
     boss: "leviathan",
-    bgm: "bgm_stage2",
   },
   3: {
     id: 3,
@@ -44,7 +40,6 @@ export const STAGE_DEFS: Record<1 | 2 | 3, StageDefinition> = {
     waves: STAGE3_WAVES,
     midboss: "hollowStag",
     boss: "fateWeaver",
-    bgm: "bgm_stage3",
   },
 };
 

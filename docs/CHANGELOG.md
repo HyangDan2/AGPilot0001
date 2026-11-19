@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased] — 2026-11-20 · Trailer theme BGM and one continuous music bed
+### Changed
+- Replaced the six synthesized per-state tracks (`bgm_title`, `bgm_stage`, `bgm_stage2`, `bgm_stage3`, `bgm_midboss`, `bgm_boss`) with the single **VALKYRIE EIRA trailer theme** (`bgm_main`, 2:52, whole-file loop) encoded as OGG Vorbis 73 kbps and AAC 89 kbps.
+- The theme now starts with a run and plays unbroken through boss warnings, midboss defeats, stage clears and the transition into the next stage; `warning` and `midbossDefeated` no longer swap music.
+- `gameOver` stops the theme and plays `jingle_gameover`; retry starts it again from the top. `returnToTitle()` stops the music and the title screen is silent.
+- Pause (manual Pause, hidden tab, landscape lock) now tracks the playback offset and stops the `AudioBufferSourceNode`; resuming continues from the exact paused position. Mute is independent of pause and never rewinds the track.
+- `scripts/render-audio.mjs` no longer synthesizes BGM, so running it cannot overwrite the music bed; `scripts/check-audio.mjs` and `public/assets/audio.json` list `bgm_main` only.
+- Removed the 12 obsolete BGM files; total audio is 3.66 MB against the 4.5 MB budget.
+- New unit tests cover start-from-top, cross-stage continuity, game over/retry, pause offset, position wrap and mute, plus browser tests for asset delivery and pause/resume.
+
 ## [Unreleased] — Eira transparent sword-slash sequence
 ### Added
 - Replaced the normal thin Canvas sword halo with a deterministic, original **32-cell transparent PNG atlas** (8-frame L→R/R→L attacks × background energy trail/foreground cutting edge).

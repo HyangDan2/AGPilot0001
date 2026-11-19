@@ -2,7 +2,6 @@ import { AudioRuntime } from "../audio/runtime";
 import { createKeyboardHandler } from "../input/keyboard";
 import { createTouchHandler } from "../input/touch";
 import { GameRenderer } from "../render/renderer";
-import { getStageDef } from "../sim/stages";
 import { DT, GameEvent, InputFrame, World } from "../sim/types";
 import { createWorld, step } from "../sim/world";
 import { loadHighScore, loadSettings, saveHighScore, saveSettings } from "../storage";
@@ -28,13 +27,14 @@ export class GameApp {
   constructor(
     canvas: HTMLCanvasElement,
     uiContainer: HTMLElement,
+    audio?: AudioRuntime,
   ) {
     // The boot/title backdrop is the static Halvard clean plate, not a
     // first frame of the outdated procedural striped canvas.
     this.renderer = new GameRenderer(canvas);
     this.renderer.highScore = this.highScore;
     this.renderer.reducedMotion = this.settings.reducedMotion;
-    this.audio = new AudioRuntime();
+    this.audio = audio ?? new AudioRuntime();
     this.audio.setMuted(this.settings.muted);
 
     this.keyboard = createKeyboardHandler();
@@ -102,8 +102,7 @@ export class GameApp {
 
   private startGame(): void {
     this.audio.init();
-    this.audio.currentStage = 1;
-    this.audio.playBGM("bgm_stage");
+    this.audio.playBGM("bgm_main");
     this.world = createWorld({ seed: Date.now() });
     this.ui.showInGameHUD(this.settings.muted);
     this.startLoop();
@@ -111,9 +110,9 @@ export class GameApp {
 
   private restartGame(): void {
     const stage = (this.world.currentStage || 1) as 1 | 2 | 3;
-    const stageDef = getStageDef(stage);
-    this.audio.currentStage = stage;
-    this.audio.playBGM(stageDef.bgm);
+    // The trailer theme keeps running from where it was; only a game over
+    // stopped it, and then it starts again from the top.
+    this.audio.playBGM("bgm_main");
     this.world = createWorld({ seed: Date.now(), startStage: stage });
     this.ui.showInGameHUD(this.settings.muted);
     this.startLoop();
@@ -123,8 +122,8 @@ export class GameApp {
     this.stopLoop();
     this.isPaused = false;
     this.ui.hidePauseMenu();
+    // Title screen is silent: the trailer theme plays only while a run is live.
     this.audio.stopBGM();
-    this.audio.playBGM("bgm_title");
     if (this.world.score > this.highScore) {
       saveHighScore(this.world.score);
       this.highScore = loadHighScore();
@@ -161,9 +160,7 @@ export class GameApp {
     this.world.player.grazeCount = prevGraze;
     this.world.player.lanePower = prevLanePower;
 
-    const stageDef = getStageDef(nextStage);
-    this.audio.currentStage = nextStage;
-    this.audio.playBGM(stageDef.bgm);
+    // No BGM call here on purpose: the same music bed carries into the next stage.
     this.ui.showInGameHUD(this.settings.muted);
     this.startLoop();
   }
@@ -317,6 +314,12 @@ export class GameApp {
       },
       getAudioAnalyser: () => this.audio.analyser,
       setAudioMuted: (m: boolean) => this.audio.setMuted(m),
+      getBgmState: () => ({
+        id: this.audio.getCurrentBgmId(),
+        playing: this.audio.isBgmPlaying(),
+        position: this.audio.currentBgmPosition(),
+        paused: this.audio.isGameplayPaused(),
+      }),
     };
   }
 }
