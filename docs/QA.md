@@ -1,5 +1,18 @@
 # Quality Assurance & Verification Record
 
+## Local Verification Summary (2026-11-20 — Trailer theme BGM)
+- Target: HD²LAB ARCADE : VALKYRIE EIRA — single continuous trailer-theme BGM
+- Verification Results:
+  - `npm run audio:check`: PASSED — 26 files validated (single `bgm_main` OGG 1.57 MB + M4A 1.92 MB), total 3.66 MB (< 4.5 MB budget).
+  - `npm run assets:check`: PASSED — 31 items validated, total 13.60 MB.
+  - `npm run lint`: PASSED — 0 errors, 0 warnings.
+  - `npm run typecheck`: PASSED — 0 errors (`tsc --noEmit`).
+  - `npm test`: PASSED — 78 tests across 18 suites (7 new audio-runtime tests).
+  - `npm run build`: PASSED — production client built in ~6.4s.
+  - `npm run test:e2e`: PASSED — 30 Playwright tests, including `tests/e2e/audio-bgm.spec.ts` (BGM asset served, legacy tracks 404, pause holds the position and resume continues from it).
+- Legacy BGM ids (`bgm_title`, `bgm_stage`, `bgm_stage2`, `bgm_stage3`, `bgm_midboss`, `bgm_boss`) and their 12 files were removed; the title screen plays no music.
+
+
 ## Local Verification Summary (v0.9.0 - 2026-11-08)
 - Date: 2026-11-08
 - Target: HD²LAB ARCADE : VALKYRIE EIRA (SKYBREAK) v0.9.0
